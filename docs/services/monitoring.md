@@ -55,10 +55,18 @@ graph TD
 | `dfair-gha-runner-local`, `pl-gha-runner-local`, `kc-gha-runner-local` | gha-general-01 | — | The 3 self-hosted GitHub Actions runners |
 | `buildx_buildkit_builder-*` | gha-general-01 | — | Buildkit builder for the runners |
 
-**Not yet instrumented:** the Proxmox host itself and the `nas` LXC don't
-appear to have node-exporter running — only the two VMs are confirmed
-reporting. Needs verification before the Infrastructure Overview dashboard
-(issue #5) can include them.
+**Fixed (was issue #3):** all scrape targets were still pointed at
+pre-migration `192.168.1.x` IPs (proxmox's target was literally still
+`192.168.1.197`, its old flat-network address) — a direct side effect of the
+VLAN migration earlier this session. Fixed by updating
+`/opt/monitoring/prometheus/prometheus.yml` on monitor-01 to the current
+`192.168.10.x` addresses and restarting the `prometheus` container. All 6
+configured targets (prometheus, monitor-01-node/-containers,
+gha-general-01-node/-containers, proxmox-node) are now healthy.
+
+**Not yet instrumented:** `nas` (LXC 105) has no node-exporter and isn't in
+the scrape config at all — genuine gap, not a stale-IP issue. Needed before
+the Infrastructure Overview dashboard (issue #5) can include it.
 
 ## Dashboard Rebuild Plan
 
