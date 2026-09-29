@@ -93,7 +93,7 @@ from switch factory default; 2-5, 7-8 are untouched (Untagged VLAN 1, PVID 1).
 
 | Port | VLAN Mode | VLAN 1 | VLAN 30 | PVID | Device |
 |---|---|---|---|---|---|
-| 1 | Trunk | Tagged | Tagged | 1 | GL.iNet Flint 2 uplink (`lan1`) |
+| 1 | Trunk (native VLAN 1) | Untagged (unchanged) | Tagged | 1 | GL.iNet Flint 2 uplink (`lan1`) |
 | 2 | Access | Untagged | Not Member | 1 | Proxmox (Dell Precision 3620) — moves to VLAN 10 in Phase 3 |
 | 3 | Access | Untagged | Not Member | 1 | Dell Micro (debian) — moves to VLAN 10 in Phase 3 |
 | 4 | Access | Untagged | Not Member | 1 | Acer Aspire (debian) — moves to VLAN 10 in Phase 3 |
@@ -107,9 +107,19 @@ from switch factory default; 2-5, 7-8 are untouched (Untagged VLAN 1, PVID 1).
 > Setting`) — easy to configure one and forget the other, leaving a port
 > half-configured.
 >
-> Tagging the router's `lan1` for VLAN 1 (instead of leaving it untagged)
-> before the switch's 802.1Q config is applied causes a transient outage for
-> everything reachable only through the switch (e.g. Proxmox) — the router
-> sends/expects tagged frames on that port while the switch is still flat.
-> Expected during the rollout window between the router-side and switch-side
-> changes; resolves once switch port 1 is set to Tagged for VLAN 1 to match.
+> **Lesson learned (caused a real outage during Phase 2):** originally tagged
+> `lan1` for VLAN 1 on the router before the switch had any 802.1Q config —
+> this cut off everything through the switch (proxmox, the switch's own mgmt
+> UI at 192.168.1.160) since the router started sending/expecting tagged
+> frames on a link the switch was still treating as flat. Full loss of
+> reachability to the switch's management page, confirmed via `ping` timing
+> out even from the router itself — not a browser/cache issue.
+>
+> **Fix, and the pattern going forward:** use **native VLAN 1** on the trunk —
+> VLAN 1 stays **untagged** on `lan1` (`lan1:u*`), matching the switch's
+> untouched factory-default state exactly, so it needs **zero changes** to
+> keep working. Only the *new* VLAN (30) is tagged on the trunk. This means
+> adding a VLAN never risks breaking existing traffic — the router and switch
+> only need to agree on the newly-added tagged VLAN, not renegotiate the
+> already-working native one. Apply this same pattern in Phase 3 for VLANs 10
+> and 20.
