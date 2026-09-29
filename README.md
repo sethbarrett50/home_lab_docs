@@ -39,11 +39,11 @@ graph TD
 
 | Item | Status |
 |---|---|
-| Physical rack build | 🔲 Planned |
+| Physical rack build | ✅ Done |
 | GL.iNet Flint 2 as main router | ✅ Running |
-| VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Running — all 3 VLANs live, devices migrated, static reservations set |
+| VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Done — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
-| NAS / storage | 🔲 In progress (HDDs pending) |
+| NAS / storage | ✅ Done |
 | VPN (inbound) | 🔲 Planned |
 | Mullvad on Trusted VLAN | 🔲 Planned |
 | Monitoring stack | 🔧 Partial |
