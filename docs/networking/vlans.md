@@ -106,10 +106,22 @@ Rolling out incrementally to isolate failures to one layer at a time:
       (falls inside the `.100`–`.249` DHCP pool — flag for exclusion/reservation
       later). Acer/HP/Dell-mini debian boxes skipped for now (no network
       config done on them yet, not blocking).
-- [ ] **Phase 2** — Add VLAN 30 (IoT) only. Enable bridge-vlan-filtering on
-      `br-lan`, tag the 2.5G LAN uplink port for VLAN 30, configure one switch
-      access port for VLAN 30, repurpose the old TP-Link as a dedicated IoT AP
-      on that port. This is the highest-priority isolation goal.
+- [x] **Phase 2a** — VLAN 30 (IoT) interface live on the Flint 2. Enabled
+      `vlan_filtering` on `br-lan`, tagged `lan1` (2.5G uplink) for VLAN 1 + 30,
+      left `lan2`-`lan5` untagged/PVID in VLAN 1. `br-lan.1` (192.168.1.1) and
+      `br-lan.30` (192.168.30.1) both up, SSH survived the reload.
+      **Root cause of every prior lockout on this exact router (GL-MT6000):**
+      once `vlan_filtering` is enabled, the `lan` interface must bind to the
+      VLAN 1 subinterface (`option device 'br-lan.1'`), not the raw bridge
+      device (`br-lan`). Binding to the raw bridge while filtering is active
+      is what caused the "changes apply, device goes unreachable" failure that
+      led to repeated reflashes in the earlier attempt — confirmed as a known
+      GL-MT6000-specific gotcha via the OpenWrt forum, not user error.
+      (See: forum.openwrt.org/t/vlan-config-problems-on-gl-inet-gl-mt6000/200882
+      and forum.openwrt.org/t/gl-inet-flint-2-gl-mt6000-vlan-best-practices-on-openwrt-snapshot/251673)
+- [ ] **Phase 2b** — DHCP server on `iot` interface, firewall zone/isolation
+      rules, switch 802.1Q config (trunk port 1, IoT access port), repurpose
+      old TP-Link (already OpenWrt) as dedicated IoT AP on that access port.
 - [ ] **Phase 3** — Add VLAN 10 (Lab) and VLAN 20 (Trusted), full 802.1Q trunk
       on switch port 1, per-VLAN SSIDs, firewall zones per
       [firewall.md](firewall.md), Mullvad WireGuard for VLAN 20 + kill switch.
