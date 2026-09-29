@@ -131,9 +131,20 @@ Rolling out incrementally to isolate failures to one layer at a time:
       phone joined its `OpenWrt` SSID, got a `192.168.30.x` lease from the
       Flint 2, has internet access.
       **Phase 2 complete.**
-- [ ] **Phase 3** — Add VLAN 10 (Lab) and VLAN 20 (Trusted), full 802.1Q trunk
-      on switch port 1, per-VLAN SSIDs, firewall zones per
-      [firewall.md](firewall.md), Mullvad WireGuard for VLAN 20 + kill switch.
+- [x] **Phase 3a** — VLAN 10 (Lab) and VLAN 20 (Trusted) router-side infra
+      live: `br-lan.10` (192.168.10.1), `br-lan.20` (192.168.20.1), DHCP
+      scopes (`.100`-`.200`), firewall zones (ACCEPT/ACCEPT/ACCEPT, forward
+      to `wan` only, no cross-zone rules yet). Hostname set to `flint2` (was
+      causing tab mix-ups with the identically-prompted TP-Link). No devices
+      migrated yet, no switch access ports assigned — infra only, per the
+      decision to stand up VLANs before moving working devices.
+- [ ] **Phase 3b** — Switch: add VLAN 10 + 20 to 802.1Q table, tagged port 1
+      only (trunk), no access ports yet.
+- [ ] **Phase 3c** — Migrate devices one at a time (lowest-risk first, proxmox
+      last): switch port → new VLAN untagged/PVID, device static IP → new
+      subnet. Per-VLAN SSIDs on Flint 2 WiFi for Trusted. Selective
+      Trusted→Lab firewall rule (proxmox :8006/:22) once proxmox is on VLAN 10.
+      Mullvad WireGuard + kill switch for VLAN 20 — separate follow-up task.
 
 ## TODO / Implementation Notes
 
