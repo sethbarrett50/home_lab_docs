@@ -68,14 +68,26 @@ gha-general-01-node/-containers, proxmox-node) are now healthy.
 the scrape config at all — genuine gap, not a stale-IP issue. Needed before
 the Infrastructure Overview dashboard (issue #5) can include it.
 
-## Dashboard Rebuild Plan
+## Dashboard Rebuild Status
 
-See the linked issues for the full breakdown. Short version: verify scrape
-targets are healthy (#3) → fix this doc + devices inventory (#4) → build
-Infrastructure Overview row (#5) → build GHA Runners row (#6). GitHub
-Actions job-level metrics (#7) and router-level traffic stats (#8) are
-deferred, lower-priority follow-ups — genuinely separate scope, not part of
-the initial rebuild.
+"Infrastructure Overview" dashboard rebuilt in Grafana (`192.168.10.158:3000`,
+default `Prometheus` datasource — note there's also a stale, unused lowercase
+`prometheus` datasource pointing at a dead IP, worth deleting eventually).
+3-wide grid, 15 panels:
+
+- **Row 1 (Infra):** up/down stat panels for proxmox/monitor-01/gha-general-01
+  (`up{job="..."}`), plus CPU/Mem/Disk gauge panels per host (9 panels,
+  instant queries against node-exporter metrics)
+- **Row 2 (GHA Runners):** up/down stat panels for the 3 runner containers,
+  using `count(container_last_seen{name="..."})` with value+special mappings
+  (cAdvisor has no clean boolean like node-exporter's `up`, so "No Data" is
+  the down signal here)
+
+Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners up/down).
+Open follow-ups: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
+(GH Actions job-level metrics), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
+(router traffic stats), [#9](https://github.com/sethbarrett50/home_lab_docs/issues/9)
+(CPU/RAM/network panels per runner — resource visibility, not just up/down).
 
 ## Alerting Ideas (still aspirational — not built)
 
