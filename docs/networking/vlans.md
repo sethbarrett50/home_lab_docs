@@ -156,16 +156,18 @@ Rolling out incrementally to isolate failures to one layer at a time:
       gha-general-01 :22) — see [devices/README.md](../devices/README.md) for
       the full table. gha-general-01 given a static DHCP reservation (was
       floating DHCP, now pinned to its MAC).
-      **Remaining:** MacBook Pro still on the IoT SSID, needs to reconnect to
-      `dfair_lab`. Mullvad WireGuard + kill switch for VLAN 20 — separate
+      MacBook Pro reconnected to `dfair_lab` (VLAN 20), confirmed. All 10
+      current IoT devices given static DHCP host reservations (MAC-pinned) so
+      addresses don't drift — see [devices/README.md](../devices/README.md).
+      **Remaining:** Mullvad WireGuard + kill switch for VLAN 20 — separate
       follow-up task, not started.
 
 ## TODO / Implementation Notes
 
-- [ ] Configure 802.1Q VLAN tagging on TL-SG108E
-- [ ] Create VLAN interfaces on GL.iNet Flint 2 (stock OpenWrt — DSA bridge-vlan-filtering via LuCI or UCI)
-- [ ] Create separate SSIDs per VLAN on Flint 2 WiFi
-- [ ] Configure DHCP server per VLAN on router
+- [x] Configure 802.1Q VLAN tagging on TL-SG108E
+- [x] Create VLAN interfaces on GL.iNet Flint 2 (stock OpenWrt — DSA bridge-vlan-filtering via UCI, not LuCI — see Phase 2a note on the GL-MT6000 lockout bug)
+- [x] Create SSID for VLAN 20 on Flint 2 WiFi (`dfair_lab`, both radios). VLAN 30 uses the old TP-Link's own AP instead of a Flint 2 radio SSID; VLAN 10 is wired-only per design, no SSID needed.
+- [x] Configure DHCP server per VLAN on router (10, 20, 30 all live; static host reservations for known devices)
 - [ ] Set up Mullvad WireGuard interface on router, policy-route VLAN 20 traffic through it
 - [ ] Configure kill switch (nftables/iptables) for Mullvad on VLAN 20
-- [ ] Set up OpenWrt IoT AP with VLAN 30 SSID, trunk to switch
+- [x] Set up OpenWrt IoT AP with VLAN 30 (simplified from the original "SSID + trunk" plan to a dumb-AP-on-a-single-access-port — no trunking needed on the AP itself since it only ever serves one VLAN)

@@ -1,6 +1,6 @@
 # 🏠 Homelab Documentation
 
-> Personal homelab documentation — currently deployed in a PhD lab environment, moving home soon.
+> Personal homelab documentation — migrated from the PhD lab environment to home. GL.iNet Flint 2 + TL-SG108E + VLAN segmentation now live.
 
 ## Quick Links
 
@@ -15,24 +15,23 @@
 
 ```mermaid
 graph TD
-    WAN[🌐 WAN / University Port]
-    Router[GL.iNet Flint 2<br/>Router / Firewall]
-    Switch[TP-Link TL-SG108E<br/>8-Port Smart Switch]
-    PVE[Dell 3620<br/>Proxmox Node]
+    WAN[🌐 Home ISP]
+    Router[GL.iNet Flint 2<br/>stock OpenWrt · Router / Firewall]
+    Switch[TP-Link TL-SG108E<br/>8-Port Smart Switch, 802.1Q]
     PATCH[Patch Panel<br/>12-Port Cat6]
-    IoT_AP[Old TP-Link<br/>OpenWrt AP]
+    IoT_AP[Old TP-Link<br/>OpenWrt 15.05.1 · dumb AP]
 
-    VLAN10[VLAN 10 — Lab<br/>Proxmox · Laptops · RPis]
-    VLAN20[VLAN 20 — Trusted<br/>Phone · Desktop · MBP]
-    VLAN30[VLAN 30 — IoT<br/>Research Devices]
+    VLAN10[VLAN 10 — Lab<br/>Proxmox · nas/gha-runner/monitor VMs+LXCs · debian boxes]
+    VLAN20[VLAN 20 — Trusted<br/>WiFi `dfair_lab` · Phone · MacBook Pro]
+    VLAN30[VLAN 30 — IoT<br/>Cameras · smart plugs · research devices]
 
     WAN --> Router
-    Router -->|2.5G Uplink| Switch
+    Router -->|2.5G Uplink, native VLAN 1 + tagged 10/20/30| Switch
     Switch --> PATCH
-    Switch --> IoT_AP
-    PATCH --> PVE
+    Switch -->|access port 6| IoT_AP
+    PATCH --> VLAN10
     Switch --> VLAN10
-    Switch --> VLAN20
+    Router -.->|WiFi| VLAN20
     IoT_AP --> VLAN30
 ```
 
@@ -41,8 +40,8 @@ graph TD
 | Item | Status |
 |---|---|
 | Physical rack build | 🔲 Planned |
-| GL.iNet Flint 2 as main router (flat LAN) | ✅ Running |
-| VLAN configuration | 🔧 Phase 2 done (IoT isolated) — Phase 3 (Lab/Trusted) next |
+| GL.iNet Flint 2 as main router | ✅ Running |
+| VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Running — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
 | NAS / storage | 🔲 In progress (HDDs pending) |
 | VPN (inbound) | 🔲 Planned |
