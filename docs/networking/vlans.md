@@ -141,11 +141,24 @@ Rolling out incrementally to isolate failures to one layer at a time:
 - [x] **Phase 3b** — Switch: VLAN 10 + 20 added to 802.1Q table, tagged port 1
       only (trunk), no access ports assigned. Verified zero disruption — VLAN
       1 and VLAN 30 traffic unaffected.
-- [ ] **Phase 3c** — Migrate devices one at a time (lowest-risk first, proxmox
-      last): switch port → new VLAN untagged/PVID, device static IP → new
-      subnet. Per-VLAN SSIDs on Flint 2 WiFi for Trusted. Selective
-      Trusted→Lab firewall rule (proxmox :8006/:22) once proxmox is on VLAN 10.
-      Mullvad WireGuard + kill switch for VLAN 20 — separate follow-up task.
+- [x] **Phase 3c** — Device migration done for core infra. `dfair_lab` SSID
+      live on both radios, bound to VLAN 20. Idle debian boxes (Dell
+      Micro/Acer/HP) switch-migrated to VLAN 10 (no OS network config on them
+      yet — not blocking). Proxmox host + its VM/LXC guests migrated to VLAN
+      10 — **key lesson**: the Proxmox host's own `vmbr0` IP is independent of
+      each VM/LXC's *guest-level* network config; migrating the host doesn't
+      migrate the guests. LXCs on `ip=dhcp` (nas) picked up new leases on
+      reboot automatically; VMs (gha-general-01, monitor-01) needed the same
+      via their own guest OS, reachable only through the Proxmox noVNC console
+      once the host itself was unreachable over the network.
+      Scoped `lan`/`trusted` → Lab firewall rules added per-host as needed
+      (proxmox :8006/:22, monitor-01 :3000/:3001 for Grafana/Prometheus,
+      gha-general-01 :22) — see [devices/README.md](../devices/README.md) for
+      the full table. gha-general-01 given a static DHCP reservation (was
+      floating DHCP, now pinned to its MAC).
+      **Remaining:** MacBook Pro still on the IoT SSID, needs to reconnect to
+      `dfair_lab`. Mullvad WireGuard + kill switch for VLAN 20 — separate
+      follow-up task, not started.
 
 ## TODO / Implementation Notes
 
