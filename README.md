@@ -41,7 +41,8 @@ graph TD
 | Item | Status |
 |---|---|
 | Physical rack build | 🔲 Planned |
-| VLAN configuration | 🔲 Planned |
+| GL.iNet Flint 2 as main router (flat LAN) | ✅ Running |
+| VLAN configuration | 🔲 Planned (Phase 2: IoT next) |
 | Proxmox setup | ✅ Running |
 | NAS / storage | 🔲 In progress (HDDs pending) |
 | VPN (inbound) | 🔲 Planned |

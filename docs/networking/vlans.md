@@ -97,9 +97,15 @@ swconfig — tagging must be done via `br-lan` VLAN filtering + per-port
 tagged/untagged bridge-vlan members, not per-interface `.VLANID` subinterfaces.
 Rolling out incrementally to isolate failures to one layer at a time:
 
-- [ ] **Phase 1** — Flint 2 as plain main router (flat LAN, no VLANs). Replaces
+- [x] **Phase 1** — Flint 2 as plain main router (flat LAN, no VLANs). Replaces
       TP-Link as the WAN-facing device. Confirms WAN/NAT/DHCP works before any
       switch complexity is introduced.
+      Notes: TL-SG108E needed a factory reset (leftover VLAN config from the
+      earlier failed attempt was blocking L2 forwarding entirely — 802.1Q mode
+      is currently `Disable`). Proxmox is reachable via static `192.168.1.197`
+      (falls inside the `.100`–`.249` DHCP pool — flag for exclusion/reservation
+      later). Acer/HP/Dell-mini debian boxes skipped for now (no network
+      config done on them yet, not blocking).
 - [ ] **Phase 2** — Add VLAN 30 (IoT) only. Enable bridge-vlan-filtering on
       `br-lan`, tag the 2.5G LAN uplink port for VLAN 30, configure one switch
       access port for VLAN 30, repurpose the old TP-Link as a dedicated IoT AP
