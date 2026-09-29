@@ -119,9 +119,13 @@ Rolling out incrementally to isolate failures to one layer at a time:
       GL-MT6000-specific gotcha via the OpenWrt forum, not user error.
       (See: forum.openwrt.org/t/vlan-config-problems-on-gl-inet-gl-mt6000/200882
       and forum.openwrt.org/t/gl-inet-flint-2-gl-mt6000-vlan-best-practices-on-openwrt-snapshot/251673)
-- [ ] **Phase 2b** — DHCP server on `iot` interface, firewall zone/isolation
-      rules, switch 802.1Q config (trunk port 1, IoT access port), repurpose
-      old TP-Link (already OpenWrt) as dedicated IoT AP on that access port.
+- [x] **Phase 2b** — DHCP server on `iot` interface (`.100`-`.249`, 12h lease),
+      firewall zone (`input`/`forward` DROP by default, explicit allow only for
+      DHCP/DNS-to-router and forwarding to `wan`). Switch VLAN 30 added via
+      native-VLAN-1 pattern (see above) — zero disruption to existing traffic.
+      Switch port 6 is now VLAN 30 untagged/PVID 30, ready for the IoT AP.
+      Remaining: physically wire the old TP-Link into port 6 and configure it
+      as a dumb AP (no routing/DHCP of its own) bridging its WiFi into VLAN 30.
 - [ ] **Phase 3** — Add VLAN 10 (Lab) and VLAN 20 (Trusted), full 802.1Q trunk
       on switch port 1, per-VLAN SSIDs, firewall zones per
       [firewall.md](firewall.md), Mullvad WireGuard for VLAN 20 + kill switch.
