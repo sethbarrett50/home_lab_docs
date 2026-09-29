@@ -13,8 +13,8 @@ Proxmox host + LXC/VM services + 3 debian boxes not yet networked.
 | `switch` | TP-Link TL-SG108E | — | mgmt | 192.168.1.160 | L2 only, DHCP (not static) |
 | `proxmox` (pve) | Dell Precision 3620 | Proxmox VE | 10 | 192.168.10.10 | Static, host for VMs/LXCs below |
 | `nas` (LXC 105) | — | — | 10 | 192.168.10.170 | DHCP (not pinned) |
-| `gha-general-01` (VM 101) | — | Debian Trixie | 10 | 192.168.10.189 | DHCP host reservation (pinned to MAC) |
-| `monitor-01` (VM 102) | — | — | 10 | 192.168.10.158 | Prometheus `:3001` + Grafana `:3000`. DHCP (not pinned) |
+| `gha-general-01` (VM 101) | — | Debian Trixie | 10 | 192.168.10.189 | DHCP host reservation (pinned to MAC). Runs 3x GHA runner containers (`dfair`/`pl`/`kc`), Buildkit, Grafana Alloy, cAdvisor `:8080`, node-exporter. SSH open from lan/trusted |
+| `monitor-01` (VM 102) | — | — | 10 | 192.168.10.158 | Grafana `:3000` (dashboards lost, rebuild tracked in [issues #3-8](https://github.com/sethbarrett50/home_lab_docs/issues)), Prometheus `:9090` (not `:3001` — that's Uptime Kuma), Loki `:3100`, Alloy `:12345`, cAdvisor `:8080`, node-exporter. DHCP (not pinned). SSH open from lan/trusted |
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
 | Dell Micro / Acer / HP laptop | — | Debian, base install only | 10 (switch ports 3-5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured on any of the three |
 
@@ -66,7 +66,7 @@ outside it:
 | Dest host | Port(s) | From |
 |---|---|---|
 | proxmox (192.168.10.10) | 8006, 22 | lan, trusted |
-| monitor-01 (192.168.10.158) | 3000, 3001 | lan, trusted |
+| monitor-01 (192.168.10.158) | 3000, 3001, 22 | lan, trusted |
 | gha-general-01 (192.168.10.189) | 22 | lan, trusted |
 
 ## Device Naming Convention
