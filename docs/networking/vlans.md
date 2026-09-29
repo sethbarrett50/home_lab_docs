@@ -88,10 +88,30 @@ flowchart LR
 | IoT | Trusted | ❌ Blocked |
 | Any | Internet | See per-VLAN policy above |
 
+## Rollout Plan (Phased)
+
+Earlier attempt at doing all VLANs in one pass on the Flint 2 failed at the
+switch/router VLAN tagging step. Flint 2 runs **stock OpenWrt** (not GL.iNet's
+own firmware), which uses DSA + bridge-vlan-filtering rather than classic
+swconfig — tagging must be done via `br-lan` VLAN filtering + per-port
+tagged/untagged bridge-vlan members, not per-interface `.VLANID` subinterfaces.
+Rolling out incrementally to isolate failures to one layer at a time:
+
+- [ ] **Phase 1** — Flint 2 as plain main router (flat LAN, no VLANs). Replaces
+      TP-Link as the WAN-facing device. Confirms WAN/NAT/DHCP works before any
+      switch complexity is introduced.
+- [ ] **Phase 2** — Add VLAN 30 (IoT) only. Enable bridge-vlan-filtering on
+      `br-lan`, tag the 2.5G LAN uplink port for VLAN 30, configure one switch
+      access port for VLAN 30, repurpose the old TP-Link as a dedicated IoT AP
+      on that port. This is the highest-priority isolation goal.
+- [ ] **Phase 3** — Add VLAN 10 (Lab) and VLAN 20 (Trusted), full 802.1Q trunk
+      on switch port 1, per-VLAN SSIDs, firewall zones per
+      [firewall.md](firewall.md), Mullvad WireGuard for VLAN 20 + kill switch.
+
 ## TODO / Implementation Notes
 
 - [ ] Configure 802.1Q VLAN tagging on TL-SG108E
-- [ ] Create VLAN interfaces on GL.iNet Flint 2 (runs OpenWrt — use LuCI or UCI)
+- [ ] Create VLAN interfaces on GL.iNet Flint 2 (stock OpenWrt — DSA bridge-vlan-filtering via LuCI or UCI)
 - [ ] Create separate SSIDs per VLAN on Flint 2 WiFi
 - [ ] Configure DHCP server per VLAN on router
 - [ ] Set up Mullvad WireGuard interface on router, policy-route VLAN 20 traffic through it
