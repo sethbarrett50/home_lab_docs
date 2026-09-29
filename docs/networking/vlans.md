@@ -138,8 +138,9 @@ Rolling out incrementally to isolate failures to one layer at a time:
       causing tab mix-ups with the identically-prompted TP-Link). No devices
       migrated yet, no switch access ports assigned — infra only, per the
       decision to stand up VLANs before moving working devices.
-- [ ] **Phase 3b** — Switch: add VLAN 10 + 20 to 802.1Q table, tagged port 1
-      only (trunk), no access ports yet.
+- [x] **Phase 3b** — Switch: VLAN 10 + 20 added to 802.1Q table, tagged port 1
+      only (trunk), no access ports assigned. Verified zero disruption — VLAN
+      1 and VLAN 30 traffic unaffected.
 - [ ] **Phase 3c** — Migrate devices one at a time (lowest-risk first, proxmox
       last): switch port → new VLAN untagged/PVID, device static IP → new
       subnet. Per-VLAN SSIDs on Flint 2 WiFi for Trusted. Selective
