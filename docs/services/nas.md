@@ -1,8 +1,12 @@
 # NAS & Storage
 
-## Status: Planned (HDDs pending)
+## Status: Done
 
-Storage services will be set up once additional HDDs are purchased.
+Running as `nas` (LXC 105) on the Proxmox host, VLAN 10 (`192.168.10.170`,
+DHCP). Implementation specifics (which NAS software from the options below,
+actual mount points, qBittorrent/Mullvad binding) weren't covered in the
+GL.iNet networking session — update this doc with the real configuration
+next time it's touched.
 
 ## Planned Stack
 
