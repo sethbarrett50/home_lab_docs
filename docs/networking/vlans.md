@@ -124,8 +124,13 @@ Rolling out incrementally to isolate failures to one layer at a time:
       DHCP/DNS-to-router and forwarding to `wan`). Switch VLAN 30 added via
       native-VLAN-1 pattern (see above) — zero disruption to existing traffic.
       Switch port 6 is now VLAN 30 untagged/PVID 30, ready for the IoT AP.
-      Remaining: physically wire the old TP-Link into port 6 and configure it
-      as a dumb AP (no routing/DHCP of its own) bridging its WiFi into VLAN 30.
+      Old TP-Link (15.05.1 "Chaos Calmer", ar71xx — its own switch/VLAN config
+      untouched, only became a dumb AP) reconfigured: LAN static
+      `192.168.30.2`, own DHCP server disabled (`dhcp.lan.ignore=1`), WAN
+      disabled (`proto=none`), wired into switch port 6. Verified end-to-end:
+      phone joined its `OpenWrt` SSID, got a `192.168.30.x` lease from the
+      Flint 2, has internet access.
+      **Phase 2 complete.**
 - [ ] **Phase 3** — Add VLAN 10 (Lab) and VLAN 20 (Trusted), full 802.1Q trunk
       on switch port 1, per-VLAN SSIDs, firewall zones per
       [firewall.md](firewall.md), Mullvad WireGuard for VLAN 20 + kill switch.
