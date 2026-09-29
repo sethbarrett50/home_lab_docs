@@ -87,13 +87,29 @@ graph TD
 
 ## Switch Port Assignment
 
-| Port | VLAN Mode | VLAN | Device |
-|---|---|---|---|
-| 1 | Trunk | 1,10,20,30 | Router uplink |
-| 2 | Access | 10 | Proxmox |
-| 3 | Access | 10 | RPi 1 |
-| 4 | Access | 10 | RPi 2 |
-| 5 | Access | 10 | RPi 3 |
-| 6 | Access | 30 | IoT AP |
-| 7 | Access | 10 | HP Laptop |
-| 8 | — | — | Reserved |
+Updated to match actual current hardware (post-move) and the phased rollout —
+see [vlans.md](vlans.md) for phase status. Only ports 1 and 6 required changes
+from switch factory default; 2-5, 7-8 are untouched (Untagged VLAN 1, PVID 1).
+
+| Port | VLAN Mode | VLAN 1 | VLAN 30 | PVID | Device |
+|---|---|---|---|---|---|
+| 1 | Trunk | Tagged | Tagged | 1 | GL.iNet Flint 2 uplink (`lan1`) |
+| 2 | Access | Untagged | Not Member | 1 | Proxmox (Dell Precision 3620) — moves to VLAN 10 in Phase 3 |
+| 3 | Access | Untagged | Not Member | 1 | Dell Micro (debian) — moves to VLAN 10 in Phase 3 |
+| 4 | Access | Untagged | Not Member | 1 | Acer Aspire (debian) — moves to VLAN 10 in Phase 3 |
+| 5 | Access | Untagged | Not Member | 1 | HP Laptop (debian) — moves to VLAN 10 in Phase 3 |
+| 6 | Access | Not Member | Untagged | 30 | Old TP-Link (OpenWrt) — dedicated IoT AP |
+| 7 | — | Untagged | Not Member | 1 | Empty |
+| 8 | — | Untagged | Not Member | 1 | Reserved / maintenance |
+
+> TL-SG108E gotcha: VLAN membership (tagged/untagged/not member) and PVID are
+> **two separate pages** (`VLAN > 802.1Q VLAN` and `VLAN > 802.1Q VLAN PVID
+> Setting`) — easy to configure one and forget the other, leaving a port
+> half-configured.
+>
+> Tagging the router's `lan1` for VLAN 1 (instead of leaving it untagged)
+> before the switch's 802.1Q config is applied causes a transient outage for
+> everything reachable only through the switch (e.g. Proxmox) — the router
+> sends/expects tagged frames on that port while the switch is still flat.
+> Expected during the rollout window between the router-side and switch-side
+> changes; resolves once switch port 1 is set to Tagged for VLAN 1 to match.
