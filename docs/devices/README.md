@@ -41,20 +41,21 @@ app-based confirmation is the more reliable method going forward.
 | Name | MAC | IP | Notes |
 |---|---|---|---|
 | Galaxy-A71-5G | BA:AD:F9:BE:0C:BB | 192.168.30.117 | Test phone |
-| RingDoorbell-b1 | 90:48:6C:04:72:B1 | 192.168.30.151 | Ring Video Doorbell |
+| RingDoorbell-b1 | 90:48:6C:04:72:B1 | 192.168.30.151 | Ring Video Doorbell — reconfirmed by owner |
 | HS105 | 00:5F:67:FB:83:A4 | 192.168.30.216 | Kasa Smart Plug |
 | Nest-Cam-indoor | 20:1F:3B:21:93:74 | 192.168.30.110 | Google Home Cam |
 | **Amazon-Echo-Dot** | A8:E6:21:3E:26:01 | 192.168.30.142 | Amazon Echo Dot (5th Gen) — confirmed via Alexa app, doesn't respond to ICMP even when online (expected Echo behavior) |
 | Roborock-K2-Vacuum | B0:4A:39:55:B1:76 | 192.168.30.181 | Self-identified via DHCP hostname `roborock-vacuum-a34` |
 | OKP-K2-Vacuum | 10:D5:61:A4:B8:92 | 192.168.30.188 | Inferred by elimination (plugged in alongside the Roborock, only 2 new leases appeared) |
+| LongPlus-Baby-Monitor | 30:4A:26:2B:BA:87 | 192.168.30.220 | Confirmed via unplug test (vendor lookup had only narrowed it to "Shenzhen Trolink Technology Co.", a generic OEM — unplug test gave the real answer) |
 | `amazon-unknown-1` | 00:F6:20:4E:22:FB | 192.168.30.203 | **Was mislabeled `Google-Home-Mini`** — vendor lookup said Amazon, not Google, and it's confirmed NOT the Echo Dot (different MAC, responds to ping unlike the real Echo Dot). Not in the Alexa app either. Still unidentified — worth physically tracking down |
-| `iot-unknown-2` | 72:28:BA:5F:4E:6C | 192.168.30.229 | Unidentified — locally-administered/randomized MAC, vendor lookup impossible |
-| `iot-unknown-3` | 30:4A:26:2B:BA:87 | 192.168.30.220 | Unidentified — vendor: Shenzhen Trolink Technology Co. (generic OEM). Candidates from the owner's device list: LongPlus baby monitor, NiteBird smart bulb, Philips Hue Hub |
-| `iot-unknown-4` | CA:70:A3:B6:C7:FB | 192.168.30.237 | Unidentified — locally-administered/randomized MAC. Present in the original TP-Link lease dump from before this migration too — has been on the network unidentified for a while |
+| `iot-unknown-2` | 72:28:BA:5F:4E:6C | 192.168.30.229 | Unidentified — locally-administered/randomized MAC, vendor lookup impossible. Currently offline |
+| `iot-unknown-4` | CA:70:A3:B6:C7:FB | 192.168.30.237 | Unidentified — locally-administered/randomized MAC. Present in the original TP-Link lease dump from before this migration too — has been on the network unidentified for a long time. Currently offline |
+| `unknown-100` (no reservation yet) | 82:A4:F5:01:66:AA | 192.168.30.100 | Unresolved loose thread — appeared right when the Echo Dot was replugged during that test, but turned out not to be it. No hostname, doesn't respond to ping. Needs its own unplug test |
 | **BLOCKED**: was `ESP_512EA9` | 70:03:9F:51:2E:A9 | 192.168.30.214 | Not on the owner's device list — unrecognized ESP32/8266 dev board. Firewall-blocked (MAC-based DROP, both input and forward-to-wan) rather than just isolated — confirmed actively dropping traffic via `nft` counters (35 packets/7560 bytes at time of blocking) |
 
 **Not yet connected** (known from the owner's device list / companion apps, no current lease):
-Google Nest Mini (MAC known: `20:1F:3B:78:FA:4A`, from Google Home app), Philips Hue Hub, LongPlus baby monitor, NiteBird smart bulb.
+Google Nest Mini (MAC known: `20:1F:3B:78:FA:4A`, from Google Home app), Philips Hue Hub (unplugged all session), NiteBird smart bulb (physically plugged in but produced no new lease — likely needs first-time app pairing before it'll join this network's WiFi).
 
 ## Cross-VLAN Firewall Rules (Lab access from mgmt/Trusted)
 
