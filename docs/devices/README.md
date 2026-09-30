@@ -71,7 +71,7 @@ outside it:
 
 ## Device Naming Convention
 
-```
+```text
 <type>-<descriptor>
 e.g. rpi1, rpi2, proxmox, xps16, mbp
 ```

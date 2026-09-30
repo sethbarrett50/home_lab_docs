@@ -44,7 +44,7 @@ flowchart LR
 ### Trusted VLAN → Internet
 All traffic from VLAN 20 is policy-routed to the Mullvad WireGuard interface. A kill switch rule drops traffic if the VPN interface is down:
 
-```
+```text
 # Conceptual nftables kill switch
 chain forward {
     iifname "br-trusted" oifname != "mullvad0" drop
