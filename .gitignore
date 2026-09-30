@@ -13,3 +13,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Python / mkdocs
+.venv/
+site/

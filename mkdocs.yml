@@ -1,0 +1,52 @@
+site_name: Homelab Docs
+site_description: Personal homelab infrastructure documentation, public for research reproducibility.
+repo_url: https://github.com/sethbarrett50/home_lab_docs
+repo_name: sethbarrett50/home_lab_docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+markdown_extensions:
+  - tables
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Physical:
+      - Overview: physical/README.md
+      - Rack Layout: physical/rack-layout.md
+      - Power: physical/power.md
+  - Networking:
+      - Overview: networking/README.md
+      - VLANs: networking/vlans.md
+      - Firewall: networking/firewall.md
+      - VPN: networking/vpn.md
+  - Services:
+      - Overview: services/README.md
+      - Proxmox: services/proxmox.md
+      - NAS: services/nas.md
+      - Monitoring: services/monitoring.md
+  - Devices: devices/README.md
+
+docs_dir: docs
