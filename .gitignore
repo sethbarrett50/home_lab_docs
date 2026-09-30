@@ -17,3 +17,5 @@ Thumbs.db
 # Python / mkdocs
 .venv/
 site/
+
+network.config
