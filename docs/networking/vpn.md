@@ -27,7 +27,7 @@ sequenceDiagram
 
 ### Configuration Sketch
 
-```
+```ini
 # /etc/wireguard/wg0.conf (server side — on router)
 [Interface]
 Address = 10.100.0.1/24

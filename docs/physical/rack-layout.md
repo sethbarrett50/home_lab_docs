@@ -4,7 +4,7 @@
 
 ## Unit Assignment (Planned)
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  U1  │ VEVOR 8-Outlet PDU           │
 │  U2  │ Cable Matters 12-Port Patch  │

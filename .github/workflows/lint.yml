@@ -2,9 +2,9 @@ name: Lint Docs
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   check-links:
@@ -15,3 +15,14 @@ jobs:
         uses: lycheeverse/lychee-action@v1
         with:
           args: --no-progress --exclude-all-private '**/*.md'
+
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint markdown
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          globs: |
+            **/*.md
+            !.github/**/*.md

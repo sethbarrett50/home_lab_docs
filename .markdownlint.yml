@@ -1,0 +1,9 @@
+# Disabled: purely stylistic/cosmetic, not worth a repo-wide reformat to satisfy.
+# Kept everything else - duplicate headings, heading hierarchy, trailing
+# whitespace, etc. still catch real problems.
+MD013: false  # line-length
+MD022: false  # blanks-around-headings
+MD032: false  # blanks-around-lists
+MD058: false  # blanks-around-tables
+MD060: false  # table-column-style (this repo consistently uses compact pipes)
+MD034: false  # no-bare-urls
