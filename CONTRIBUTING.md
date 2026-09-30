@@ -7,7 +7,7 @@ service write-ups once added).
 
 ## If you're here for research reproducibility
 
-Open a [question issue](../../issues/new?template=question.yml) if something
+Open a [question issue](https://github.com/sethbarrett50/home_lab_docs/issues/new?template=question.yml) if something
 in the docs is unclear, inconsistent, or you're trying to reproduce a part of
 the setup and hitting a gap. That's the most useful kind of contribution this
 repo can get from outside readers.
