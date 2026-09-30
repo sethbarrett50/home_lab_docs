@@ -83,11 +83,26 @@ default `Prometheus` datasource — note there's also a stale, unused lowercase
   (cAdvisor has no clean boolean like node-exporter's `up`, so "No Data" is
   the down signal here)
 
-Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners up/down).
+Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners
+up/down), #9 (CPU/RAM/network panels per runner). 24 panels total now.
+
+Dashboard is version-controlled as code:
+[docs/services/dashboards/infra-overview.json](dashboards/infra-overview.json)
+— the raw Grafana dashboard JSON (v13 Scenes-based schema), exported after
+each round of changes so the dashboard's actual state lives in git, not just
+in Grafana's own storage. To apply: Grafana → dashboard → **Edit** →
+**Export/Share** → **Export as JSON** to see current state, or paste this
+file's content into **Settings → JSON Model** to apply it.
+
+Currently a flat 3-wide grid, not grouped into labeled row sections yet —
+noted as a follow-up (owner wants proper collapsible row headers, deferred
+until done via the Grafana UI directly rather than hand-authored, since the
+v13 schema's `RowsLayout` kind isn't reliably documented and guessing it
+risked breaking the import).
+
 Open follow-ups: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
 (GH Actions job-level metrics), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
-(router traffic stats), [#9](https://github.com/sethbarrett50/home_lab_docs/issues/9)
-(CPU/RAM/network panels per runner — resource visibility, not just up/down).
+(router traffic stats).
 
 ## Alerting Ideas (still aspirational — not built)
 
