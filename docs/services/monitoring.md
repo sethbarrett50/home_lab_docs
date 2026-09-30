@@ -104,6 +104,26 @@ Open follow-ups: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
 (GH Actions job-level metrics), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
 (router traffic stats).
 
+### #7 research note
+
+Checked the existing third-party GitHub Actions Prometheus exporters before
+building anything. `amirwollman/github-actions-exporter` and its successor
+`Labbs/github-actions-exporter` (same project, migrated orgs) are **marked
+"no longer maintained"** by the original author — currently mid-revival
+under new stewardship, 26 open issues. Both also require a PAT scoped to
+`repo` + `admin:org` just to read workflow status, which is a lot of
+permission for read-only Actions data. `skroutz/github-actions-exporter` and
+`kaidotdev/github-actions-exporter` are both built around Actions Runner
+Controller (Kubernetes) — doesn't fit this setup, which runs runners as
+plain Docker containers.
+
+**Decision:** build a small custom exporter instead (Python +
+`prometheus_client`, polling `/repos/{owner}/{repo}/actions/runs` directly),
+authenticated with a fine-grained PAT scoped to `Actions: Read-only` on just
+the tracked repos — same least-privilege pattern used everywhere else in
+this setup. Blocked on the actual GitHub org/repo names for the
+dfair/pl/kc runners.
+
 ## Alerting Ideas (still aspirational — not built)
 
 | Alert | Condition | Severity |
