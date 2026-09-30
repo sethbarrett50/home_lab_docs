@@ -50,7 +50,7 @@ graph TD
 
 ## Repo Structure
 
-```
+```text
 homelab-docs/
 ├── README.md                   ← You are here
 ├── docs/
