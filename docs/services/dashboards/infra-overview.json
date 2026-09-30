@@ -2549,7 +2549,7 @@
         {
           "kind": "RowsLayoutRow",
           "spec": {
-            "title": "GHA Runners",
+            "title": "DFAIR Runner",
             "layout": {
               "kind": "AutoGridLayout",
               "spec": {
@@ -2590,7 +2590,23 @@
                         "name": "panel-18"
                       }
                     }
-                  },
+                  }
+                ],
+                "maxColumnCount": 4,
+                "rowHeightMode": "short"
+              }
+            }
+          }
+        },
+        {
+          "kind": "RowsLayoutRow",
+          "spec": {
+            "title": "PL Runner",
+            "layout": {
+              "kind": "AutoGridLayout",
+              "spec": {
+                "columnWidthMode": "narrow",
+                "items": [
                   {
                     "kind": "AutoGridLayoutItem",
                     "spec": {
@@ -2626,7 +2642,23 @@
                         "name": "panel-21"
                       }
                     }
-                  },
+                  }
+                ],
+                "maxColumnCount": 4,
+                "rowHeightMode": "short"
+              }
+            }
+          }
+        },
+        {
+          "kind": "RowsLayoutRow",
+          "spec": {
+            "title": "Kart Chaser Runner",
+            "layout": {
+              "kind": "AutoGridLayout",
+              "spec": {
+                "columnWidthMode": "narrow",
+                "items": [
                   {
                     "kind": "AutoGridLayoutItem",
                     "spec": {
@@ -2664,7 +2696,7 @@
                     }
                   }
                 ],
-                "maxColumnCount": 3,
+                "maxColumnCount": 4,
                 "rowHeightMode": "short"
               }
             }
