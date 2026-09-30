@@ -47,6 +47,7 @@ nav:
       - Proxmox: services/proxmox.md
       - NAS: services/nas.md
       - Monitoring: services/monitoring.md
+      - IDS Research: services/ids-research.md
   - Devices: devices/README.md
 
 docs_dir: docs
