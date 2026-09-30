@@ -1,0 +1,7 @@
+# MDPI (publisher DOI prefix 10.3390) blocks bot/CI requests with 403 -
+# confirmed against docs/services/ids-research.md's FADES link.
+^https://doi\.org/10\.3390/
+
+# OpenAlex's own landing pages also block bot/CI requests with 403 -
+# link to DOIs instead, this is just defensive in case that changes back.
+^https://openalex\.org/
