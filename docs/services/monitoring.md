@@ -83,8 +83,8 @@ default `Prometheus` datasource — note there's also a stale, unused lowercase
   (cAdvisor has no clean boolean like node-exporter's `up`, so "No Data" is
   the down signal here)
 
-Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners up/down),
-#9 (CPU/RAM/network panels per runner). 24 panels total now.
+Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners
+up/down), #9 (CPU/RAM/network panels per runner). 24 panels total now.
 
 Dashboard is version-controlled as code:
 [docs/services/dashboards/infra-overview.json](dashboards/infra-overview.json)
