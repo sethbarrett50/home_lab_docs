@@ -272,7 +272,7 @@
         "description": "",
         "id": 3,
         "links": [],
-        "title": "GHA Host",
+        "title": "GHA SHRs",
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -768,7 +768,7 @@
         "description": "",
         "id": 8,
         "links": [],
-        "title": "Monitor Memory",
+        "title": "Monitor Ram",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -964,7 +964,7 @@
         "description": "",
         "id": 10,
         "links": [],
-        "title": "GHA Host CPU",
+        "title": "GHA SHR CPU",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1062,7 +1062,7 @@
         "description": "",
         "id": 11,
         "links": [],
-        "title": "GHA Host Memory",
+        "title": "GHA SHR Ram",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1160,7 +1160,7 @@
         "description": "",
         "id": 12,
         "links": [],
-        "title": "GHA Host Disk",
+        "title": "GHA SHR Disk",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1258,7 +1258,7 @@
         "description": "",
         "id": 13,
         "links": [],
-        "title": "dfair runner",
+        "title": "DFAIR Runner",
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -1358,7 +1358,7 @@
         "description": "",
         "id": 14,
         "links": [],
-        "title": "pl runner",
+        "title": "PL Runner",
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -1458,7 +1458,7 @@
         "description": "",
         "id": 15,
         "links": [],
-        "title": "kc runner",
+        "title": "Kart Chaser Runner",
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -1558,7 +1558,7 @@
         "description": "",
         "id": 16,
         "links": [],
-        "title": "dfair runner CPU",
+        "title": "DFAIR Runner CPU",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1581,7 +1581,8 @@
                     }
                   ]
                 },
-                "unit": "percent"
+                "unit": "percent",
+                "decimals": 2
               },
               "overrides": []
             },
@@ -1656,7 +1657,7 @@
         "description": "",
         "id": 17,
         "links": [],
-        "title": "dfair runner Memory",
+        "title": "DFAIR Runner Ram",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1675,11 +1676,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 1610612736
                     }
                   ]
                 },
-                "unit": "bytes"
+                "unit": "bytes",
+                "min": 0,
+                "max": 2147483648
               },
               "overrides": []
             },
@@ -1736,7 +1739,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "rate(container_network_receive_bytes_total{name=\"dfair-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"dfair-gha-runner-local\"}[5m])",
+                      "expr": "sum by (name) (rate(container_network_receive_bytes_total{name=\"dfair-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"dfair-gha-runner-local\"}[5m]))",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -1754,7 +1757,7 @@
         "description": "",
         "id": 18,
         "links": [],
-        "title": "dfair runner Network",
+        "title": "DFAIR Runner Network",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1773,11 +1776,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 8388608
                     }
                   ]
                 },
-                "unit": "Bps"
+                "unit": "Bps",
+                "min": 0,
+                "max": 10485760
               },
               "overrides": []
             },
@@ -1852,7 +1857,7 @@
         "description": "",
         "id": 19,
         "links": [],
-        "title": "pl runner CPU",
+        "title": "PL Runner CPU",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1875,7 +1880,8 @@
                     }
                   ]
                 },
-                "unit": "percent"
+                "unit": "percent",
+                "decimals": 2
               },
               "overrides": []
             },
@@ -1950,7 +1956,7 @@
         "description": "",
         "id": 20,
         "links": [],
-        "title": "pl runner Memory",
+        "title": "PL Runner Ram",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1969,11 +1975,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 1610612736
                     }
                   ]
                 },
-                "unit": "bytes"
+                "unit": "bytes",
+                "min": 0,
+                "max": 2147483648
               },
               "overrides": []
             },
@@ -2030,7 +2038,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "rate(container_network_receive_bytes_total{name=\"pl-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"pl-gha-runner-local\"}[5m])",
+                      "expr": "sum by (name) (rate(container_network_receive_bytes_total{name=\"pl-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"pl-gha-runner-local\"}[5m]))",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -2048,7 +2056,7 @@
         "description": "",
         "id": 21,
         "links": [],
-        "title": "pl runner Network",
+        "title": "PL Runner Network",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -2067,11 +2075,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 8388608
                     }
                   ]
                 },
-                "unit": "Bps"
+                "unit": "Bps",
+                "min": 0,
+                "max": 10485760
               },
               "overrides": []
             },
@@ -2146,7 +2156,7 @@
         "description": "",
         "id": 22,
         "links": [],
-        "title": "kc runner CPU",
+        "title": "Kart Chaser Runner CPU",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -2169,7 +2179,8 @@
                     }
                   ]
                 },
-                "unit": "percent"
+                "unit": "percent",
+                "decimals": 2
               },
               "overrides": []
             },
@@ -2244,7 +2255,7 @@
         "description": "",
         "id": 23,
         "links": [],
-        "title": "kc runner Memory",
+        "title": "Kart Chaser Runner Ram",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -2263,11 +2274,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 1610612736
                     }
                   ]
                 },
-                "unit": "bytes"
+                "unit": "bytes",
+                "min": 0,
+                "max": 2147483648
               },
               "overrides": []
             },
@@ -2324,7 +2337,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "rate(container_network_receive_bytes_total{name=\"kc-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"kc-gha-runner-local\"}[5m])",
+                      "expr": "sum by (name) (rate(container_network_receive_bytes_total{name=\"kc-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"kc-gha-runner-local\"}[5m]))",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -2342,7 +2355,7 @@
         "description": "",
         "id": 24,
         "links": [],
-        "title": "kc runner Network",
+        "title": "Kart Chaser Runner Network",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -2361,11 +2374,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 8388608
                     }
                   ]
                 },
-                "unit": "Bps"
+                "unit": "Bps",
+                "min": 0,
+                "max": 10485760
               },
               "overrides": []
             },
@@ -2408,30 +2423,222 @@
     "spec": {
       "columnWidthMode": "narrow",
       "items": [
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-1" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-2" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-3" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-4" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-5" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-6" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-7" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-8" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-9" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-10" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-11" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-12" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-13" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-14" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-15" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-16" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-17" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-18" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-19" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-20" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-21" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-22" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-23" } } },
-        { "kind": "AutoGridLayoutItem", "spec": { "element": { "kind": "ElementReference", "name": "panel-24" } } }
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-1"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-2"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-3"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-4"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-5"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-6"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-7"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-8"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-9"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-10"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-11"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-12"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-13"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-14"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-15"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-16"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-17"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-18"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-19"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-20"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-21"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-22"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-23"
+            }
+          }
+        },
+        {
+          "kind": "AutoGridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-24"
+            }
+          }
+        }
       ],
       "maxColumnCount": 3,
       "rowHeightMode": "short"
