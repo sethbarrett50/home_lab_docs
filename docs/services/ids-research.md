@@ -15,16 +15,65 @@ goal of being useful to anyone trying to reproduce or understand the setup.
 | [FIRCE: A Framework for Intrusion Response and Conformal Evaluation](https://doi.org/10.48550/arxiv.2605.01962) (preprint) / [published version](https://doi.org/10.1109/smartnets69662.2026.11604738) | arXiv preprint, published at IEEE SmartNets 2026 | 2026 | Augments supervised IDS classifiers with **conformal evaluation-based uncertainty quantification and drift detection**. Four conformal evaluation strategies (Inductive, Cross, Approximate Transductive, and a novel Approximate Cross-Conformal Evaluator), plus an adaptive chunking mechanism that adjusts evaluation granularity to stream volatility. Evaluated on **"a custom IoT testbed of 10 commercial devices"** plus CICIDS2018 and UNSW-NB15. |
 | [FADES: Adaptive Drift Estimation via Conformal Signals for Streaming Intrusion Detection](https://doi.org/10.3390/electronics15102114) | *Electronics* (journal) | 2026 | Journal extension of FIRCE. Generalizes drift monitoring beyond prediction-space uncertainty to also support representation-space detectors (contrastive autoencoder / CADE) in a unified streaming architecture. Introduces Approx-CCE (statistical benefits of cross-conformal evaluation without repeated model training) and an Adaptive Chunking Controller. Evaluated across UNSW-NB15, CICIDS2018, **and a real-world IoT testbed**. |
 
-## Likely connection to this network
+## Connection to this network
 
-Both FIRCE and FADES describe evaluation against a real/custom IoT testbed
-— strongly likely to be this network's **VLAN 30** (192.168.30.0/24), which
+**Confirmed by owner:** FIRCE and FADES's "custom IoT testbed" evaluation
+data comes from this network's **VLAN 30** (192.168.30.0/24), which
 currently hosts ~10 commercial IoT devices (Ring doorbell, Nest cam,
 Google/Amazon smart speakers, Kasa smart plug, two robot vacuums, a baby
 monitor, plus a couple still-unidentified devices — see
-[devices/README.md](../devices/README.md)). **Needs confirmation from
-owner** — this doc should be corrected if the actual research testbed is
-separate hardware, not this home network.
+[devices/README.md](../devices/README.md)).
+
+## Data collection setup (CAPEX)
+
+Traffic capture and attack generation is done with
+[CAPEX](https://github.com/DFAIR-LAB-Augusta/CAPEX) (public repo, same
+author) — a config-driven framework that orchestrates `tcpdump` captures
+and real attack traffic against the devices listed in its
+`configs/devices.yaml`, per the attack definitions in
+`configs/attacks.yaml`. Full attack-type reference and setup instructions
+live in that repo's README/`docs/USAGE.md`, not duplicated here.
+
+```mermaid
+flowchart TD
+    subgraph vlan30["VLAN 30 — IoT (fully isolated, 192.168.30.0/24)"]
+        CAPEX["CAPEX host\n(attack + capture)"]
+        IOT["~10 commercial IoT devices\nRing / Nest / Kasa / vacuums / etc."]
+        CAPEX -->|"real attack traffic\nper attacks.yaml"| IOT
+        IOT -->|device traffic| CAPEX
+    end
+
+    CAPEX -->|tcpdump, whole capture window| PCAP[("data/raw/&lt;device&gt;_flow.pcap")]
+    CAPEX -->|"per-attack-invocation log"| LOG[("data/logs/&lt;device&gt;_CE.txt")]
+    PCAP -->|CICFlowMeter| FLOWS["Flow-based feature dataset"]
+    FLOWS --> CE["Conformal evaluation /\ndrift detection pipeline\n(FIRCE / FADES)"]
+```
+
+**Why CAPEX has to run inside VLAN 30, not elsewhere on this network:**
+VLAN 30 is fully isolated from Lab and Trusted (see
+[vlans.md](../networking/vlans.md)'s inter-VLAN policy — no traffic in
+either direction). A capture/attack host on any other VLAN couldn't reach
+the IoT devices at all, so CAPEX's host is itself another device sitting
+on VLAN 30 alongside the IoT hardware it targets.
+
+**Capture window shape** (per CAPEX's `docs/USAGE.md`): each run captures
+for a configurable duration (default 8h) per device, with a `SAFE_PERIOD`
+(default 15min) at both the start and end where no attacks run, so the
+dataset has clean baseline traffic bracketing the attack traffic:
+
+```mermaid
+flowchart LR
+    A["Safe period\n(baseline only)\ndefault 15min"] --> B["Attacks scheduled + spread\nacross the window"] --> C["Safe period\n(baseline only)\ndefault 15min"]
+```
+
+**Labeling:** each `attacks.yaml` entry carries a `label` field (e.g.
+`TCP_SYN_Flood`) that's written to the device's `_CE.txt` log alongside a
+timestamp for every attack invocation — that log, correlated against the
+PCAP by timestamp, is the ground-truth label source. Traffic inside a
+`SAFE_PERIOD` with no corresponding log entry is implicitly benign/baseline.
+
+`tcpdump` runs for the entire window regardless of phase; only attack
+scheduling respects the safe-period boundaries.
 
 ## Unrelated device found during network migration
 
@@ -45,10 +94,17 @@ done yet.
 
 ## TODO
 
-- [ ] Confirm with owner whether VLAN 30 is in fact the testbed referenced
-      in FIRCE/FADES, or if a different environment was used
-- [ ] If confirmed, document actual data collection setup (packet capture
-      method, attack simulation approach, labeling process)
+- [x] Confirm with owner whether VLAN 30 is in fact the testbed referenced
+      in FIRCE/FADES — confirmed yes
+- [x] Document actual data collection setup (CAPEX — packet capture,
+      attack simulation, labeling, see above)
+- [x] Diagrams for the research data flow (issue #15)
 - [ ] Locate and physically remove the unidentified ESP32 board, or apply
       switch-level port isolation if it can't be found
-- [ ] Diagrams for the research data flow (tracked separately, issue #15)
+- [ ] **CAPEX's `configs/devices.yaml` and the `arp_spoof` entries'
+      `gateway_ip` in `configs/attacks.yaml` still reference pre-migration
+      `192.168.1.x` addresses** — these predate the VLAN migration and
+      won't reach the real devices at their current `192.168.30.x`
+      addresses (or the real VLAN 30 gateway, `192.168.30.1`). CAPEX won't
+      actually work against this network's current IoT devices until
+      these configs are updated. Separate repo, not fixed here.
