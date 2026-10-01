@@ -90,6 +90,8 @@ degrades into a manual merge.
 
 - [ ] TLS once a real domain is chosen (`certbot --nginx` is the documented
       path in that repo's `docs/deploy.md`)
-- [ ] Monitoring: not yet instrumented with node-exporter/cAdvisor like the
-      Proxmox-hosted services (see [Monitoring](monitoring.md)) — `dell-mini`
-      isn't in the scrape config at all currently
+- [x] Monitoring: `dell-mini` now has a native node-exporter (no Docker, so
+      no cAdvisor), scraped directly by Prometheus and on the Grafana
+      Infrastructure Overview dashboard — see [Monitoring](monitoring.md).
+      Uptime Kuma HTTP check still open, tracked in
+      [#42](https://github.com/sethbarrett50/home_lab_docs/issues/42)
