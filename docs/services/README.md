@@ -56,8 +56,6 @@ graph TD
 
     IDS["IDS Research (FIRCE/FADES)\nlikely uses VLAN 30 as testbed"]
     IDS -.-> PVE
-
-    ROSC["research-output-scraper\ndell-mini, nginx + systemd\n(not Proxmox)"]
 ```
 
 ## Service Status
