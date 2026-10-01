@@ -35,7 +35,8 @@ graph TD
         GHA["gha-general-01 (VM 101)\n.189 DHCP-pinned"]
         MON["monitor-01 (VM 102)\n.158 DHCP\nGrafana :3000 / Prometheus :3001"]
         DELLMINI["dell-mini\n.117 DHCP-pinned"]
-        DEBIAN["Acer / HP\nswitch-migrated, OS networking pending"]
+        ACERLAP["acer-lap\n.199 DHCP-pinned"]
+        DEBIAN["HP\nswitch-migrated, OS networking pending"]
     end
 
     subgraph "VLAN 20 — Trusted (192.168.20.0/24)"
@@ -55,6 +56,7 @@ graph TD
     Patch --> PVE
     Switch --> PVE
     Switch --> DELLMINI
+    Switch --> ACERLAP
     Switch --> DEBIAN
     PVE -.-> NAS
     PVE -.-> GHA
@@ -87,6 +89,7 @@ network design itself.
 | Proxmox host | 192.168.10.10 | Static (in-guest, `/etc/network/interfaces`) |
 | gha-general-01 | 192.168.10.189 | DHCP host reservation |
 | dell-mini | 192.168.10.117 | DHCP host reservation |
+| acer-lap | 192.168.10.199 | DHCP host reservation |
 | Old TP-Link (IoT AP) | 192.168.30.2 | Static (in-guest) |
 | 10 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
 
