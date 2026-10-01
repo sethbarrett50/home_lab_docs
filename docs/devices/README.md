@@ -5,7 +5,7 @@ Full inventory of all devices in the homelab ecosystem.
 ## Infrastructure (Rack)
 
 Superseded the original PhD-lab RPi-based plan — actual hardware post-move is
-Proxmox host + LXC/VM services + 3 debian boxes not yet networked.
+Proxmox host + LXC/VM services + 3 debian boxes (1 of 3 networked so far).
 
 | Hostname | Device | OS/Firmware | VLAN | IP | Notes |
 |---|---|---|---|---|---|
@@ -16,7 +16,9 @@ Proxmox host + LXC/VM services + 3 debian boxes not yet networked.
 | `gha-general-01` (VM 101) | — | Debian Trixie | 10 | 192.168.10.189 | DHCP host reservation (pinned to MAC). Runs 3x GHA runner containers (`dfair`/`pl`/`kc`), Buildkit, Grafana Alloy, cAdvisor `:8080`, node-exporter. SSH open from lan/trusted |
 | `monitor-01` (VM 102) | — | — | 10 | 192.168.10.158 | Grafana `:3000` (dashboards lost, rebuild tracked in [issues #3-8](https://github.com/sethbarrett50/home_lab_docs/issues)), Prometheus `:9090` (not `:3001` — that's Uptime Kuma), Loki `:3100`, Alloy `:12345`, cAdvisor `:8080`, node-exporter. DHCP (not pinned). SSH open from lan/trusted |
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
-| Dell Micro / Acer / HP laptop | — | Debian, base install only | 10 (switch ports 3-5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured on any of the three |
+| `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). SSH open from lan/trusted |
+| Acer Aspire (laptop) | — | Debian, base install only | 10 (switch port 4) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
+| HP laptop | — | Debian, base install only | 10 (switch port 5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
 
 ## Personal Devices (Mobile / Off-rack)
 
@@ -68,6 +70,7 @@ outside it:
 | proxmox (192.168.10.10) | 8006, 22 | lan, trusted |
 | monitor-01 (192.168.10.158) | 3000, 3001, 22 | lan, trusted |
 | gha-general-01 (192.168.10.189) | 22 | lan, trusted |
+| dell-mini (192.168.10.117) | 22 | lan, trusted |
 
 ## Device Naming Convention
 
