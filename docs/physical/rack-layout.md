@@ -1,64 +1,84 @@
 # Rack Layout
 
-**Rack:** Eastrexon 15U Open Frame — 19.7"L × 18.8"W × 32.3"H, wall-mountable with swivel casters.
+**Rack:** Eastrexon 15U Open Frame — 19.7"L × 18.8"W × 32.3"H, wall-mountable
+with swivel casters. Open-frame means front and back rails are populated
+independently except where a full-depth shelf spans both — this is why the
+layout below is two columns instead of one.
 
-## Unit Assignment (Planned)
+## Current Layout (confirmed post-move)
+
+**Below the rack-mount holes:** the CyberPower UPS sits on the rack's own
+base tray, above the caster/wheel space — not floor-standing, not
+rack-mounted either.
+
+Bottom to top, by bolt-hole count:
 
 ```text
-┌─────────────────────────────────────┐
-│  U1  │ VEVOR 8-Outlet PDU           │
-│  U2  │ Cable Matters 12-Port Patch  │
-│  U3  │ GL.iNet Flint 2 Router       │
-│  U4  │ TP-Link TL-SG108E Switch     │
-│  U5  │ [reserved / IoT AP]          │
-│  U6  │ ─── 1U gap / airflow ───     │
-│  U7  │  
-│  U9  │   └─ 3× Raspberry Pi 3B      │
-│ U10  │   └─ Old TP-Link AP (IoT)    │
-│ U11  │ Tecmojo 1U Vented Shelf      │
-│ U12  │  └─ Dell Precision 3620      │
-│ U13  │  └─ Dell Precision 3620      │
-│ U14  │ [reserved]                   │
-│ U15  │ CyberPower UPS (floor/base)  │
-└─────────────────────────────────────┘
+                  Dell Precision 3620 (Proxmox)
+                  full-depth shelf, 15 holes — shared front+back
+        ────────────────────────────────────────────────────────
+BACK RAIL                                  FRONT RAIL
+Acer Aspire                                HP laptop
+half-depth shelf, 3 holes                  half-depth shelf, 3 holes
+(overlaps the front shelf's height         (overlaps the back shelf's
+ by 2 holes)                                height by 2 holes)
+5 empty holes                              10 empty holes
+dell-mini + switch (TL-SG108E)             GL.iNet Flint 2 router
+short shelf, 3 holes                       short shelf, 3 holes
+8 empty holes                              (nothing else on front)
+PDU (VEVOR, plugs facing inside)
+Patch panel (Cable Matters 12-port), directly above the PDU
 ```
 
-> Note: The Dell 3620 is a tower/SFF unit and will sit on the shelf or be shelf-mounted. Adjust U positions once physical fitment is confirmed.
+**On top of the rack frame (not rack-mounted), front side:** Lenovo
+ThinkPad Mini Dock 3 + Lenovo ThinkPad T420 + a TP-Link router — this
+TP-Link is the same unit documented as `iot-ap` in
+[devices/README.md](../devices/README.md) (VLAN 30 dumb AP), not a
+separate device.
+
+**Not in the rack at all** (desk equipment, out of scope for this doc): the
+3× Raspberry Pi 3B, and the mobile/personal devices and other laptops not
+listed above.
 
 ## Rack Diagram
 
 ```mermaid
-block-beta
-  columns 1
-  PDU["U1 — PDU (VEVOR 8-outlet)"]
-  Patch["U2 — Patch Panel (12-port Cat6)"]
-  Router["U3 — GL.iNet Flint 2 (Router)"]
-  Switch["U4 — TP-Link TL-SG108E (Switch)"]
-  IoTAP["U5 — IoT AP (TP-Link / OpenWrt)"]
-  Gap["U6 — Airflow gap"]
-  Dell["U7–U8 — Dell Precision 3620 (Proxmox)"]
-  Shelf["U9–U11 — Tecmojo Shelf: RPi × 3, misc"]
-  Reserved["U12–U14 — Reserved"]
-  UPS["U15 / Floor — CyberPower UPS 1500VA"]
+flowchart BT
+    subgraph Shared["Full-depth shelf — 15 holes"]
+        PVE["Dell Precision 3620\n(Proxmox)"]
+    end
+
+    subgraph Back["Back Rail"]
+        direction BT
+        PVE --> ACER["Acer Aspire\nhalf-depth shelf, 3 holes\n(~2-hole overlap with front shelf)"]
+        ACER --> BE1["5 empty holes"]
+        BE1 --> DM["dell-mini + TL-SG108E switch\nshort shelf, 3 holes"]
+        DM --> BE2["8 empty holes"]
+        BE2 --> PDU["PDU\nplugs facing inside"]
+        PDU --> PATCH["Patch panel\n12-port Cat6"]
+    end
+
+    subgraph Front["Front Rail"]
+        direction BT
+        PVE --> HP["HP laptop\nhalf-depth shelf, 3 holes\n(~2-hole overlap with back shelf)"]
+        HP --> FE1["10 empty holes"]
+        FE1 --> GL["GL.iNet Flint 2 router\nshort shelf, 3 holes"]
+    end
 ```
 
-## Cable Plan (Patch Panel → Switch)
+## Cable Plan
 
-| Patch Port | → Switch Port | Device |
-|---|---|---|
-| P1 | SW1 | Dell Proxmox (primary) |
-| P2 | SW2 | RPi 1 |
-| P3 | SW3 | RPi 2 |
-| P4 | SW4 | RPi 3 |
-| P5 | SW5 | Router uplink (2.5G) |
-| P6 | SW6 | IoT AP uplink |
-| P7–P12 | SW7–SW8 | Reserved / future |
-
-> Router connects to switch via one of its 2.5G ports. The second 2.5G port on the router connects to the wall network jack.
+Not yet re-documented post-move — the previous patch-panel-to-switch port
+table was written for the original RPi-based plan and no longer reflects
+reality (RPis aren't in the rack, dell-mini/acer-lap are new). Needs a pass
+confirming actual patch panel ↔ switch port assignments.
 
 ## Notes
 
-- The Eastrexon is an **open-frame** rack — no side panels. Keep in mind dust and cable management.
-- Swivel casters make repositioning easy but ensure they're locked when the rack is in final position.
-- The UPS is a **mini tower** form factor; it can sit on the floor beneath the rack or on the bottom shelf area if depth allows.
-- When moving home, verify wall-mount anchor points can support the loaded rack weight.
+- The Eastrexon is an **open-frame** rack — no side panels, and since front
+  and back rails are independent, front/back device counts don't need to
+  match (confirmed here: back rail is fuller than front).
+- Swivel casters make repositioning easy but ensure they're locked when the
+  rack is in its final position.
+- The UPS's base-tray placement keeps it clear of the casters without
+  taking up rack-mount holes.
