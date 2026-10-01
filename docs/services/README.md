@@ -1,6 +1,8 @@
 # Services
 
-All services run on or through the **Dell Precision 3620 Proxmox node** unless noted.
+All services run on or through the **Dell Precision 3620 Proxmox node**
+unless noted — `research-output-scraper` is the one exception, running
+directly on `dell-mini` instead.
 
 ## Contents
 
@@ -9,6 +11,9 @@ All services run on or through the **Dell Precision 3620 Proxmox node** unless n
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
   likely uses this network's IoT VLAN as its real-world testbed
+- [research-output-scraper](research-output-scraper.md) — CS researcher
+  publication leaderboard, the one service that runs on `dell-mini`
+  instead of Proxmox
 
 ## Services Overview
 
@@ -59,6 +64,7 @@ graph TD
 |---|---|---|---|
 | GitHub Actions runners (dfair/pl/kc) | 3x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
+| [research-output-scraper](research-output-scraper.md) | nginx + systemd, on `dell-mini` (not Proxmox) | ✅ Running | Medium |
 | qBittorrent | LXC/Docker | 🔲 Planned | Medium |
 | NAS software | LXC/VM | 🔲 Planned (HDDs pending) | Medium |
 | Firewall VM | VM | 🔲 Planned | Low |
