@@ -86,12 +86,31 @@ the *installed* copy in `/etc/nginx/sites-available/` instead, or a local
 commit piles up that can never be pushed and every future `git pull`
 degrades into a manual merge.
 
+## Monitoring
+
+Beyond host-level metrics (node-exporter, see below), three Uptime Kuma
+monitors cover this service specifically — a plain "is the device up" check
+isn't enough here, since nginx can be healthy while uvicorn or the nightly
+sync are silently broken behind it:
+
+| Monitor | Type | Target | Catches |
+|---|---|---|---|
+| Site | HTTP(s), expect `200` | `http://192.168.10.117/` | nginx itself down |
+| API | JSON Query: `$count($) > 0` == `true` | `http://192.168.10.117/api/universities` | uvicorn dead, or serving a broken/empty DB, behind a healthy nginx |
+| Sync cron | Push, 1500min (25h) heartbeat | n/a (cron pushes to Kuma) | the nightly `rosc sync` silently failing or not running at all |
+
+The cron job's crontab entry (`sudo -u rosc crontab -e` on dell-mini) reports
+its own success/failure to the Push monitor's URL via `&&`/`||`:
+
+```text
+... rosc sync >> data/rosc-sync.log 2>&1 && curl .../push/<token>?status=up&msg=OK&ping= > /dev/null || curl .../push/<token>?status=down&msg=sync+failed&ping= > /dev/null
+```
+
+Host-level CPU/Mem/Disk: `dell-mini` has a native node-exporter (no Docker,
+so no cAdvisor), scraped directly by Prometheus and on the Grafana
+Infrastructure Overview dashboard — see [Monitoring](monitoring.md).
+
 ## TODO
 
 - [ ] TLS once a real domain is chosen (`certbot --nginx` is the documented
       path in that repo's `docs/deploy.md`)
-- [x] Monitoring: `dell-mini` now has a native node-exporter (no Docker, so
-      no cAdvisor), scraped directly by Prometheus and on the Grafana
-      Infrastructure Overview dashboard — see [Monitoring](monitoring.md).
-      Uptime Kuma HTTP check still open, tracked in
-      [#42](https://github.com/sethbarrett50/home_lab_docs/issues/42)

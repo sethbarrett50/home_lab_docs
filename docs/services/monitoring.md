@@ -56,7 +56,7 @@ graph TD
 |---|---|---|---|
 | `grafana` | monitor-01 | 3000 | Visualization — **dashboards lost, container itself healthy** |
 | `prometheus` | monitor-01 | 9090 | Metrics store. **Not** 3001 — that's Kuma (see below, was documented wrong) |
-| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks |
+| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks — currently 3 monitors covering research-output-scraper (HTTP, API JSON Query, cron Push), see [research-output-scraper.md](research-output-scraper.md#monitoring) |
 | `loki` | monitor-01 | 3100 | Log aggregation |
 | `alloy` | monitor-01 + gha-general-01 | 12345 | Unified telemetry collector — ships node-exporter/cAdvisor data to Prometheus/Loki |
 | `cadvisor` | monitor-01 + gha-general-01 | 8080 | Per-container CPU/mem/network metrics |
