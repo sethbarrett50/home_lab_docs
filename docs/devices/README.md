@@ -5,7 +5,7 @@ Full inventory of all devices in the homelab ecosystem.
 ## Infrastructure (Rack)
 
 Superseded the original PhD-lab RPi-based plan — actual hardware post-move is
-Proxmox host + LXC/VM services + 3 debian boxes not yet networked.
+Proxmox host + LXC/VM services + 3 debian boxes (2 of 3 networked so far).
 
 | Hostname | Device | OS/Firmware | VLAN | IP | Notes |
 |---|---|---|---|---|---|
@@ -16,7 +16,9 @@ Proxmox host + LXC/VM services + 3 debian boxes not yet networked.
 | `gha-general-01` (VM 101) | — | Debian Trixie | 10 | 192.168.10.189 | DHCP host reservation (pinned to MAC). Runs 3x GHA runner containers (`dfair`/`pl`/`kc`), Buildkit, Grafana Alloy, cAdvisor `:8080`, node-exporter. SSH open from lan/trusted |
 | `monitor-01` (VM 102) | — | — | 10 | 192.168.10.158 | Grafana `:3000` (dashboards lost, rebuild tracked in [issues #3-8](https://github.com/sethbarrett50/home_lab_docs/issues)), Prometheus `:9090` (not `:3001` — that's Uptime Kuma), Loki `:3100`, Alloy `:12345`, cAdvisor `:8080`, node-exporter. DHCP (not pinned). SSH open from lan/trusted |
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
-| Dell Micro / Acer / HP laptop | — | Debian, base install only | 10 (switch ports 3-5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured on any of the three |
+| `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). Runs `research-output-scraper` (nginx + systemd, see that repo's `docs/deploy.md`). SSH (22) and HTTP (80) open from lan/trusted |
+| `acer-lap` | Acer Aspire (laptop) | Debian 13 (Trixie) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC). Networked via `systemd-networkd`. Run closed-lid (rack-mounted); `HandleLidSwitch`/`HandleLidSwitchExternalPower`/`HandleLidSwitchDocked` set to `ignore` in `/etc/systemd/logind.conf` to prevent suspend-on-close — applies to any laptop run this way, see HP below. SSH open from lan/trusted |
+| HP laptop | — | Debian, base install only | 10 (switch port 5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
 
 ## Personal Devices (Mobile / Off-rack)
 
@@ -52,7 +54,7 @@ app-based confirmation is the more reliable method going forward.
 | `iot-unknown-2` | 72:28:BA:5F:4E:6C | 192.168.30.229 | Unidentified — locally-administered/randomized MAC, vendor lookup impossible. Currently offline |
 | `iot-unknown-4` | CA:70:A3:B6:C7:FB | 192.168.30.237 | Unidentified — locally-administered/randomized MAC. Present in the original TP-Link lease dump from before this migration too — has been on the network unidentified for a long time. Currently offline |
 | `unknown-100` (no reservation yet) | 82:A4:F5:01:66:AA | 192.168.30.100 | Unresolved loose thread — appeared right when the Echo Dot was replugged during that test, but turned out not to be it. No hostname, doesn't respond to ping. Needs its own unplug test |
-| **BLOCKED**: was `ESP_512EA9` | 70:03:9F:51:2E:A9 | 192.168.30.214 | Not on the owner's device list — unrecognized ESP32/8266 dev board. Firewall-blocked (MAC-based DROP, both input and forward-to-wan) rather than just isolated — confirmed actively dropping traffic via `nft` counters (35 packets/7560 bytes at time of blocking) |
+| **BLOCKED**: was `ESP_512EA9` | 70:03:9F:51:2E:A9 | 192.168.30.214 | Confirmed by owner: **not** research equipment (checked against the FIRCE/FADES IDS testbed, see [ids-research.md](../services/ids-research.md)), genuinely unknown origin, owner wants it removed entirely. Currently firewall-blocked (MAC-based DROP, both input and forward-to-wan; confirmed actively dropping traffic via `nft` counters) — **but this is router-level only**. It shares the VLAN 30 switch segment with other IoT devices and could still reach them directly over L2 without the block ever applying. Needs physical removal or switch-level port isolation for true isolation — neither done yet |
 
 **Not yet connected** (known from the owner's device list / companion apps, no current lease):
 Google Nest Mini (MAC known: `20:1F:3B:78:FA:4A`, from Google Home app), Philips Hue Hub (unplugged all session), NiteBird smart bulb (physically plugged in but produced no new lease — likely needs first-time app pairing before it'll join this network's WiFi).
@@ -68,6 +70,8 @@ outside it:
 | proxmox (192.168.10.10) | 8006, 22 | lan, trusted |
 | monitor-01 (192.168.10.158) | 3000, 3001, 22 | lan, trusted |
 | gha-general-01 (192.168.10.189) | 22 | lan, trusted |
+| dell-mini (192.168.10.117) | 22, 80 | lan, trusted |
+| acer-lap (192.168.10.199) | 22 | lan, trusted |
 
 ## Device Naming Convention
 
