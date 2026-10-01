@@ -18,7 +18,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | Direct (no VPN) |
 | Inter-VLAN | → Trusted: blocked. → IoT: blocked. |
 
-**Devices:** Proxmox node, Raspberry Pis, dell-mini, HP laptop (Debian/XFCE), Acer Aspire (when present)
+**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap, HP laptop (Debian/XFCE, when present)
 
 ---
 
@@ -163,11 +163,15 @@ Rolling out incrementally to isolate failures to one layer at a time:
       follow-up task, not started.
 - [ ] **Phase 3d** — OS-level networking for the 3 idle debian boxes (Dell
       Micro/Acer/HP), tracked in [issue #19](https://github.com/sethbarrett50/home_lab_docs/issues/19).
-      `dell-mini` done: `systemd-networkd` (chosen for a config method that
-      works the same whether a box is headless or running a desktop env like
-      HP's XFCE, instead of per-box ifupdown/NetworkManager), DHCP host
-      reservation pinned to `192.168.10.117`, `lan`/`trusted` → `:22` firewall
-      rules added. Acer and HP not yet started.
+      `dell-mini` and `acer-lap` done: `systemd-networkd` (chosen for a config
+      method that works the same whether a box is headless or running a
+      desktop env like HP's XFCE, instead of per-box ifupdown/NetworkManager),
+      DHCP host reservations pinned to `192.168.10.117`/`.199`, `lan`/`trusted`
+      → `:22` firewall rules added. `acer-lap` is run closed-lid (rack-mounted
+      laptop) — needed `HandleLidSwitch=ignore` (+ `ExternalPower`/`Docked`
+      variants) in `/etc/systemd/logind.conf` to stop it suspending on lid
+      close; HP will need the same since it's also a laptop. HP not yet
+      started.
 
 ## TODO / Implementation Notes
 

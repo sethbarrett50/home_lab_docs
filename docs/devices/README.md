@@ -5,7 +5,7 @@ Full inventory of all devices in the homelab ecosystem.
 ## Infrastructure (Rack)
 
 Superseded the original PhD-lab RPi-based plan — actual hardware post-move is
-Proxmox host + LXC/VM services + 3 debian boxes (1 of 3 networked so far).
+Proxmox host + LXC/VM services + 3 debian boxes (2 of 3 networked so far).
 
 | Hostname | Device | OS/Firmware | VLAN | IP | Notes |
 |---|---|---|---|---|---|
@@ -17,7 +17,7 @@ Proxmox host + LXC/VM services + 3 debian boxes (1 of 3 networked so far).
 | `monitor-01` (VM 102) | — | — | 10 | 192.168.10.158 | Grafana `:3000` (dashboards lost, rebuild tracked in [issues #3-8](https://github.com/sethbarrett50/home_lab_docs/issues)), Prometheus `:9090` (not `:3001` — that's Uptime Kuma), Loki `:3100`, Alloy `:12345`, cAdvisor `:8080`, node-exporter. DHCP (not pinned). SSH open from lan/trusted |
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). Runs `research-output-scraper` (nginx + systemd, see that repo's `docs/deploy.md`). SSH (22) and HTTP (80) open from lan/trusted |
-| Acer Aspire (laptop) | — | Debian, base install only | 10 (switch port 4) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
+| `acer-lap` | Acer Aspire (laptop) | Debian 13 (Trixie) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC). Networked via `systemd-networkd`. Run closed-lid (rack-mounted); `HandleLidSwitch`/`HandleLidSwitchExternalPower`/`HandleLidSwitchDocked` set to `ignore` in `/etc/systemd/logind.conf` to prevent suspend-on-close — applies to any laptop run this way, see HP below. SSH open from lan/trusted |
 | HP laptop | — | Debian, base install only | 10 (switch port 5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
 
 ## Personal Devices (Mobile / Off-rack)
@@ -71,6 +71,7 @@ outside it:
 | monitor-01 (192.168.10.158) | 3000, 3001, 22 | lan, trusted |
 | gha-general-01 (192.168.10.189) | 22 | lan, trusted |
 | dell-mini (192.168.10.117) | 22, 80 | lan, trusted |
+| acer-lap (192.168.10.199) | 22 | lan, trusted |
 
 ## Device Naming Convention
 
