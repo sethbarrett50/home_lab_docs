@@ -5,3 +5,7 @@
 # OpenAlex's own landing pages also block bot/CI requests with 403 -
 # link to DOIs instead, this is just defensive in case that changes back.
 ^https://openalex\.org/
+
+# Private repo (lint.yml's lychee-action has no GITHUB_TOKEN, so it checks
+# unauthenticated and sees a 404 same as a nonexistent repo).
+^https://github\.com/sethbarrett50/research-output-scraper$

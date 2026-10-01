@@ -48,6 +48,7 @@ nav:
       - NAS: services/nas.md
       - Monitoring: services/monitoring.md
       - IDS Research: services/ids-research.md
+      - research-output-scraper: services/research-output-scraper.md
   - Devices: devices/README.md
 
 docs_dir: docs
