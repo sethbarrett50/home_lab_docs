@@ -64,8 +64,8 @@ From `pvesm status` (2026-10-08):
 |---|---|---|---|---|
 | `local` | dir | ~94 GiB | ~5% | ISOs, templates, backups (on the NVMe root LV) |
 | `local-lvm` | LVM-thin | ~349 GiB | ~25% | VM/LXC disks (NVMe) |
-| `hdd-1tb` | dir | ~916 GiB | ~45% | Bulk storage on one of the 1 TB HDDs |
-| `hdd-tmp-1tb` | dir | ~94 GiB | ~5% | **Suspect** — size and usage exactly match `local`, which suggests this directory sits on the NVMe root filesystem rather than on the second HDD (i.e. that disk isn't mounted where the storage points). Unverified — check `/etc/pve/storage.cfg` against `findmnt` |
+| `hdd-1tb` | dir | ~916 GiB | ~45% | Bulk storage on `sda1` (`/mnt/pve/hdd-1tb`, `is_mountpoint 1`) |
+| `hdd-tmp-1tb` | dir | (root fs) | — | **Not actually on an HDD.** `sdb1` (ext4, label `hdd-tmp-1tb`) is formatted but not mounted, and this storage lacks `is_mountpoint 1`, so `/mnt/pve/hdd-tmp-1tb` is a plain directory on the NVMe root fs — anything written here eats the ~94 GiB root. Left as-is for now (deferred with the NAS work); avoid using this storage until it's fixed |
 
 No NAS-backed (NFS/CIFS) storage yet — see [nas.md](nas.md).
 
@@ -74,5 +74,5 @@ No NAS-backed (NFS/CIFS) storage yet — see [nas.md](nas.md).
 - [x] Document actual CPU/RAM specs of the 3620
 - [ ] Configure Proxmox backup schedule (PBS or external)
 - [ ] Add NAS storage as Proxmox datastore once HDDs arrive
-- [ ] Verify `hdd-tmp-1tb` is actually on the second HDD (see Storage Layout)
+- [ ] Attach `sdb1` at `/mnt/pve/hdd-tmp-1tb` (fstab by UUID, `nofail`) and set `is_mountpoint 1`, or remove the storage — deferred with the NAS work
 - [ ] Set up Proxmox notifications (email or webhook)
