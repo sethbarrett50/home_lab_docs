@@ -18,7 +18,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | Direct (no VPN) |
 | Inter-VLAN | → Trusted: blocked. → IoT: blocked. |
 
-**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap, HP laptop (Debian/XFCE, when present)
+**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap, hp-lap (Debian/XFCE)
 
 ---
 
@@ -176,8 +176,14 @@ Rolling out incrementally to isolate failures to one layer at a time:
       `HandleHibernateKey`, `IdleAction` all `ignore`), masked sleep/suspend/
       hibernate targets, and default target set to `multi-user.target`;
       verified with `systemd-analyze cat-config` and a refused
-      `systemctl suspend`. HP will need the same since it's also a laptop —
-      verify it on the box rather than trusting the doc. HP not yet started.
+      `systemctl suspend`; survives a reboot. `hp-lap` done 2026-10-08: was
+      on the IoT AP's WiFi (VLAN 30) — moved to wired `enp0s25` via
+      `systemd-networkd` (`.network` file matched on MAC), NetworkManager
+      disabled, WiFi rfkill-blocked, DHCP host reservation pinned to
+      `192.168.10.147`, `Allow-LAN-to-HP-Lap`/`Allow-Trusted-to-HP-Lap` `:22`
+      rules added, same logind drop-in + masked sleep targets as acer-lap.
+      Hostname renamed `poolTab` → `hp-lap`. Still on Debian 12 (bookworm);
+      upgrade to 13 to match the other boxes is a follow-up.
 
 ## TODO / Implementation Notes
 

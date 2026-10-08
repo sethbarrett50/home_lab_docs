@@ -56,7 +56,7 @@ The CP1500PFCLCD splits its 12 outlets into a **battery+surge** bank and a
 | GL.iNet Flint 2 | ~15W | PDU | |
 | `dell-mini` (OptiPlex 3050 Micro) | ~20W | PDU | Rough estimate, not measured |
 | `acer-lap` | ~30W | PDU | Rough estimate, not measured |
-| HP laptop | ~30W | PDU | Rough estimate, not measured, not yet networked |
+| `hp-lap` | ~30W | PDU | Rough estimate, not measured |
 | IoT AP (TP-Link) | ~5W | PDU | |
 | Patch panel | 0W | — | Passive |
 | Lenovo T420 + Mini Dock 3 | ~30W | UPS surge-only (direct) | Rough estimate; not battery-backed, drops immediately on outage |

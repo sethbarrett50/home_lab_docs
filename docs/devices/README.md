@@ -18,7 +18,7 @@ Proxmox host + LXC/VM services + 3 debian boxes (2 of 3 networked so far).
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). Runs `research-output-scraper` (nginx + systemd, see that repo's `docs/deploy.md`). SSH (22) and HTTP (80) open from lan/trusted |
 | `acer-lap` | Acer Aspire 5 A515-54 (laptop) — i5-10210U, 8 GB, 512 GB NVMe, see [specs](#acer-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC `b4:a9:fc:2b:d2:6d`, `enp1s0`). Networked via `systemd-networkd`. Run closed-lid with the built-in panel disconnected; suspend-on-close prevented via drop-in `/etc/systemd/logind.conf.d/10-headless.conf` (`HandleLidSwitch*`/`HandleSuspendKey`/`HandleHibernateKey`/`IdleAction` = `ignore`) plus masked `sleep`/`suspend`/`hibernate`/`hybrid-sleep`/`suspend-then-hibernate` targets — applies to any laptop run this way, see HP below. Planned role: edge-device test host for custom IDS (dissertation direction four). SSH open from lan/trusted |
-| HP laptop | — | Debian, base install only | 10 (switch port 5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
+| `hp-lap` | HP EliteBook 840 G2 (laptop) — i5-5300U, 16 GB, 240 GB SATA SSD, see [specs](#hp-lap-hardware) | Debian 12.13 (bookworm), XFCE installed (`graphical.target`) | 10 (switch port 5) | 192.168.10.147 | DHCP host reservation (pinned to MAC `70:5a:0f:ce:1a:ae`, `enp0s25`). Networked via `systemd-networkd` (`/etc/systemd/network/10-wired.network`, matched on MAC); was previously on the IoT AP's WiFi (VLAN 30) — NetworkManager disabled and WiFi (`wlo1`) rfkill-blocked. Hostname renamed from `poolTab`; login user is `pooltab`. Same closed-lid setup as acer-lap (`/etc/systemd/logind.conf.d/10-headless.conf` + masked sleep targets). Docker installed (`docker0` present). Full-disk encryption — needs a passphrase at boot, so it won't come back unattended after a reboot or power loss until remote unlock is set up (root is LUKS2 on `sda5` → LVM; TPM is 1.2, so Clevis/TPM2 is out — `dropbear-initramfs` on `:2222` planned, not yet done). SSH open from lan/trusted |
 
 ### acer-lap hardware
 
@@ -36,6 +36,22 @@ Collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `lspci` and sysfs.
 | Battery | AP18C4K, ~71% of design capacity (2,976,000 / 4,200,000 µAh); kernel reports `cycle_count` 0 (not tracked) |
 | Display | Built-in panel physically disconnected; runs headless |
 | Kernel | 6.12.111+deb13-amd64 |
+
+### hp-lap hardware
+
+Collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `lspci` and sysfs.
+
+| Component | Detail |
+|---|---|
+| Model | HP EliteBook 840 G2 (Hewlett-Packard) |
+| BIOS | M71 Ver. 01.13 (2016-01-18) |
+| CPU | Intel Core i5-5300U (Broadwell) — 2C/4T, 2.3–2.9 GHz, 3 MiB L3, VT-x |
+| RAM | 16 GB DDR3-1600 — 2× 8 GB SO-DIMM (both slots full, dual-channel). 975 MiB swap |
+| Storage | SanDisk SDSSDA240G 240 GB SATA SSD |
+| Wired NIC | `enp0s25` — Intel I218-LM [8086:15a2] rev 03, `e1000e` driver, 1 GbE, MAC `70:5a:0f:ce:1a:ae` |
+| Wireless | `wlo1` — Intel Wireless 7265 [8086:095a], `iwlwifi` driver, MAC `64:80:99:e3:e5:54` (rfkill-blocked, unused) |
+| Battery | "Primary", reports 100% of design (4,290,000 / 4,290,000 µAh) — likely a replacement pack or unreliable firmware reporting |
+| Kernel | 6.1.0-44-amd64 |
 
 ## Personal Devices (Mobile / Off-rack)
 
@@ -89,6 +105,7 @@ outside it:
 | gha-general-01 (192.168.10.189) | 22 | lan, trusted |
 | dell-mini (192.168.10.117) | 22, 80 | lan, trusted |
 | acer-lap (192.168.10.199) | 22 | lan, trusted |
+| hp-lap (192.168.10.147) | 22 | lan, trusted |
 
 ## Device Naming Convention
 
