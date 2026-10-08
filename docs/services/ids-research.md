@@ -18,11 +18,14 @@ goal of being useful to anyone trying to reproduce or understand the setup.
 ## Connection to this network
 
 **Confirmed by owner:** FIRCE and FADES's "custom IoT testbed" evaluation
-data comes from this network's **VLAN 30** (192.168.30.0/24), which
-currently hosts ~10 commercial IoT devices (Ring doorbell, Nest cam,
-Google/Amazon smart speakers, Kasa smart plug, two robot vacuums, a baby
-monitor, plus a couple still-unidentified devices — see
-[devices/README.md](../devices/README.md)).
+data comes from this network's **VLAN 30** (192.168.30.0/24). As of
+2026-10-08 it has 12 reserved devices, all identified: Ring doorbell, Nest
+cam, Google Nest Mini, Amazon Echo Dot, Kasa smart plug, two robot vacuums,
+a baby monitor, a Philips Hue hub, two NiteBird smart bulbs, and the
+Galaxy A71 setup/test phone — see [devices/README.md](../devices/README.md).
+The device mix has grown since the FIRCE/FADES captures (10 devices), so new
+captures aren't directly comparable without noting which devices were in
+scope.
 
 ## Data collection setup (CAPEX)
 
@@ -96,8 +99,8 @@ physical removal or switch-level port isolation does.
 - [x] Document actual data collection setup (CAPEX — packet capture,
       attack simulation, labeling, see above)
 - [x] Diagrams for the research data flow (issue #15)
-- [ ] Locate and physically remove the unidentified ESP32 board, or apply
-      switch-level port isolation if it can't be found
+- [x] ~~Locate and physically remove the unidentified ESP32 board~~ —
+      resolved 2026-10-08, it was a NiteBird smart bulb (see above)
 - [ ] **CAPEX's `configs/devices.yaml` and the `arp_spoof` entries'
       `gateway_ip` in `configs/attacks.yaml` still reference pre-migration
       `192.168.1.x` addresses** — these predate the VLAN migration and
