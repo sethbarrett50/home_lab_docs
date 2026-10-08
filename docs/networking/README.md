@@ -114,10 +114,10 @@ root@192.168.1.1`, then `http://localhost:8080`).
 | 7 | Untagged | Not Member | Not Member | Not Member | 1 | Empty |
 | 8 | Untagged | Not Member | Not Member | Not Member | 1 | Reserved / maintenance |
 
-> Port 6 was left as an untagged member of VLAN 1 after Phase 3 (ingress was
-> fine via PVID 30, but VLAN 1 broadcasts flooded out onto the IoT segment).
-> Removed 2026-10-08; IoT AP (`192.168.30.2`) and IoT clients verified
-> reachable afterwards.
+Port 6 was left as an untagged member of VLAN 1 after Phase 3 (ingress was
+fine via PVID 30, but VLAN 1 broadcasts flooded out onto the IoT segment).
+Removed 2026-10-08; IoT AP (`192.168.30.2`) and IoT clients verified
+reachable afterwards.
 
 > TL-SG108E gotcha: VLAN membership (tagged/untagged/not member) and PVID are
 > **two separate pages** (`VLAN > 802.1Q VLAN` and `VLAN > 802.1Q VLAN PVID
