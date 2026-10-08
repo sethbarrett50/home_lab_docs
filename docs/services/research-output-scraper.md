@@ -99,6 +99,12 @@ sync are silently broken behind it:
 | API | JSON Query: `$count($) > 0` == `true` | `http://192.168.10.117/api/universities` | uvicorn dead, or serving a broken/empty DB, behind a healthy nginx |
 | Sync cron | Push, 1500min (25h) heartbeat | n/a (cron pushes to Kuma) | the nightly `rosc sync` silently failing or not running at all |
 
+Site and API run on Kuma's defaults (60s interval, 0 retries, 60s retry
+interval), so a single failed check alerts — bump retries to 1-2 if
+transient blips get noisy. A Kuma notification channel is configured for all
+three monitors. Telegram was tried and doesn't work from this network — see
+[Upstream DNS](../networking/README.md#upstream-dns).
+
 The cron job's crontab entry (`sudo -u rosc crontab -e` on dell-mini) reports
 its own success/failure to the Push monitor's URL via `&&`/`||`:
 

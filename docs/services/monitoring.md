@@ -56,7 +56,7 @@ graph TD
 |---|---|---|---|
 | `grafana` | monitor-01 | 3000 | Visualization — **dashboards lost, container itself healthy** |
 | `prometheus` | monitor-01 | 9090 | Metrics store. **Not** 3001 — that's Kuma (see below, was documented wrong) |
-| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks — currently 3 monitors covering research-output-scraper (HTTP, API JSON Query, cron Push), see [research-output-scraper.md](research-output-scraper.md#monitoring) |
+| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks — currently 3 monitors covering research-output-scraper (HTTP, API JSON Query, cron Push), see [research-output-scraper.md](research-output-scraper.md#monitoring). DNS pinned to `192.168.10.1` via `dns:` in `/opt/monitoring/compose.yml` — the container's Docker-generated `resolv.conf` had ended up with no upstream nameserver, so any hostname-based monitor or notification failed with `ENOTFOUND` |
 | `loki` | monitor-01 | 3100 | Log aggregation |
 | `alloy` | monitor-01 + gha-general-01 | 12345 | Unified telemetry collector — ships node-exporter/cAdvisor data to Prometheus/Loki |
 | `cadvisor` | monitor-01 + gha-general-01 | 8080 | Per-container CPU/mem/network metrics |
@@ -140,6 +140,7 @@ dfair/pl/kc runners.
 | Disk full | >80% on any mount | Warning |
 | GHA runner container down | cAdvisor shows container not running | Warning |
 
-No Alertmanager or notification routing exists yet — Prometheus/Grafana are
-collection + visualization only right now, nothing pages/notifies on
-thresholds.
+No Alertmanager or notification routing exists yet for Prometheus/Grafana —
+they're collection + visualization only, nothing pages/notifies on these
+thresholds. Uptime Kuma *does* notify (its own notification channel, separate
+from this), but only for its up/down checks.

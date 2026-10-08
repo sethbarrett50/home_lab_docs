@@ -94,6 +94,24 @@ network design itself.
 | Old TP-Link (IoT AP) | 192.168.30.2 | Static (in-guest) |
 | 12 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
 
+## Upstream DNS
+
+The Flint 2 gets its WAN DNS servers by DHCP: `10.127.10.25` and
+`10.127.10.26` (search domain `mcghi.mcg.edu`), and dnsmasq forwards every
+VLAN's queries to them. Observed 2026-10-08:
+
+- These resolvers are **filtered** (Cisco Umbrella) — blocked domains resolve
+  to the `146.112.61.x` block-page range instead of failing (e.g.
+  `api.telegram.org`).
+- **Outbound DNS to public resolvers is blocked** — `nslookup` against
+  `1.1.1.1` / `9.9.9.9` from the router times out.
+
+So any service that needs a blocked domain won't work from the lab, and
+pointing dnsmasq at a public resolver isn't an option. Working around the
+filtering (DoH, tunneling) would mean bypassing the upstream network's own
+controls — check its acceptable-use policy first; the same question applies
+to the planned Mullvad setup for VLAN 20 (#12).
+
 ## Switch Port Assignment
 
 Read from the switch UI (`VLAN > 802.1Q VLAN` and `VLAN > 802.1Q VLAN PVID
