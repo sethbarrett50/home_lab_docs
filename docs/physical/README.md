@@ -22,10 +22,10 @@ Overview of rack hardware, device placement, and power infrastructure.
 
 | Device | Model | Role | Location |
 |---|---|---|---|
-| Proxmox node | Dell Precision 3620 | Hypervisor, GitHub Actions runner, monitoring | Rack, full-depth shelf (shared front+back) |
+| Proxmox node | Dell Precision 3620 (i7-6700K, 32 GB) | Hypervisor, GitHub Actions runner, monitoring — specs in [proxmox.md](../services/proxmox.md) | Rack, full-depth shelf (shared front+back) |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian, runs research-output-scraper — see [devices/README.md](../devices/README.md) | Rack, back short shelf (shares with switch) |
-| `acer-lap` | Acer Aspire (laptop) | Debian, networked — see [devices/README.md](../devices/README.md) | Rack, back half-depth shelf |
-| `hp-lap` | HP EliteBook 840 G2 (laptop) | Debian, networked — see [devices/README.md](../devices/README.md) | Rack, front half-depth shelf |
+| `acer-lap` | Acer Aspire 5 A515-54 (laptop) | Debian 13, headless — edge-device IDS test host (planned move to VLAN 30 when that work starts), see [devices/README.md](../devices/README.md) | Rack, back half-depth shelf |
+| `hp-lap` | HP EliteBook 840 G2 (laptop) | Debian 12, no assigned role yet — see [devices/README.md](../devices/README.md) | Rack, front half-depth shelf |
 
 ### Top of Rack (not rack-mounted)
 
@@ -59,5 +59,6 @@ slot:
 | Dell XPS 16 | Debian | Primary dev laptop, leaves lab |
 | MacBook M1 Pro Max | macOS | Primary portable, leaves lab |
 | Pixel 6 | GrapheneOS | Leaves lab |
+| Pixel 3 | GrapheneOS | |
 | iPhone 7 | iOS | Leaves lab |
-| Samsung (old) | Android | IoT VLAN testing, stays in lab |
+| Samsung Galaxy A71 5G | Android | IoT setup/test phone on VLAN 30, stays in lab |

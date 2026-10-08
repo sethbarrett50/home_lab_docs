@@ -68,10 +68,11 @@ flowchart BT
 
 ## Cable Plan
 
-Not yet re-documented post-move — the previous patch-panel-to-switch port
-table was written for the original RPi-based plan and no longer reflects
-reality (RPis aren't in the rack, dell-mini/acer-lap are new). Needs a pass
-confirming actual patch panel ↔ switch port assignments.
+The patch panel is mounted but **unused** (confirmed 2026-10-08) — every
+device patches directly into the TL-SG108E. Port-by-port assignments and
+VLAN membership live in the switch port table in
+[networking/README.md](../networking/README.md#switch-port-assignment).
+Revisit this section if runs are ever moved onto the patch panel.
 
 ## Notes
 

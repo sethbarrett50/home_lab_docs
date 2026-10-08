@@ -58,11 +58,21 @@ Collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `lspci` and sysfs.
 WiFi: SSID `dfair_lab` (both 2.4GHz/`radio0` and 5GHz/`radio1`), bound to
 VLAN 20 (Trusted), on the Flint 2 itself.
 
+Phones and Macs use per-network or per-connection randomized MACs
+(GrapheneOS re-randomizes on every connection by default), so these devices
+are tracked by name rather than MAC and get no DHCP reservations — expect
+many stale randomized-MAC neighbor entries on `br-lan.20`.
+
 | Device | VLAN | Notes |
 |---|---|---|
-| Phone (tested) | 20 | Confirmed working on `dfair_lab` |
-| MacBook Pro | 20 | Reconnected from the old IoT `OpenWrt` SSID to `dfair_lab` |
-| Everything else from the original PhD-lab device list (XPS16, Pixel 6, iPhone 7, Samsung) | — | Not yet reconnected post-move; re-add here as they come online |
+| MacBook Pro M1 | 20 | Reconnected from the old IoT `OpenWrt` SSID to `dfair_lab` |
+| Dell XPS 16 | 20 | Likely the Intel `80:c0:1e:35:9d:be` client — the only non-randomized MAC on VLAN 20 |
+| Pixel 6 (GrapheneOS) | 20 | Randomized MAC |
+| Pixel 3 (GrapheneOS) | 20 | Randomized MAC |
+| iPhone 7 | 20 | Private Wi-Fi address |
+
+The Samsung (Galaxy A71 5G) is the dedicated IoT setup/test phone and lives
+on VLAN 30 — see below.
 
 ## IoT Devices (VLAN 30)
 
@@ -71,7 +81,9 @@ to current MAC/IP so they don't drift. Bridged in via the old TP-Link AP
 (`iot-ap`, SSID `OpenWrt`) on switch port 6. Identified via a mix of MAC
 vendor lookup (`api.macvendors.com`) and ground-truth checks in each device's
 companion app — vendor lookup alone caused one mislabel (see note below), so
-app-based confirmation is the more reliable method going forward.
+app-based confirmation is the more reliable method going forward. For new
+devices, `logread -f -e dnsmasq-dhcp` on the router shows each DHCPACK
+(MAC + hostname) live as a device joins.
 
 | Name | MAC | IP | Notes |
 |---|---|---|---|
@@ -83,14 +95,18 @@ app-based confirmation is the more reliable method going forward.
 | Roborock-K2-Vacuum | B0:4A:39:55:B1:76 | 192.168.30.181 | Self-identified via DHCP hostname `roborock-vacuum-a34` |
 | OKP-K2-Vacuum | 10:D5:61:A4:B8:92 | 192.168.30.188 | Inferred by elimination (plugged in alongside the Roborock, only 2 new leases appeared) |
 | LongPlus-Baby-Monitor | 30:4A:26:2B:BA:87 | 192.168.30.220 | Confirmed via unplug test (vendor lookup had only narrowed it to "Shenzhen Trolink Technology Co.", a generic OEM — unplug test gave the real answer) |
-| `amazon-unknown-1` | 00:F6:20:4E:22:FB | 192.168.30.203 | **Was mislabeled `Google-Home-Mini`** — vendor lookup said Amazon, not Google, and it's confirmed NOT the Echo Dot (different MAC, responds to ping unlike the real Echo Dot). Not in the Alexa app either. Still unidentified — worth physically tracking down |
-| `iot-unknown-2` | 72:28:BA:5F:4E:6C | 192.168.30.229 | Unidentified — locally-administered/randomized MAC, vendor lookup impossible. Currently offline |
-| `iot-unknown-4` | CA:70:A3:B6:C7:FB | 192.168.30.237 | Unidentified — locally-administered/randomized MAC. Present in the original TP-Link lease dump from before this migration too — has been on the network unidentified for a long time. Currently offline |
-| `unknown-100` (no reservation yet) | 82:A4:F5:01:66:AA | 192.168.30.100 | Unresolved loose thread — appeared right when the Echo Dot was replugged during that test, but turned out not to be it. No hostname, doesn't respond to ping. Needs its own unplug test |
-| **BLOCKED**: was `ESP_512EA9` | 70:03:9F:51:2E:A9 | 192.168.30.214 | Confirmed by owner: **not** research equipment (checked against the FIRCE/FADES IDS testbed, see [ids-research.md](../services/ids-research.md)), genuinely unknown origin, owner wants it removed entirely. Currently firewall-blocked (MAC-based DROP, both input and forward-to-wan; confirmed actively dropping traffic via `nft` counters) — **but this is router-level only**. It shares the VLAN 30 switch segment with other IoT devices and could still reach them directly over L2 without the block ever applying. Needs physical removal or switch-level port isolation for true isolation — neither done yet |
+| Google-Nest-Mini | 00:F6:20:4E:22:FB | 192.168.30.203 | Previously `amazon-unknown-1` (and before that mislabeled `Google-Home-Mini`). Re-checked 2026-10-08: OUI `00:f6:20` is **Google, Inc.**, not Amazon — the earlier "vendor lookup said Amazon" note was wrong. Owner believes this is the Nest Mini; the MAC the Google Home app shows (`20:1F:3B:78:FA:4A`) differs from this Wi-Fi MAC, so not 100% confirmed by an unplug test |
+| Philips-Hue-Hub | EC:B5:FA:A2:E4:5A | 192.168.30.153 | Wired into the old TP-Link AP's LAN port (bridged to VLAN 30); DHCP hostname `Philips-hue` |
+| NiteBird-Bulb-1 | 70:03:9F:51:2E:A9 | 192.168.30.214 | Previously `ESP_512EA9`, firewall-blocked as an "unknown ESP device" — identified 2026-10-08 as a NiteBird smart bulb (Espressif module; MAC is near-sequential with Bulb-2, same batch). Block removed |
+| NiteBird-Bulb-2 | 70:03:9F:51:4A:84 | 192.168.30.199 | DHCP hostname `ESP_514A84`, first seen 2026-10-08 |
 
-**Not yet connected** (known from the owner's device list / companion apps, no current lease):
-Google Nest Mini (MAC known: `20:1F:3B:78:FA:4A`, from Google Home app), Philips Hue Hub (unplugged all session), NiteBird smart bulb (physically plugged in but produced no new lease — likely needs first-time app pairing before it'll join this network's WiFi).
+**Retired entries** (2026-10-08): `iot-unknown-2` (`72:28:BA:5F:4E:6C`, .229),
+`iot-unknown-4` (`CA:70:A3:B6:C7:FB`, .237) and `unknown-100`
+(`82:A4:F5:01:66:AA`, .100) — all locally-administered/randomized MACs, most
+likely GrapheneOS phones that joined the `OpenWrt` SSID at some point rather
+than IoT devices. Reservations deleted. An Intel client
+(`c0:b6:f9:5c:81:90`, seen at .116 with no lease) was likely `hp-lap` or
+`acer-lap` on Wi-Fi before they moved to wired VLAN 10.
 
 ## Cross-VLAN Firewall Rules (Lab access from mgmt/Trusted)
 

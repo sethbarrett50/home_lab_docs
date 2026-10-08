@@ -34,7 +34,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | **Routed through Mullvad VPN** |
 | Inter-VLAN | → Lab: blocked by default (allow specific services as needed). → IoT: blocked. |
 
-**Devices:** MacBook M1 Pro, Dell XPS 16, Pixel 6, iPhone 7
+**Devices:** MacBook M1 Pro, Dell XPS 16, Pixel 6, Pixel 3, iPhone 7 (all on `dfair_lab` as of 2026-10-08)
 
 > All outbound traffic from VLAN 20 exits via Mullvad. If the VPN tunnel drops, implement a **kill switch** so traffic doesn't fall back to plain internet.
 
@@ -124,6 +124,8 @@ Rolling out incrementally to isolate failures to one layer at a time:
       DHCP/DNS-to-router and forwarding to `wan`). Switch VLAN 30 added via
       native-VLAN-1 pattern (see above) — zero disruption to existing traffic.
       Switch port 6 is now VLAN 30 untagged/PVID 30, ready for the IoT AP.
+      (Its VLAN 1 untagged membership was left in place by mistake until
+      2026-10-08 — removed, port 6 is now VLAN 30 only.)
       Old TP-Link (15.05.1 "Chaos Calmer", ar71xx — its own switch/VLAN config
       untouched, only became a dumb AP) reconfigured: LAN static
       `192.168.30.2`, own DHCP server disabled (`dhcp.lan.ignore=1`), WAN

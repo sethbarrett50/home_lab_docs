@@ -18,11 +18,14 @@ goal of being useful to anyone trying to reproduce or understand the setup.
 ## Connection to this network
 
 **Confirmed by owner:** FIRCE and FADES's "custom IoT testbed" evaluation
-data comes from this network's **VLAN 30** (192.168.30.0/24), which
-currently hosts ~10 commercial IoT devices (Ring doorbell, Nest cam,
-Google/Amazon smart speakers, Kasa smart plug, two robot vacuums, a baby
-monitor, plus a couple still-unidentified devices — see
-[devices/README.md](../devices/README.md)).
+data comes from this network's **VLAN 30** (192.168.30.0/24). As of
+2026-10-08 it has 12 reserved devices, all identified: Ring doorbell, Nest
+cam, Google Nest Mini, Amazon Echo Dot, Kasa smart plug, two robot vacuums,
+a baby monitor, a Philips Hue hub, two NiteBird smart bulbs, and the
+Galaxy A71 setup/test phone — see [devices/README.md](../devices/README.md).
+The device mix has grown since the FIRCE/FADES captures (10 devices), so new
+captures aren't directly comparable without noting which devices were in
+scope.
 
 ## Data collection setup (CAPEX)
 
@@ -75,22 +78,29 @@ PCAP by timestamp, is the ground-truth label source. Traffic inside a
 `tcpdump` runs for the entire window regardless of phase; only attack
 scheduling respects the safe-period boundaries.
 
-## Unrelated device found during network migration
+## Edge-device deployment (planned)
 
-An unrecognized ESP32/8266 dev board (`ESP_512EA9`, `70:03:9F:51:2E:A9`) was
-found on VLAN 30 during the September 2026 network migration. **Confirmed
-by the owner to NOT be research equipment** — genuinely unknown origin, not
-part of the FIRCE/FADES testbed. Currently firewall-blocked (MAC-based DROP
-on the router, both input and forward-to-wan) but owner wants it fully
-removed.
+The owner's own IDS will be tested on resource-constrained "edge" hardware
+(dissertation direction four), using `acer-lap` (Acer Aspire 5 A515-54 —
+i5-10210U, 8 GB single-channel RAM, one Realtek `r8169` 1 GbE NIC; see
+[devices/README.md](../devices/README.md#acer-lap-hardware)). It's on
+VLAN 10 today; the plan is to move it onto VLAN 30 when this work starts, so
+it sits on the same segment as the IoT devices (same reasoning as the CAPEX
+host above). Not started.
 
-**Known gap:** the current block is router-level only. Since the board
-shares the same VLAN 30 switch segment as the other IoT devices, it could
-still communicate with them directly over L2 without ever traversing the
-router's firewall — the block does not provide true isolation from other
-devices on the same VLAN. Real fix is physical removal (once located) or
-switch-level port isolation on the TL-SG108E, neither of which has been
-done yet.
+## Unrelated device found during network migration (resolved)
+
+An unrecognized Espressif device (`ESP_512EA9`, `70:03:9F:51:2E:A9`) was
+found on VLAN 30 during the September 2026 network migration and
+firewall-blocked as unknown. **Confirmed by the owner to NOT be research
+equipment.** Resolved 2026-10-08: a second Espressif device with a
+near-sequential MAC (`ESP_514A84`) appeared, and both were identified as
+NiteBird smart bulbs. The block was removed and both now have reservations as
+`NiteBird-Bulb-1`/`-2` — see [devices/README.md](../devices/README.md).
+
+The underlying lesson still applies to the testbed: router-level MAC blocks
+don't isolate a device from others on the same VLAN 30 L2 segment — only
+physical removal or switch-level port isolation does.
 
 ## TODO
 
@@ -99,8 +109,8 @@ done yet.
 - [x] Document actual data collection setup (CAPEX — packet capture,
       attack simulation, labeling, see above)
 - [x] Diagrams for the research data flow (issue #15)
-- [ ] Locate and physically remove the unidentified ESP32 board, or apply
-      switch-level port isolation if it can't be found
+- [x] ~~Locate and physically remove the unidentified ESP32 board~~ —
+      resolved 2026-10-08, it was a NiteBird smart bulb (see above)
 - [ ] **CAPEX's `configs/devices.yaml` and the `arp_spoof` entries'
       `gateway_ip` in `configs/attacks.yaml` still reference pre-migration
       `192.168.1.x` addresses** — these predate the VLAN migration and
