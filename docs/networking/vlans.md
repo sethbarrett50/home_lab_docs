@@ -34,7 +34,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | **Routed through Mullvad VPN** |
 | Inter-VLAN | → Lab: blocked by default (allow specific services as needed). → IoT: blocked. |
 
-**Devices:** MacBook M1 Pro, Dell XPS 16, Pixel 6, iPhone 7
+**Devices:** MacBook M1 Pro, Dell XPS 16, Pixel 6, Pixel 3, iPhone 7 (all on `dfair_lab` as of 2026-10-08)
 
 > All outbound traffic from VLAN 20 exits via Mullvad. If the VPN tunnel drops, implement a **kill switch** so traffic doesn't fall back to plain internet.
 

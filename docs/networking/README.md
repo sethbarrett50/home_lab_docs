@@ -92,7 +92,7 @@ network design itself.
 | acer-lap | 192.168.10.199 | DHCP host reservation |
 | hp-lap | 192.168.10.147 | DHCP host reservation |
 | Old TP-Link (IoT AP) | 192.168.30.2 | Static (in-guest) |
-| 10 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
+| 12 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
 
 ## Switch Port Assignment
 
