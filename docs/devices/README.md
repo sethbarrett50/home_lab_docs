@@ -17,8 +17,25 @@ Proxmox host + LXC/VM services + 3 debian boxes (2 of 3 networked so far).
 | `monitor-01` (VM 102) | — | — | 10 | 192.168.10.158 | Grafana `:3000` (dashboards lost, rebuild tracked in [issues #3-8](https://github.com/sethbarrett50/home_lab_docs/issues)), Prometheus `:9090` (not `:3001` — that's Uptime Kuma), Loki `:3100`, Alloy `:12345`, cAdvisor `:8080`, node-exporter. DHCP (not pinned). SSH open from lan/trusted |
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). Runs `research-output-scraper` (nginx + systemd, see that repo's `docs/deploy.md`). SSH (22) and HTTP (80) open from lan/trusted |
-| `acer-lap` | Acer Aspire (laptop) | Debian 13 (Trixie) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC). Networked via `systemd-networkd`. Run closed-lid (rack-mounted); `HandleLidSwitch`/`HandleLidSwitchExternalPower`/`HandleLidSwitchDocked` set to `ignore` in `/etc/systemd/logind.conf` to prevent suspend-on-close — applies to any laptop run this way, see HP below. SSH open from lan/trusted |
+| `acer-lap` | Acer Aspire 5 A515-54 (laptop) — i5-10210U, 8 GB, 512 GB NVMe, see [specs](#acer-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC `b4:a9:fc:2b:d2:6d`, `enp1s0`). Networked via `systemd-networkd`. Run closed-lid with the built-in panel disconnected; suspend-on-close prevented via drop-in `/etc/systemd/logind.conf.d/10-headless.conf` (`HandleLidSwitch*`/`HandleSuspendKey`/`HandleHibernateKey`/`IdleAction` = `ignore`) plus masked `sleep`/`suspend`/`hibernate`/`hybrid-sleep`/`suspend-then-hibernate` targets — applies to any laptop run this way, see HP below. Planned role: edge-device test host for custom IDS (dissertation direction four). SSH open from lan/trusted |
 | HP laptop | — | Debian, base install only | 10 (switch port 5) | — | Switch-side migrated to VLAN 10; OS networking not yet configured |
+
+### acer-lap hardware
+
+Collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `lspci` and sysfs.
+
+| Component | Detail |
+|---|---|
+| Model | Acer Aspire 5 A515-54, version V1.11 |
+| BIOS | V1.11 (2019-08-01) |
+| CPU | Intel Core i5-10210U (Comet Lake) — 4C/8T, 1.6–4.2 GHz, 6 MiB L3, VT-x |
+| RAM | 8 GB DDR4-2400 SO-DIMM in `ChannelA-DIMM0`; `ChannelB-DIMM0` empty (single-channel, upgradeable). 7.7 GiB swap |
+| Storage | Kingston 512 GB NVMe (`RBUSNS8154P3512GJ1`) |
+| Wired NIC | `enp1s0` — Realtek RTL8111/8168 [10ec:8168] rev 15, `r8169` driver, 1 GbE, MAC `b4:a9:fc:2b:d2:6d` |
+| Wireless | `wlp2s0` — Qualcomm Atheros QCA6174 802.11ac [168c:003e], `ath10k_pci` driver, MAC `e8:d0:fc:a7:c1:25` (unused) |
+| Battery | AP18C4K, ~71% of design capacity (2,976,000 / 4,200,000 µAh); kernel reports `cycle_count` 0 (not tracked) |
+| Display | Built-in panel physically disconnected; runs headless |
+| Kernel | 6.12.111+deb13-amd64 |
 
 ## Personal Devices (Mobile / Off-rack)
 

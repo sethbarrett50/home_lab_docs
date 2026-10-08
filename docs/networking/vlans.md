@@ -167,11 +167,17 @@ Rolling out incrementally to isolate failures to one layer at a time:
       method that works the same whether a box is headless or running a
       desktop env like HP's XFCE, instead of per-box ifupdown/NetworkManager),
       DHCP host reservations pinned to `192.168.10.117`/`.199`, `lan`/`trusted`
-      → `:22` firewall rules added. `acer-lap` is run closed-lid (rack-mounted
-      laptop) — needed `HandleLidSwitch=ignore` (+ `ExternalPower`/`Docked`
-      variants) in `/etc/systemd/logind.conf` to stop it suspending on lid
-      close; HP will need the same since it's also a laptop. HP not yet
-      started.
+      → `:22` firewall rules added. `acer-lap` is run closed-lid and headless
+      (rack-mounted laptop, built-in panel disconnected). The lid-switch fix
+      was originally documented but never actually applied — it suspended
+      and dropped off the network once the external display was unplugged.
+      Fixed 2026-10-08 with a drop-in `/etc/systemd/logind.conf.d/10-headless.conf`
+      (`HandleLidSwitch`/`ExternalPower`/`Docked`, `HandleSuspendKey`,
+      `HandleHibernateKey`, `IdleAction` all `ignore`), masked sleep/suspend/
+      hibernate targets, and default target set to `multi-user.target`;
+      verified with `systemd-analyze cat-config` and a refused
+      `systemctl suspend`. HP will need the same since it's also a laptop —
+      verify it on the box rather than trusting the doc. HP not yet started.
 
 ## TODO / Implementation Notes
 
