@@ -92,24 +92,32 @@ network design itself.
 | acer-lap | 192.168.10.199 | DHCP host reservation |
 | hp-lap | 192.168.10.147 | DHCP host reservation |
 | Old TP-Link (IoT AP) | 192.168.30.2 | Static (in-guest) |
-| 10 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
+| 12 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
 
 ## Switch Port Assignment
 
-Updated to match actual current hardware (post-move) and the phased rollout —
-see [vlans.md](vlans.md) for phase status. Only ports 1 and 6 required changes
-from switch factory default; 2-5, 7-8 are untouched (Untagged VLAN 1, PVID 1).
+Read from the switch UI (`VLAN > 802.1Q VLAN` and `VLAN > 802.1Q VLAN PVID
+Setting`) on 2026-10-08, post-Phase 3. Port 1 is the only trunk; VLAN 20 has
+no wired access ports (Trusted is WiFi-only via `dfair_lab`). Admin UI is on
+the mgmt network at `192.168.1.160` — not reachable from `trusted` by default;
+use an SSH tunnel through the router (`ssh -L 8080:192.168.1.160:80
+root@192.168.1.1`, then `http://localhost:8080`).
 
-| Port | VLAN Mode | VLAN 1 | VLAN 30 | PVID | Device |
-|---|---|---|---|---|---|
-| 1 | Trunk (native VLAN 1) | Untagged (unchanged) | Tagged | 1 | GL.iNet Flint 2 uplink (`lan1`) |
-| 2 | Access | Untagged | Not Member | 1 | Proxmox (Dell Precision 3620) — moves to VLAN 10 in Phase 3 |
-| 3 | Access | Untagged | Not Member | 1 | Dell Micro (debian) — moves to VLAN 10 in Phase 3 |
-| 4 | Access | Untagged | Not Member | 1 | Acer Aspire (debian) — moves to VLAN 10 in Phase 3 |
-| 5 | Access | Untagged | Not Member | 1 | HP Laptop (debian) — moves to VLAN 10 in Phase 3 |
-| 6 | Access | Not Member | Untagged | 30 | Old TP-Link (OpenWrt) — dedicated IoT AP |
-| 7 | — | Untagged | Not Member | 1 | Empty |
-| 8 | — | Untagged | Not Member | 1 | Reserved / maintenance |
+| Port | VLAN 1 (mgmt) | VLAN 10 (Lab) | VLAN 20 (Trusted) | VLAN 30 (IoT) | PVID | Device |
+|---|---|---|---|---|---|---|
+| 1 | Untagged (native) | Tagged | Tagged | Tagged | 1 | GL.iNet Flint 2 uplink (`lan1`) — trunk |
+| 2 | Not Member | Untagged | Not Member | Not Member | 10 | Proxmox (Dell Precision 3620) |
+| 3 | Not Member | Untagged | Not Member | Not Member | 10 | `dell-mini` (Dell OptiPlex 3050 Micro) |
+| 4 | Not Member | Untagged | Not Member | Not Member | 10 | `acer-lap` (Acer Aspire 5) |
+| 5 | Not Member | Untagged | Not Member | Not Member | 10 | `hp-lap` (HP EliteBook 840 G2) |
+| 6 | Not Member | Not Member | Not Member | Untagged | 30 | Old TP-Link (OpenWrt) — dedicated IoT AP |
+| 7 | Untagged | Not Member | Not Member | Not Member | 1 | Empty |
+| 8 | Untagged | Not Member | Not Member | Not Member | 1 | Reserved / maintenance |
+
+Port 6 was left as an untagged member of VLAN 1 after Phase 3 (ingress was
+fine via PVID 30, but VLAN 1 broadcasts flooded out onto the IoT segment).
+Removed 2026-10-08; IoT AP (`192.168.30.2`) and IoT clients verified
+reachable afterwards.
 
 > TL-SG108E gotcha: VLAN membership (tagged/untagged/not member) and PVID are
 > **two separate pages** (`VLAN > 802.1Q VLAN` and `VLAN > 802.1Q VLAN PVID

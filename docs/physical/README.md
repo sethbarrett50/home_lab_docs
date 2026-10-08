@@ -59,5 +59,6 @@ slot:
 | Dell XPS 16 | Debian | Primary dev laptop, leaves lab |
 | MacBook M1 Pro Max | macOS | Primary portable, leaves lab |
 | Pixel 6 | GrapheneOS | Leaves lab |
+| Pixel 3 | GrapheneOS | |
 | iPhone 7 | iOS | Leaves lab |
-| Samsung (old) | Android | IoT VLAN testing, stays in lab |
+| Samsung Galaxy A71 5G | Android | IoT setup/test phone on VLAN 30, stays in lab |

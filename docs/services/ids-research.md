@@ -75,22 +75,19 @@ PCAP by timestamp, is the ground-truth label source. Traffic inside a
 `tcpdump` runs for the entire window regardless of phase; only attack
 scheduling respects the safe-period boundaries.
 
-## Unrelated device found during network migration
+## Unrelated device found during network migration (resolved)
 
-An unrecognized ESP32/8266 dev board (`ESP_512EA9`, `70:03:9F:51:2E:A9`) was
-found on VLAN 30 during the September 2026 network migration. **Confirmed
-by the owner to NOT be research equipment** — genuinely unknown origin, not
-part of the FIRCE/FADES testbed. Currently firewall-blocked (MAC-based DROP
-on the router, both input and forward-to-wan) but owner wants it fully
-removed.
+An unrecognized Espressif device (`ESP_512EA9`, `70:03:9F:51:2E:A9`) was
+found on VLAN 30 during the September 2026 network migration and
+firewall-blocked as unknown. **Confirmed by the owner to NOT be research
+equipment.** Resolved 2026-10-08: a second Espressif device with a
+near-sequential MAC (`ESP_514A84`) appeared, and both were identified as
+NiteBird smart bulbs. The block was removed and both now have reservations as
+`NiteBird-Bulb-1`/`-2` — see [devices/README.md](../devices/README.md).
 
-**Known gap:** the current block is router-level only. Since the board
-shares the same VLAN 30 switch segment as the other IoT devices, it could
-still communicate with them directly over L2 without ever traversing the
-router's firewall — the block does not provide true isolation from other
-devices on the same VLAN. Real fix is physical removal (once located) or
-switch-level port isolation on the TL-SG108E, neither of which has been
-done yet.
+The underlying lesson still applies to the testbed: router-level MAC blocks
+don't isolate a device from others on the same VLAN 30 L2 segment — only
+physical removal or switch-level port isolation does.
 
 ## TODO
 
