@@ -124,6 +124,8 @@ Rolling out incrementally to isolate failures to one layer at a time:
       DHCP/DNS-to-router and forwarding to `wan`). Switch VLAN 30 added via
       native-VLAN-1 pattern (see above) — zero disruption to existing traffic.
       Switch port 6 is now VLAN 30 untagged/PVID 30, ready for the IoT AP.
+      (Its VLAN 1 untagged membership was left in place by mistake until
+      2026-10-08 — removed, port 6 is now VLAN 30 only.)
       Old TP-Link (15.05.1 "Chaos Calmer", ar71xx — its own switch/VLAN config
       untouched, only became a dumb AP) reconfigured: LAN static
       `192.168.30.2`, own DHCP server disabled (`dhcp.lan.ignore=1`), WAN
