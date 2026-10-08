@@ -18,7 +18,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | Direct (no VPN) |
 | Inter-VLAN | → Trusted: blocked. → IoT: blocked. |
 
-**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap, HP laptop (Debian/XFCE, when present)
+**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap, hp-lap (Debian/XFCE)
 
 ---
 
@@ -167,11 +167,23 @@ Rolling out incrementally to isolate failures to one layer at a time:
       method that works the same whether a box is headless or running a
       desktop env like HP's XFCE, instead of per-box ifupdown/NetworkManager),
       DHCP host reservations pinned to `192.168.10.117`/`.199`, `lan`/`trusted`
-      → `:22` firewall rules added. `acer-lap` is run closed-lid (rack-mounted
-      laptop) — needed `HandleLidSwitch=ignore` (+ `ExternalPower`/`Docked`
-      variants) in `/etc/systemd/logind.conf` to stop it suspending on lid
-      close; HP will need the same since it's also a laptop. HP not yet
-      started.
+      → `:22` firewall rules added. `acer-lap` is run closed-lid and headless
+      (rack-mounted laptop, built-in panel disconnected). The lid-switch fix
+      was originally documented but never actually applied — it suspended
+      and dropped off the network once the external display was unplugged.
+      Fixed 2026-10-08 with a drop-in `/etc/systemd/logind.conf.d/10-headless.conf`
+      (`HandleLidSwitch`/`ExternalPower`/`Docked`, `HandleSuspendKey`,
+      `HandleHibernateKey`, `IdleAction` all `ignore`), masked sleep/suspend/
+      hibernate targets, and default target set to `multi-user.target`;
+      verified with `systemd-analyze cat-config` and a refused
+      `systemctl suspend`; survives a reboot. `hp-lap` done 2026-10-08: was
+      on the IoT AP's WiFi (VLAN 30) — moved to wired `enp0s25` via
+      `systemd-networkd` (`.network` file matched on MAC), NetworkManager
+      disabled, WiFi rfkill-blocked, DHCP host reservation pinned to
+      `192.168.10.147`, `Allow-LAN-to-HP-Lap`/`Allow-Trusted-to-HP-Lap` `:22`
+      rules added, same logind drop-in + masked sleep targets as acer-lap.
+      Hostname renamed `poolTab` → `hp-lap`. Still on Debian 12 (bookworm);
+      upgrade to 13 to match the other boxes is a follow-up.
 
 ## TODO / Implementation Notes
 

@@ -25,7 +25,7 @@ Overview of rack hardware, device placement, and power infrastructure.
 | Proxmox node | Dell Precision 3620 | Hypervisor, GitHub Actions runner, monitoring | Rack, full-depth shelf (shared front+back) |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian, runs research-output-scraper — see [devices/README.md](../devices/README.md) | Rack, back short shelf (shares with switch) |
 | `acer-lap` | Acer Aspire (laptop) | Debian, networked — see [devices/README.md](../devices/README.md) | Rack, back half-depth shelf |
-| HP laptop | HP (laptop) | Debian, networking not yet configured | Rack, front half-depth shelf |
+| `hp-lap` | HP EliteBook 840 G2 (laptop) | Debian, networked — see [devices/README.md](../devices/README.md) | Rack, front half-depth shelf |
 
 ### Top of Rack (not rack-mounted)
 
