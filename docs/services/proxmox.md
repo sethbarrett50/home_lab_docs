@@ -9,6 +9,14 @@
 | IP | 192.168.10.10 (static) |
 | Web UI | https://192.168.10.10:8006 |
 | VLAN | 10 — Lab |
+| Proxmox | VE 9.1.1 (kernel 6.17.2-1-pve) |
+| BIOS | 2.8.1 |
+| CPU | Intel Core i7-6700K (Skylake) — 4C/8T, 4.0–4.2 GHz |
+| RAM | 32 GB — 4× 8 GB DDR4-2400 (all slots full), running at 2133 MT/s (the i7-6700K's rated max). ~18 GiB used at time of writing. 8 GiB swap |
+| Boot/VM disk | Toshiba XG5 512 GB NVMe (`KXG50ZNV512G`) — holds `local` + `local-lvm` |
+| HDDs | 2× 1 TB SATA 7200rpm — Seagate `ST1000DM003` (`sda`), Seagate `ST31000528AS` (`sdb`) |
+
+Specs collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `pveversion`.
 
 ## Current Setup
 
@@ -48,17 +56,23 @@ sequenceDiagram
     Runner->>GH: Report results
 ```
 
-## Storage Layout (Planned)
+## Storage Layout
 
-| Datastore | Type | Use |
-|---|---|---|
-| `local` | LVM-thin | VM disks, ISOs |
-| `local-zfs` | ZFS (if configured) | Snapshots, replication |
-| `nas` | NFS/CIFS mount | Bulk storage from NAS service |
+From `pvesm status` (2026-10-08):
+
+| Storage | Type | Size | Used | Use |
+|---|---|---|---|---|
+| `local` | dir | ~94 GiB | ~5% | ISOs, templates, backups (on the NVMe root LV) |
+| `local-lvm` | LVM-thin | ~349 GiB | ~25% | VM/LXC disks (NVMe) |
+| `hdd-1tb` | dir | ~916 GiB | ~45% | Bulk storage on one of the 1 TB HDDs |
+| `hdd-tmp-1tb` | dir | ~94 GiB | ~5% | **Suspect** — size and usage exactly match `local`, which suggests this directory sits on the NVMe root filesystem rather than on the second HDD (i.e. that disk isn't mounted where the storage points). Unverified — check `/etc/pve/storage.cfg` against `findmnt` |
+
+No NAS-backed (NFS/CIFS) storage yet — see [nas.md](nas.md).
 
 ## TODO
 
-- [ ] Document actual CPU/RAM specs of the 3620
+- [x] Document actual CPU/RAM specs of the 3620
 - [ ] Configure Proxmox backup schedule (PBS or external)
 - [ ] Add NAS storage as Proxmox datastore once HDDs arrive
+- [ ] Verify `hdd-tmp-1tb` is actually on the second HDD (see Storage Layout)
 - [ ] Set up Proxmox notifications (email or webhook)

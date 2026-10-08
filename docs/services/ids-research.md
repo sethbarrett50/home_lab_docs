@@ -78,6 +78,16 @@ PCAP by timestamp, is the ground-truth label source. Traffic inside a
 `tcpdump` runs for the entire window regardless of phase; only attack
 scheduling respects the safe-period boundaries.
 
+## Edge-device deployment (planned)
+
+The owner's own IDS will be tested on resource-constrained "edge" hardware
+(dissertation direction four), using `acer-lap` (Acer Aspire 5 A515-54 —
+i5-10210U, 8 GB single-channel RAM, one Realtek `r8169` 1 GbE NIC; see
+[devices/README.md](../devices/README.md#acer-lap-hardware)). It's on
+VLAN 10 today; the plan is to move it onto VLAN 30 when this work starts, so
+it sits on the same segment as the IoT devices (same reasoning as the CAPEX
+host above). Not started.
+
 ## Unrelated device found during network migration (resolved)
 
 An unrecognized Espressif device (`ESP_512EA9`, `70:03:9F:51:2E:A9`) was
