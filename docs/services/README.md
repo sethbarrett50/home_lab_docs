@@ -58,6 +58,38 @@ graph TD
     IDS -.-> PVE
 ```
 
+## Internal DNS
+
+| Property | Value |
+|---|---|
+| Status | Operational |
+| Host | GL.iNet Flint 2 |
+| Software | OpenWrt dnsmasq |
+| Namespace | `home.arpa` |
+| Deployment | Router-native |
+| Dependencies | Router availability |
+| Primary clients | VLAN 10 and VLAN 20 |
+
+DNS resolution and DHCP are managed directly by OpenWrt rather than a Proxmox VM or LXC.
+
+The router maintains hostname records from DHCP leases and reservations, with explicit DNS records for statically addressed infrastructure.
+
+### Infrastructure Services
+
+| Service | Hostname | Access |
+|---|---|---|
+| Proxmox VE | `pve.home.arpa` | HTTPS port 8006 |
+| Grafana host | `monitor.home.arpa` | Port 3000 |
+| Uptime Kuma host | `monitor.home.arpa` | Port 3001 |
+| NAS LXC | `nas.home.arpa` | Service-dependent |
+| GitHub Actions VM | `gha-general-01.home.arpa` | SSH port 22 |
+
+The NAS currently uses DHCP at `192.168.10.170`. A permanent reservation is recommended but has not yet been configured.
+
+DNS resolution does not grant access between VLANs; OpenWrt firewall policies remain enforced.
+
+For the full configuration, verified inventory, and troubleshooting procedures, see [Internal DNS](../networking/dns.md).
+
 ## Service Status
 
 | Service | Type | Status | Priority |

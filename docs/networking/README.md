@@ -2,8 +2,10 @@
 
 ## Contents
 
+
 - [VLANs](vlans.md) — design, IP scheme, inter-VLAN policy
 - [Firewall](firewall.md) — rules and segmentation strategy
+- [Internal DNS](dns.md) — OpenWrt dnsmasq, `home.arpa` hostname resolution, VLAN 10 inventory, and maintenance procedures.
 - [VPN](vpn.md) — inbound remote access + Mullvad on Trusted VLAN
 
 ## Hardware
