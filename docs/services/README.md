@@ -9,6 +9,7 @@ directly on `dell-mini` instead.
 - [Proxmox](proxmox.md) — hypervisor setup, VMs, GitHub Actions runner
 - [NAS & Storage](nas.md) — qBittorrent, NAS software, HDD setup
 - [Monitoring](monitoring.md) — current and planned monitoring stack
+- [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
   likely uses this network's IoT VLAN as its real-world testbed
 - [research-output-scraper](research-output-scraper.md) — CS researcher
@@ -42,6 +43,10 @@ graph TD
         KUMA[Uptime Kuma]
     end
 
+    subgraph "LXC 106 - certs-01"
+        CADDY[Caddy / internal CA\nHTTPS reverse proxy and metrics]
+    end
+
     subgraph "LXC 105 - nas"
         QB[qBittorrent - planned]
     end
@@ -53,6 +58,9 @@ graph TD
     PVE --> GHA1
     PVE --> PROM
     PVE --> QB
+    PVE --> CADDY
+    CADDY -->|HTTPS reverse proxy| GRAF
+    CADDY -->|HTTPS reverse proxy| KUMA
 
     IDS["IDS Research (FIRCE/FADES)\nlikely uses VLAN 30 as testbed"]
     IDS -.-> PVE
@@ -64,6 +72,7 @@ graph TD
 |---|---|---|---|
 | GitHub Actions runners (dfair/pl/kc) | 3x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
+| [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
 | [research-output-scraper](research-output-scraper.md) | nginx + systemd, on `dell-mini` (not Proxmox) | ✅ Running | Medium |
 | qBittorrent | LXC/Docker | 🔲 Planned | Medium |
 | NAS software | LXC/VM | 🔲 Planned (HDDs pending) | Medium |

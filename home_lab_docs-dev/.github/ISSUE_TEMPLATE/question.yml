@@ -1,0 +1,17 @@
+name: Question about the setup
+description: Ask about anything in this repo - useful for research reproducibility questions
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to understand or reproduce?
+    validations:
+      required: true
+  - type: textarea
+    id: doc-ref
+    attributes:
+      label: Relevant doc/page
+      description: Link to the specific page in docs/ this relates to, if any
+    validations:
+      required: false

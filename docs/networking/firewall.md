@@ -70,6 +70,12 @@ Add rules as needed. Starting point — only Proxmox UI:
 | TCP | 192.168.10.10 | 22 | ACCEPT (SSH to Proxmox) |
 | * | 192.168.10.0/24 | * | DROP |
 
+## Internal HTTPS access (deployed 2026-10-20)
+
+The existing broad section above documents the planned baseline, **not a fully audited live firewall ruleset**. During the internal HTTPS deployment, selective Trusted (VLAN 20) → `certs-01` (`192.168.10.50`) TCP access was configured for SSH **22** and web **80/443**. Grafana and Uptime Kuma are reached through Caddy on port 443. Proxmox's CA-signed UI still uses direct `192.168.10.10:8006` access.
+
+The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10.158`) within VLAN 10. Caddy currently uses a source-IP matcher to reject other clients, but a cross-client test and additional Proxmox/LXC firewall restriction remain outstanding. The admin endpoint `127.0.0.1:2019` **must never be exposed on the network**. Same-VLAN traffic is not secured by OpenWrt's inter-VLAN rules alone.
+
 ## TODO
 
 - [ ] Implement zone config in OpenWrt UCI / LuCI

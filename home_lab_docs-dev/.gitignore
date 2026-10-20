@@ -1,0 +1,21 @@
+# Secrets — never commit these
+*.key
+*.pem
+wg*.conf
+secrets/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Python / mkdocs
+.venv/
+site/
+
+network.config

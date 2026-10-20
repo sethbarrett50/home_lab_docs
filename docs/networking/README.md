@@ -32,8 +32,9 @@ graph TD
     subgraph "VLAN 10 — Lab (192.168.10.0/24)"
         PVE["Dell Precision 3620\nProxmox host\n.10 static"]
         NAS["nas (LXC 105)\n.170 DHCP"]
+        CERTS["certs-01 (LXC 106)\n.50 static; Caddy HTTPS :443"]
         GHA["gha-general-01 (VM 101)\n.189 DHCP-pinned"]
-        MON["monitor-01 (VM 102)\n.158 DHCP\nGrafana :3000 / Prometheus :3001"]
+        MON["monitor-01 (VM 102)\n.158 DHCP\nGrafana :3000 / Prometheus :9090 / Kuma :3001"]
         DELLMINI["dell-mini\n.117 DHCP-pinned"]
         ACERLAP["acer-lap\n.199 DHCP-pinned"]
         DEBIAN["hp-lap\n.147 DHCP-pinned"]
@@ -59,6 +60,7 @@ graph TD
     Switch --> ACERLAP
     Switch --> DEBIAN
     PVE -.-> NAS
+    PVE -.-> CERTS
     PVE -.-> GHA
     PVE -.-> MON
     Switch -->|"Access port 6 — VLAN 30"| IoTAP
@@ -88,11 +90,26 @@ network design itself.
 |---|---|---|
 | Proxmox host | 192.168.10.10 | Static (in-guest, `/etc/network/interfaces`) |
 | gha-general-01 | 192.168.10.189 | DHCP host reservation |
+| certs-01 | 192.168.10.50 | Static; Caddy/internal CA on LXC 106 |
 | dell-mini | 192.168.10.117 | DHCP host reservation |
 | acer-lap | 192.168.10.199 | DHCP host reservation |
 | hp-lap | 192.168.10.147 | DHCP host reservation |
 | Old TP-Link (IoT AP) | 192.168.30.2 | Static (in-guest) |
 | 12 IoT devices | 192.168.30.x | DHCP host reservations — see devices/README.md |
+
+## Internal service DNS (`home.arpa`)
+
+`flint2` runs dnsmasq and serves internal hostnames; see [Internal HTTPS / Caddy](../services/caddy.md). Verified records on 2026-10-20 include:
+
+| Name | IP | Service |
+|---|---|---|
+| `certs-01.home.arpa` | `192.168.10.50` | Caddy host |
+| `grafana.home.arpa` | `192.168.10.50` | Caddy → monitor-01 `:3000` |
+| `uptime.home.arpa` | `192.168.10.50` | Caddy → monitor-01 `:3001` |
+| `pve.home.arpa` | `192.168.10.10` | Direct Proxmox `:8006` (not Caddy) |
+| `monitor.home.arpa` | `192.168.10.158` | Monitoring VM |
+
+These are internal-only records; they do not require public DNS or inbound Internet exposure.
 
 ## Upstream DNS
 

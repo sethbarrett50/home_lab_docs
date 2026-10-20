@@ -1,0 +1,28 @@
+name: Infrastructure / docs task
+description: Track a piece of network, service, or documentation work
+labels: ["task"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What's the current state, and why does this need doing?
+    validations:
+      required: true
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: Checklist of concrete steps
+      placeholder: |
+        - [ ] Step one
+        - [ ] Step two
+    validations:
+      required: false
+  - type: textarea
+    id: depends-on
+    attributes:
+      label: Depends on / blocks
+      description: Link related issues if this has a dependency ordering
+    validations:
+      required: false

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question about the setup
+    url: https://github.com/sethbarrett50/home_lab_docs/issues/new?template=question.yml
+    about: Ask about anything in this repo's network/service setup - useful if you're referencing this for research reproducibility.

@@ -1,0 +1,8 @@
+[project]
+name = "home-lab-docs"
+version = "0.1.0"
+description = "Local dev tooling for building the docs site (mkdocs-material). Not a package - nothing here is imported/installed elsewhere."
+requires-python = ">=3.11"
+dependencies = [
+    "mkdocs-material>=9.7.7",
+]
