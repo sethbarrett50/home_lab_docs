@@ -2,13 +2,11 @@
 
 ## Current State
 
-Fully deployed via Docker on two VMs, plus a native (non-Docker) node-exporter
-on `dell-mini` — this is not aspirational, it's what's actually running
-(confirmed via `docker ps -a` on both VMs, and `systemctl status
-node_exporter` on dell-mini). What's missing is the **Grafana dashboard
-layer on top** — the previous dashboard was lost, but the entire
-data-collection pipeline underneath it is healthy and intact. Rebuild is
-tracked in issues
+Deployed via Docker on two VMs, plus a native (non-Docker) node-exporter
+on `dell-mini`, and Caddy metrics from `certs-01`. The Infrastructure
+Overview dashboard has been rebuilt; an updated repository dashboard JSON now
+includes a proposed Caddy row, but its import/rendering in live Grafana has not
+yet been verified. Related work is tracked in issues
 [#3](https://github.com/sethbarrett50/home_lab_docs/issues/3)–[#8](https://github.com/sethbarrett50/home_lab_docs/issues/8),
 [#43](https://github.com/sethbarrett50/home_lab_docs/issues/43) for
 dell-mini specifically.
@@ -35,6 +33,10 @@ graph TD
         KUMA[Uptime Kuma :3001]
     end
 
+    subgraph "certs-01 (LXC 106; 192.168.10.50)"
+        CADDY[Caddy :443 / metrics :9180]
+    end
+
     subgraph "dell-mini (192.168.10.117)"
         NE3[node-exporter\nnative systemd, no Docker]
     end
@@ -45,6 +47,9 @@ graph TD
     NE2 --> PROM
     CB2 --> PROM
     NE3 -->|direct scrape| PROM
+    CADDY -->|metrics scrape :9180| PROM
+    CADDY -->|HTTPS proxy| GF
+    CADDY -->|HTTPS proxy| KUMA
     AL2 --> LOKI
     PROM --> GF
     LOKI --> GF
@@ -54,9 +59,9 @@ graph TD
 
 | Container | Host | Port | Role |
 |---|---|---|---|
-| `grafana` | monitor-01 | 3000 | Visualization — **dashboards lost, container itself healthy** |
+| `grafana` | monitor-01 | 3000 | Visualization — Infrastructure Overview dashboard has been rebuilt; see [Dashboard Rebuild Status](#dashboard-rebuild-status) |
 | `prometheus` | monitor-01 | 9090 | Metrics store. **Not** 3001 — that's Kuma (see below, was documented wrong) |
-| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks — currently 3 monitors covering research-output-scraper (HTTP, API JSON Query, cron Push), see [research-output-scraper.md](research-output-scraper.md#monitoring). DNS pinned to `192.168.10.1` via `dns:` in `/opt/monitoring/compose.yml` — the container's Docker-generated `resolv.conf` had ended up with no upstream nameserver, so any hostname-based monitor or notification failed with `ENOTFOUND` |
+| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks; existing research-output-scraper monitors documented in [research-output-scraper.md](research-output-scraper.md#monitoring). Docker DNS pinned to `192.168.10.1`. Added internal-CA trust via `NODE_EXTRA_CA_CERTS` and read-only certificate mount (2026-10-20); new Grafana/Proxmox HTTPS monitor status not yet verified. |
 | `loki` | monitor-01 | 3100 | Log aggregation |
 | `alloy` | monitor-01 + gha-general-01 | 12345 | Unified telemetry collector — ships node-exporter/cAdvisor data to Prometheus/Loki |
 | `cadvisor` | monitor-01 + gha-general-01 | 8080 | Per-container CPU/mem/network metrics |
@@ -75,6 +80,33 @@ configured targets (prometheus, monitor-01-node/-containers,
 gha-general-01-node/-containers, proxmox-node, dell-mini-node) are now
 healthy.
 
+## Caddy and internal HTTPS monitoring (2026-10-20)
+
+Caddy runs on `certs-01` (LXC 106, `192.168.10.50`); full configuration and CA handling are documented in [Internal HTTPS / Caddy](caddy.md). Prometheus runs in Docker on `monitor-01` and reads `/opt/monitoring/prometheus/prometheus.yml` (bind-mounted read-only to `/etc/prometheus/prometheus.yml`). Added one scrape job alongside existing jobs:
+
+```yaml
+  - job_name: "caddy"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "192.168.10.50:9180"
+```
+
+`promtool check config` passed, the lifecycle reload succeeded, and the target API reported `health: up` with `up{job="caddy"} = 1` and no scrape error. Existing seven targets remain configured; **eight** targets are now configured including Caddy. Caddy exposes upstream health and HTTP metrics. The Prometheus API was rechecked on 2026-10-20: `up{job="caddy"} = 1`, and both `caddy_reverse_proxy_upstreams_healthy` series (`192.168.10.158:3000` and `192.168.10.158:3001`) returned `1`. The values show successful scraping and Caddy-reported upstream state, not verified end-to-end application health.
+
+**Uptime Kuma** (Docker Compose at `/opt/monitoring/compose.yml`) retains its named `/app/data` volume and router DNS (`192.168.10.1`). The service additionally sets:
+
+```yaml
+    environment:
+      NODE_EXTRA_CA_CERTS: /etc/homelab-ca/root.crt
+    volumes:
+      # Existing uptime-kuma-data:/app/data mount is retained
+      - /opt/monitoring/certs/homelab-root-ca.crt:/etc/homelab-ca/root.crt:ro
+```
+
+`/opt/monitoring/certs/homelab-root-ca.crt` is a verified copy of the **public** internal CA certificate; `NODE_EXTRA_CA_CERTS` and the mount were confirmed inside the running Uptime Kuma **1.23.17** container following `docker compose up -d --no-deps uptime-kuma`. Its SQLite database loaded successfully. Adding/verifying HTTPS probes for `https://grafana.home.arpa/login` and `https://pve.home.arpa:8006/`, retaining TLS verification, and testing actual alert delivery are **still to be confirmed**. Do not count those checks as verified until Kuma reports them UP.
+
 **Not yet instrumented:** `nas` (LXC 105) has no node-exporter and isn't in
 the scrape config at all — genuine gap, not a stale-IP issue. Needed before
 the Infrastructure Overview dashboard (issue #5) can include it.
@@ -84,7 +116,7 @@ the Infrastructure Overview dashboard (issue #5) can include it.
 "Infrastructure Overview" dashboard rebuilt in Grafana (`192.168.10.158:3000`,
 default `Prometheus` datasource — note there's also a stale, unused lowercase
 `prometheus` datasource pointing at a dead IP, worth deleting eventually).
-Grouped into 2 labeled rows (`RowsLayout`), 4-wide grid, 28 panels:
+The original live dashboard was grouped into 2 labeled rows (`RowsLayout`), 4-wide grid, 28 panels:
 
 - **Row 1 (Infrastructure):** up/down stat panels for
   proxmox/monitor-01/gha-general-01/dell-mini (`up{job="..."}`), plus
@@ -95,16 +127,25 @@ Grouped into 2 labeled rows (`RowsLayout`), 4-wide grid, 28 panels:
   (cAdvisor has no clean boolean like node-exporter's `up`, so "No Data" is
   the down signal here), plus CPU/Mem/Network gauges per runner
 
+- **Row 3 (Internal HTTPS / Caddy) — prepared in the repository JSON:**
+  3 status panels for Caddy scrape (`up{job="caddy"}`), Grafana upstream
+  (`caddy_reverse_proxy_upstreams_healthy{job="caddy",upstream="192.168.10.158:3000"}`),
+  and Kuma upstream (`upstream="192.168.10.158:3001"`). All three underlying
+  Prometheus expressions returned `1` on October 20, 2026. **The updated
+  Scenes-based JSON has not been confirmed imported/saved in Grafana yet.**
+
 Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners
 up/down), #9 (CPU/RAM/network panels per runner), #43 (dell-mini panels).
 
 Dashboard is version-controlled as code:
 [docs/services/dashboards/infra-overview.json](dashboards/infra-overview.json)
-— the raw Grafana dashboard JSON (v13 Scenes-based schema), exported after
-each round of changes so the dashboard's actual state lives in git, not just
-in Grafana's own storage. To apply: Grafana → dashboard → **Edit** →
-**Export/Share** → **Export as JSON** to see current state, or paste this
-file's content into **Settings → JSON Model** to apply it.
+— Grafana 13 Scenes-based dashboard JSON. The version in this documentation
+package extends the previously captured dashboard with three Caddy status
+panels (31 panels total). **It is an intended configuration, not yet a
+verified export of the live saved dashboard.** Before applying it, export
+the current live JSON as a backup, review any intervening changes, import
+the updated JSON through Grafana, verify all three panels, then re-export
+the saved dashboard back to this file so the repository matches reality.
 
 Open follow-ups: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
 (GH Actions job-level metrics), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
@@ -130,7 +171,13 @@ the tracked repos — same least-privilege pattern used everywhere else in
 this setup. Blocked on the actual GitHub org/repo names for the
 dfair/pl/kc runners.
 
-## Alerting Ideas (still aspirational — not built)
+## Alerting — separate follow-up issue (not part of this deployment)
+
+Grafana alerting and Uptime Kuma notification/expiry alert setup and
+validation will be tracked in a **separate GitHub issue**. No new alerts were
+configured in the October 20, 2026 Caddy monitoring session.
+
+### Ideas (not configured)
 
 | Alert | Condition | Severity |
 |---|---|---|
