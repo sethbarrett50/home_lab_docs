@@ -1,8 +1,8 @@
 # Internal DNS — OpenWrt dnsmasq
 
-**Status:** Deployed and validated on 2026-10-20  
-**DNS namespace:** `home.arpa` (RFC 8375)  
-**Platform:** GL.iNet Flint 2 / OpenWrt 23.05.5, dnsmasq  
+**Status:** Deployed and validated on 2026-10-20
+**DNS namespace:** `home.arpa` (RFC 8375)
+**Platform:** GL.iNet Flint 2 / OpenWrt 23.05.5, dnsmasq
 **Scope:** Internal lab hostnames, with the router continuing to serve DNS and DHCP. TLS certificates are deferred.
 
 ## Design decision
