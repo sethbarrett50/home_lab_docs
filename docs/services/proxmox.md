@@ -7,7 +7,7 @@
 | Property | Value |
 |---|---|
 | IP | 192.168.10.10 (static) |
-| Web UI | https://192.168.10.10:8006 |
+| Web UI | `https://pve.home.arpa:8006/` (CA-trusted hostname); IP-based access also available on port 8006 but certificate name does not match IP |
 | VLAN | 10 — Lab |
 | Proxmox | VE 9.1.1 (kernel 6.17.2-1-pve) |
 | BIOS | 2.8.1 |
@@ -29,6 +29,7 @@ services overview):
 | `gha-general-01` | VM 101 | 3x GitHub Actions runner containers (`dfair`/`pl`/`kc`), Buildkit, Grafana Alloy, cAdvisor, node-exporter |
 | `monitor-01` | VM 102 | Grafana, Prometheus, Loki, Uptime Kuma, Alloy, cAdvisor, node-exporter — see [monitoring.md](monitoring.md) |
 | `nas` | LXC 105 | File storage — software TBD, see [nas.md](nas.md). Data is mp0 `/mnt/pve/hdd-1tb/nas-share` -> `/mnt/nas-share` (`sda1`); rootfs on `local-lvm` |
+| `certs-01` | LXC 106 | Debian 13, unprivileged; Caddy 2.6.2, internal CA and HTTPS reverse proxy; `192.168.10.50`, see [caddy.md](caddy.md) |
 
 ### Future ideas (not started, no concrete plan)
 
@@ -87,8 +88,16 @@ Job `nightly-all` (vzdump), created 2026-10-13 for #56:
 
 First manual run (2026-10-13) sizes: VM 101 ~24 GB, VM 102 ~5 GB, CT 105 ~266 MB.
 
+CT 106 (`certs-01`) was deployed and manually backed up with `vzdump` on 2026-10-20; the backup archive is approximately 224 MB. Its ongoing coverage under the all-guests `nightly-all` job should be confirmed from the next completed job. **Treat CT 106 backups as sensitive** because they include CA private-key material.
+
 - CT 105's `mp0` NAS share (`/mnt/pve/hdd-1tb/nas-share`) is not in the backup
 - Backups share `sda` with the NAS data, so a failure of `sda` loses both; there is no offsite or second-disk copy
+
+## Internal HTTPS certificate
+
+The Proxmox UI is accessed directly at `https://pve.home.arpa:8006/` (DNS resolves to `192.168.10.10`); **it is not proxied through Caddy**. On 2026-10-20, a Proxmox-host-generated RSA 3072-bit key and CSR were signed using the Caddy local root CA in `certs-01`. The certificate contains the `pve.home.arpa` SAN and expires **2027-10-20**. The Proxmox host installed the key and certificate using `pvenode cert set ... --restart 1`; the public CA must also be trusted on clients. GET requests from `monitor-01` successfully verified the certificate and returned HTTP 200.
+
+The certificate **does not automatically renew** with Caddy's own leaf certificates. Arrange renewal well before October 2027, protect both the Proxmox key and Caddy CA key, and document a restricted signing/rotation process. See [Internal HTTPS / Caddy](caddy.md#internal-ca-and-client-trust).
 
 ## Notifications
 
