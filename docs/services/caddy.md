@@ -1,6 +1,6 @@
 # Internal HTTPS and Caddy
 
-Deployed 2026-10-20 on **`certs-01`**, Debian 13 unprivileged Proxmox LXC **CT 106**, VLAN 10, static `192.168.10.50`. Caddy **2.6.2** runs under systemd (`caddy.service`). The router (`flint2`, `192.168.10.1`) provides the `home.arpa` DNS records; Caddy does **not** provide DNS.
+Deployed 2026-10-20; leaderboard route added and validated 2026-10-21. Runs on **`certs-01`**, Debian 13 unprivileged Proxmox LXC **CT 106**, VLAN 10, static `192.168.10.50`. Caddy **2.6.2** runs under systemd (`caddy.service`). The router (`flint2`, `192.168.10.1`) provides the `home.arpa` DNS records; Caddy does **not** provide DNS.
 
 ## Endpoints and traffic
 
@@ -8,6 +8,7 @@ Deployed 2026-10-20 on **`certs-01`**, Debian 13 unprivileged Proxmox LXC **CT 1
 |---|---|---|---|
 | `grafana.home.arpa` | HTTPS 443 → Caddy | `192.168.10.158:3000` | Caddy `tls internal` (automatic leaf renewal) |
 | `uptime.home.arpa` | HTTPS 443 → Caddy | `192.168.10.158:3001` | Caddy `tls internal` (automatic leaf renewal) |
+| `cs-leaderboard.home.arpa` | HTTPS 443 → Caddy | `192.168.10.117:80` (nginx on `dell-mini`) | Caddy `tls internal` (automatic leaf renewal) |
 | `pve.home.arpa:8006` | Direct to Proxmox `192.168.10.10:8006` | Proxmox `pveproxy` (not routed through Caddy) | Manually signed custom certificate; see [Proxmox](proxmox.md#internal-https-certificate) |
 | `192.168.10.50:9180/metrics` | HTTP metrics-only listener on `certs-01` | Scraped by Prometheus on `monitor-01` | Plain HTTP, IP-restricted by Caddy matcher; firewall restriction still needs testing |
 
@@ -15,7 +16,7 @@ Deployed 2026-10-20 on **`certs-01`**, Debian 13 unprivileged Proxmox LXC **CT 1
 
 ## Running Caddyfile
 
-`/etc/caddy/Caddyfile` on **`certs-01`** (captured 2026-10-20):
+`/etc/caddy/Caddyfile` on **`certs-01`** (updated 2026-10-21; includes leaderboard block):
 
 ```caddyfile
 {
@@ -34,6 +35,12 @@ uptime.home.arpa {
     tls internal
     encode zstd gzip
     reverse_proxy 192.168.10.158:3001
+}
+
+cs-leaderboard.home.arpa {
+    tls internal
+    encode zstd gzip
+    reverse_proxy 192.168.10.117:80
 }
 
 http://192.168.10.50:9180 {
@@ -70,6 +77,10 @@ curl -fsS http://192.168.10.50:9180/metrics | grep '^caddy_reverse_proxy_upstrea
 
 Both proxy URLs returned HTTP 200 from `certs-01` after installing the internal root CA in its system trust store. Prometheus subsequently reported the `caddy` job **UP** (`up{job="caddy"} = 1`). An upstream-health gauge of 1 is **not** a substitute for an end-to-end HTTPS check.
 
+### Leaderboard acceptance test (2026-10-21)
+
+From an XPS client on VLAN 20, `curl -v https://cs-leaderboard.home.arpa/` returned HTTP/2 200 and `SSL certificate verify ok`; the TLS SAN matched `cs-leaderboard.home.arpa`. `GET /api/universities` returned HTTP/2 200 and nonempty JSON; HTTP port 80 returned a 308 redirect to HTTPS. On `certs-01`, `curl -I http://192.168.10.117/` returned 200. `caddy fmt --overwrite`, configuration validation, and service reload succeeded. The initial leaf certificate was valid for 12 hours; Caddy manages renewal automatically. These checks establish service reachability, not a complete audit of the router firewall rules.
+
 ## Internal CA and client trust
 
 Caddy's local CA material lives on **`certs-01`** under:
@@ -101,7 +112,7 @@ On `certs-01`, commands run as root, so omit `sudo` (not installed there). Brave
 
 CT 106 has been included in the Proxmox backup workflow on `hdd-1tb` (see [Proxmox backups](proxmox.md#backups)). An initial manual `vzdump` succeeded. Backups reside on the same host/site and are **not** yet verified off-host disaster-recovery copies.
 
-A restore must preserve Caddy's CA material to keep the existing installed trust anchor valid. After restoring, check DNS resolution, port 443, the `caddy` service, the metrics endpoint, and both HTTPS URLs. Protect stored backup archives as CA-key-bearing secrets. A restore test is still outstanding.
+A restore must preserve Caddy's CA material to keep the existing installed trust anchor valid. After restoring, check DNS resolution, port 443, the `caddy` service, the metrics endpoint, and all three proxied HTTPS URLs. Protect stored backup archives as CA-key-bearing secrets. A restore test is still outstanding.
 
 ## Follow-ups
 
