@@ -100,13 +100,14 @@ network design itself.
 
 ## Internal service DNS (`home.arpa`)
 
-`flint2` runs dnsmasq and serves internal hostnames; see [Internal HTTPS / Caddy](../services/caddy.md). Verified records on 2026-10-20 include:
+`flint2` runs dnsmasq and serves internal hostnames; see [Internal HTTPS / Caddy](../services/caddy.md). Records verified during 2026-10-20 deployment and the 2026-10-21 leaderboard addition include:
 
 | Name | IP | Service |
 |---|---|---|
 | `certs-01.home.arpa` | `192.168.10.50` | Caddy host |
 | `grafana.home.arpa` | `192.168.10.50` | Caddy → monitor-01 `:3000` |
 | `uptime.home.arpa` | `192.168.10.50` | Caddy → monitor-01 `:3001` |
+| `cs-leaderboard.home.arpa` | `192.168.10.50` | Caddy → dell-mini `192.168.10.117:80` (verified HTTPS 2026-10-21) |
 | `pve.home.arpa` | `192.168.10.10` | Direct Proxmox `:8006` (not Caddy) |
 | `monitor.home.arpa` | `192.168.10.158` | Monitoring VM |
 

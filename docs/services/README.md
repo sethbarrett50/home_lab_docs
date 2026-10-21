@@ -61,6 +61,8 @@ graph TD
     PVE --> CADDY
     CADDY -->|HTTPS reverse proxy| GRAF
     CADDY -->|HTTPS reverse proxy| KUMA
+    LEADERBOARD[research-output-scraper\nnginx on dell-mini] 
+    CADDY -->|HTTPS frontend, HTTP backend| LEADERBOARD
 
     IDS["IDS Research (FIRCE/FADES)\nlikely uses VLAN 30 as testbed"]
     IDS -.-> PVE
@@ -89,6 +91,7 @@ The router maintains hostname records from DHCP leases and reservations, with ex
 | Proxmox VE | `pve.home.arpa` | HTTPS port 8006 |
 | Grafana host | `monitor.home.arpa` | Port 3000 |
 | Uptime Kuma host | `monitor.home.arpa` | Port 3001 |
+| CS publication leaderboard | `cs-leaderboard.home.arpa` | HTTPS 443 via Caddy → `dell-mini:80` |
 | NAS LXC | `nas.home.arpa` | Service-dependent |
 | GitHub Actions VM | `gha-general-01.home.arpa` | SSH port 22 |
 
@@ -105,7 +108,7 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 | GitHub Actions runners (dfair/pl/kc) | 3x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
-| [research-output-scraper](research-output-scraper.md) | nginx + systemd, on `dell-mini` (not Proxmox) | ✅ Running | Medium |
+| [research-output-scraper](research-output-scraper.md) | nginx + systemd on `dell-mini`; HTTPS via Caddy | ✅ Running; HTTPS verified 2026-10-21 | Medium |
 | qBittorrent | LXC/Docker | 🔲 Planned | Medium |
 | NAS software | LXC/VM | 🔲 Planned (HDDs pending) | Medium |
 | Firewall VM | VM | 🔲 Planned | Low |

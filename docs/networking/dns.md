@@ -3,7 +3,7 @@
 **Status:** Deployed and validated on 2026-10-20
 **DNS namespace:** `home.arpa` (RFC 8375)
 **Platform:** GL.iNet Flint 2 / OpenWrt 23.05.5, dnsmasq
-**Scope:** Internal lab hostnames, with the router continuing to serve DNS and DHCP. TLS certificates are deferred.
+**Scope:** Internal lab hostnames; the router continues to serve DNS and DHCP. HTTPS certificates are provided separately by Caddy on `certs-01`.
 
 ## Design decision
 
@@ -19,6 +19,7 @@ The router's VLAN 10 gateway is `192.168.10.1`, and its VLAN 20 gateway is `192.
 | --- | --- | --- | --- |
 | `pve.home.arpa` | `192.168.10.10` | Explicit UCI DNS record; static address on Proxmox `vmbr0` | DNS lookup; web UI reachable |
 | `monitor.home.arpa` | `192.168.10.158` | Explicit UCI DNS record | DNS lookup |
+| `cs-leaderboard.home.arpa` | `192.168.10.50` | Explicit UCI `config domain` record (2026-10-21) | `dig @192.168.20.1`, `getent`, HTTPS/API validated |
 | `dell-mini.home.arpa` | `192.168.10.117` | Existing DHCP reservation | DNS lookup |
 | `gha-general-01.home.arpa` | `192.168.10.189` | Existing DHCP reservation | DNS lookup |
 | `acer-lap.home.arpa` | `192.168.10.199` | Existing DHCP reservation | DNS lookup |
@@ -40,7 +41,7 @@ config dnsmasq
     option expandhosts '1'
 ```
 
-Two explicit entries are configured for statically addressed infrastructure:
+Examples of explicit entries for statically addressed infrastructure and service aliases:
 
 ```text
 config domain
@@ -50,7 +51,13 @@ config domain
 config domain
     option name 'monitor.home.arpa'
     option ip '192.168.10.158'
+
+config domain
+    option name 'cs-leaderboard.home.arpa'
+    option ip '192.168.10.50'
 ```
+
+The leaderboard DNS name points to the **Caddy frontend** at `.50`, not the application backend `dell-mini` at `192.168.10.117`. Other Caddy aliases (`grafana.home.arpa`, `uptime.home.arpa`) also point to `.50`; see [networking inventory](README.md#internal-service-dns-homearpa) and [Caddy](../services/caddy.md).
 
 Existing `config host` DHCP reservations are retained. No DHCP reservation was added for Proxmox: its host network configuration uses `192.168.10.10/24` statically on `vmbr0`, gateway `192.168.10.1`.
 
@@ -76,6 +83,10 @@ getent ahostsv4 dell-mini.home.arpa
 ```
 
 `https://pve.home.arpa:8006` worked in a browser. Certificate trust warnings are expected until TLS is addressed separately. An HTTP `501` response to `curl -k -I` reflects unsupported HEAD requests and is not evidence of failed name resolution.
+
+### Leaderboard DNS validation (2026-10-21)
+
+Added `cs-leaderboard.home.arpa` on OpenWrt using `uci add dhcp domain`, committed, ran `dnsmasq --test` (OK), and restarted dnsmasq. `dig @192.168.20.1 cs-leaderboard.home.arpa +short` and `getent ahostsv4 cs-leaderboard.home.arpa` both returned `192.168.10.50` from the Trusted VLAN. HTTPS then returned HTTP 200 with trusted TLS, API JSON was returned, and HTTP redirected to HTTPS (308). See [leaderboard](../services/research-output-scraper.md). The dnsmasq restart printed `udhcpc: no lease` messages, but the tested DNS resolution succeeded; this alone does not diagnose other DHCP client interfaces.
 
 ### NAS follow-up validation
 
@@ -105,5 +116,5 @@ Only after deciding that `.170` should be permanent, add a reservation and docum
 
 - Test `nas.home.arpa` from VLAN 20 and with ordinary client resolution. If the NAS should keep `192.168.10.170`, add a DHCP reservation using MAC `BC:24:11:4D:7E:3A`, then retest. Do not treat the currently verified DHCP lease as a permanent reservation.
 - Compare the router's active DHCP leases and ARP/neigh table with the VLAN 10 inventory; add entries for other verified hosts if necessary.
-- Update existing network inventory and diagrams to reflect router-hosted DNS and the `home.arpa` namespace.
-- Create a separate HTTPS/certificate work item; DNS setup does not remove certificate warnings.
+- Keep network inventory and diagrams synchronized with new router-hosted DNS names and the `home.arpa` namespace.
+- HTTPS was deployed on 2026-10-20 and extended to the leaderboard on 2026-10-21; clients must trust the existing Caddy CA. See [Caddy](../services/caddy.md).
