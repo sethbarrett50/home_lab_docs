@@ -160,7 +160,7 @@ grep -RHnE '^(URIs:|Suites:|Components:|Enabled:|deb )' \
 
 ### Upgrade History
 
-**2026-10-20 — Proxmox VE 9.1.1 → 9.2.21**
+#### 2026-10-20 — Proxmox VE 9.1.1 → 9.2.21
 
 The host was upgraded after correcting the APT repositories.
 
