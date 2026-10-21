@@ -1,12 +1,19 @@
 # NAS & Storage
 
-## Status: Done
+## Status: Container running; NAS stack not finalized
 
-Running as `nas` (LXC 105) on the Proxmox host, VLAN 10 (`192.168.10.170`,
-DHCP). Implementation specifics (which NAS software from the options below,
-actual mount points, qBittorrent/Mullvad binding) weren't covered in the
-GL.iNet networking session — update this doc with the real configuration
-next time it's touched.
+`nas` (LXC 105) is running on the Proxmox host, VLAN 10
+(`192.168.10.170`, DHCP). The container's root filesystem is on
+`local-lvm`. Its bind mount (`mp0`) maps host
+`/mnt/pve/hdd-1tb/nas-share` to container `/mnt/nas-share` on the
+active Seagate 1 TB HDD. This bind-mounted data is not covered by the
+normal LXC guest backup.
+
+The host now also has an empty 500 GB WD Blue ext4 directory storage
+(`hdd-500gb`) and a ~906 GiB Silicon Power LVM-thin pool (`ssd-1tb`),
+added 2026-10-21. Neither is currently a NAS share or a network-mounted
+Proxmox datastore. NAS software, Samba/NFS shares, qBittorrent and VPN
+integration remain unverified or planned, not completed.
 
 ## Planned Stack
 
@@ -67,7 +74,7 @@ Alternatively, use a Docker setup like `binhex/arch-qbittorrentvpn` which handle
 
 ## TODO
 
-- [ ] Purchase HDDs
+- [x] Install additional local SSD/HDD storage (2026-10-21; not a redundant NAS array)
 - [ ] Decide on NAS software
 - [ ] Set up NAS as VM or LXC on Proxmox
 - [ ] Configure Samba/NFS shares
