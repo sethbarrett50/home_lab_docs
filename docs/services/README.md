@@ -31,7 +31,6 @@ graph TD
 
     subgraph "VM 101 - gha-general-01"
         GHA1[dfair runner]
-        GHA2[pl runner]
         GHA3[kc runner]
         BK[Buildkit]
     end
@@ -105,7 +104,7 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 
 | Service | Type | Status | Priority |
 |---|---|---|---|
-| GitHub Actions runners (dfair/pl/kc) | 3x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
+| GitHub Actions runners (dfair/kc) | 2x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
 | [research-output-scraper](research-output-scraper.md) | nginx + systemd on `dell-mini`; HTTPS via Caddy | ✅ Running; HTTPS verified 2026-10-21 | Medium |

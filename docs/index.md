@@ -46,7 +46,8 @@ graph TD
 | NAS / storage | ✅ Done |
 | VPN (inbound) | 🔲 Planned |
 | Mullvad on Trusted VLAN | 🔲 Planned |
-| Monitoring stack | 🔧 Partial |
+| Monitoring stack | 🔧 Running; runner job-exporter added 2026-10-22, job-active test pending |
+| VLAN 30 Internet egress | 🔒 IoT → WAN forwarding removed 2026-10-22; client validation pending |
 
 !!! note
     This page mirrors the repo's root `README.md` (GitHub's landing page) for

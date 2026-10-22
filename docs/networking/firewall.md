@@ -9,13 +9,13 @@ flowchart LR
     WAN[wan\nzone]
     LAB[lan_lab\nVLAN 10]
     TRUST[lan_trusted\nVLAN 20]
-    IOT[lan_iot\nVLAN 30]
+    IOT[iot\nVLAN 30]
 
     WAN -->|"DNAT — VPN tunnel\n& homelab ingress"| LAB
     WAN -->|"DNAT — VPN tunnel"| TRUST
     LAB -->|"allow outbound"| WAN
     TRUST -->|"via Mullvad only"| WAN
-    IOT -->|"restricted outbound"| WAN
+    IOT -.->|"WAN forwarding removed 2026-10-22"| WAN
 
     LAB -. blocked .- TRUST
     LAB -. blocked .- IOT
@@ -30,7 +30,7 @@ flowchart LR
 | wan | DROP | ACCEPT | DROP |
 | lan_lab | ACCEPT | ACCEPT | ACCEPT |
 | lan_trusted | ACCEPT | ACCEPT | ACCEPT |
-| lan_iot | DROP | ACCEPT | DROP |
+| iot (VLAN 30) | DROP | ACCEPT | DROP |
 
 ## Planned Firewall Rules
 
@@ -51,8 +51,8 @@ chain forward {
 }
 ```
 
-### IoT VLAN — Restricted Outbound
-Allow only what research devices need; deny everything else by default.
+### IoT VLAN — Planned exception policy (not deployed)
+Historic design only; **VLAN 30 WAN forwarding was removed on 2026-10-22**, and the table below is *not* a list of deployed rules. An existing DHCP/DNS exception remains and must be reviewed separately.
 
 | Protocol | Destination | Action | Notes |
 |---|---|---|---|
@@ -70,6 +70,34 @@ Add rules as needed. Starting point — only Proxmox UI:
 | TCP | 192.168.10.10 | 22 | ACCEPT (SSH to Proxmox) |
 | * | 192.168.10.0/24 | * | DROP |
 
+## VLAN 30 outbound isolation — applied 2026-10-22
+
+On the Flint 2 (OpenWrt 23.05.5), VLAN 30 is named **`iot`**, not `edge`:
+`network.iot.device=br-lan.30`, gateway `192.168.30.1/24`, firewall
+zone `firewall.iot` with `input=DROP`, `output=ACCEPT`, `forward=DROP`.
+Removed the `iot` → `wan` **zone forwarding** while retaining `lan`, `lab`,
+and `trusted` → `wan`. The attempted `edge` source rule was invalid and
+was deleted. Backed up `/etc/config/firewall` to
+`/root/firewall-before-vlan30-block.bak`; `fw4 check` reported
+`Ruleset passes nftables check` and firewall reload succeeded.
+
+This is **router-side configuration verification**, not a completed
+end-to-end test. Verify on a VLAN 30 client that IPv4 HTTPS, ping and IPv6
+Internet connectivity are blocked; verify intended DHCP/DNS still works.
+`Allow-IoT-DHCP-DNS` is still configured but its exact rule contents were
+not examined in the captured output. Router-resolved DNS may still forward
+queries externally. Inspect policy routing, VPNs, redirects and IPv6 before
+claiming airtight isolation; layer-2 peers on the same VLAN are not separated
+by OpenWrt's inter-zone firewall.
+
+```bash
+uci show network.iot
+uci show firewall.iot
+uci show firewall.@rule[9]  # verify actual DHCP/DNS allowances
+fw4 check
+uci show firewall | grep -E '=forwarding|\.src=|\.dest='
+```
+
 ## Internal HTTPS access (deployed 2026-10-20)
 
 The existing broad section above documents the planned baseline, **not a fully audited live firewall ruleset**. During the internal HTTPS deployment, selective Trusted (VLAN 20) → `certs-01` (`192.168.10.50`) TCP access was configured for SSH **22** and web **80/443**. Grafana and Uptime Kuma are reached through Caddy on port 443. Proxmox's CA-signed UI still uses direct `192.168.10.10:8006` access. On 2026-10-21 a Trusted VLAN client (`192.168.20.173`) successfully reached `https://cs-leaderboard.home.arpa` via `certs-01:443`, confirming effective connectivity for that path (not the exact active UCI rule definitions). Caddy forwarded to nginx on `dell-mini` (`192.168.10.117:80`) on VLAN 10. Existing direct `lan`/`trusted` → `dell-mini:80` rules remain documented; these were not removed. Restricting direct HTTP access to Caddy is a future hardening option because directly supplied `X-Real-IP` may influence FastAPI rate limiting.
@@ -78,7 +106,7 @@ The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10
 
 ## TODO
 
-- [ ] Implement zone config in OpenWrt UCI / LuCI
+- [x] VLAN 30 `iot` zone configured and IoT → WAN forwarding removed (2026-10-22); client testing pending
 - [ ] Configure Mullvad WireGuard interface + kill switch
 - [ ] Test VLAN isolation with `nmap` cross-VLAN scans
 - [ ] Set up firewall logging for dropped packets (helps with debugging IoT devices)

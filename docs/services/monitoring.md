@@ -19,8 +19,9 @@ graph TD
         NE1[node-exporter]
         CB1[cAdvisor :8080]
         AL1[Grafana Alloy :12345]
-        R1[3x GHA runner containers\ndfair / pl / kc]
+        R1[2x GHA runner containers\ndfair / kc]
         BK[Buildkit builder]
+        EX[Runner job exporter :9119]
     end
 
     subgraph "monitor-01 (192.168.10.158)"
@@ -43,6 +44,7 @@ graph TD
 
     NE1 --> AL1
     CB1 --> AL1
+    EX -->|direct scrape :9119| PROM
     AL1 -->|remote_write| PROM
     NE2 --> PROM
     CB2 --> PROM
@@ -67,7 +69,8 @@ graph TD
 | `cadvisor` | monitor-01 + gha-general-01 | 8080 | Per-container CPU/mem/network metrics |
 | `node-exporter` | monitor-01 + gha-general-01 | — | Host-level CPU/mem/disk metrics |
 | `node_exporter` (native, not a container) | dell-mini | 9100 | Host-level CPU/mem/disk metrics — scraped directly by Prometheus, no Alloy (dell-mini doesn't run Docker) |
-| `dfair-gha-runner-local`, `pl-gha-runner-local`, `kc-gha-runner-local` | gha-general-01 | — | The 3 self-hosted GitHub Actions runners |
+| `dfair-gha-runner-local`, `kc-gha-runner-local` | gha-general-01 | — | The 2 active self-hosted GitHub Actions runners; PL retired 2026-10-22 |
+| `gha-runner-job-exporter.service` (systemd/Python) | gha-general-01 | 9119 | Read-only Docker runner log observer; exported metrics for current job names |
 | `buildx_buildkit_builder-*` | gha-general-01 | — | Buildkit builder for the runners |
 
 **Fixed (was issue #3):** all scrape targets were still pointed at
@@ -111,65 +114,99 @@ Caddy runs on `certs-01` (LXC 106, `192.168.10.50`); full configuration and CA h
 the scrape config at all — genuine gap, not a stale-IP issue. Needed before
 the Infrastructure Overview dashboard (issue #5) can include it.
 
-## Dashboard Rebuild Status
+## GitHub Actions runner observability (2026-10-22)
 
-"Infrastructure Overview" dashboard rebuilt in Grafana (`192.168.10.158:3000`,
-default `Prometheus` datasource — note there's also a stale, unused lowercase
-`prometheus` datasource pointing at a dead IP, worth deleting eventually).
-The original live dashboard was grouped into 2 labeled rows (`RowsLayout`), 4-wide grid, 28 panels:
+The deployed `gha-general-01` runner inventory is **KC + DFAIR only**.
+PL was removed from Docker and its dedicated systemd unit was disabled and
+removed on 2026-10-22; its old `pl-gha-runner.service` alias is masked.
+Removing PL from GitHub's organization-level runner registration is still
+not independently verified. The retired runner must not be reintroduced by
+backup restore or service automation.
 
-- **Row 1 (Infrastructure):** up/down stat panels for
-  proxmox/monitor-01/gha-general-01/dell-mini (`up{job="..."}`), plus
-  CPU/Mem/Disk gauge panels per host (12 panels, instant queries against
-  node-exporter metrics)
-- **Row 2 (GHA Runners):** up/down stat panels for the 3 runner containers,
-  using `count(container_last_seen{name="..."})` with value+special mappings
-  (cAdvisor has no clean boolean like node-exporter's `up`, so "No Data" is
-  the down signal here), plus CPU/Mem/Network gauges per runner
+| Runner | Private source repo | Container | Service |
+|---|---|---|---|
+| KC | [KC-GHA-Runner](https://github.com/Kart-Chaser/KC-GHA-Runner) | `kc-gha-runner-local` | `gha-runner-kc.service` |
+| DFAIR | [dfair_runner](https://github.com/DFAIR-LAB-Augusta/dfair_runner) | `dfair-gha-runner-local` | `gha-runner-dfair.service` |
 
-- **Row 3 (Internal HTTPS / Caddy) — prepared in the repository JSON:**
-  3 status panels for Caddy scrape (`up{job="caddy"}`), Grafana upstream
-  (`caddy_reverse_proxy_upstreams_healthy{job="caddy",upstream="192.168.10.158:3000"}`),
-  and Kuma upstream (`upstream="192.168.10.158:3001"`). All three underlying
-  Prometheus expressions returned `1` on October 20, 2026. **The updated
-  Scenes-based JSON has not been confirmed imported/saved in Grafana yet.**
+The repos are private. Their *exact* GitHub URLs are excluded from the
+unauthenticated lychee link checker in `.lycheeignore`. Other links remain
+checked as usual.
 
-Closed: #3 (scrape targets), #4 (docs), #5 (Infra row), #6 (Runners
-up/down), #9 (CPU/RAM/network panels per runner), #43 (dell-mini panels).
+A Python HTTP exporter runs as `gha-runner-job-exporter.service` on
+`gha-general-01` (`192.168.10.189:9119`) and reads local Docker runner logs.
+Its repository copy and systemd unit are under
+[`runner-observability/`](runner-observability/).
+It exposes:
 
-Dashboard is version-controlled as code:
-[docs/services/dashboards/infra-overview.json](dashboards/infra-overview.json)
-— Grafana 13 Scenes-based dashboard JSON. The version in this documentation
-package extends the previously captured dashboard with three Caddy status
-panels (31 panels total). **It is an intended configuration, not yet a
-verified export of the live saved dashboard.** Before applying it, export
-the current live JSON as a backup, review any intervening changes, import
-the updated JSON through Grafana, verify all three panels, then re-export
-the saved dashboard back to this file so the repository matches reality.
+- `gha_runner_job_observer_up{runner="kc|dfair"}`: `1` when Docker logs can be read;
+  **not** proof GitHub has registered or marked the runner online.
+- `gha_runner_job_observer_initialized`: whether a recognizable log marker was seen.
+- `gha_runner_current_job{runner="...",job="..."} 1`: inferred unfinished job;
+  **absent** when no active job is inferred. Grafana maps absence to
+  `None running` when the observer is healthy.
 
-Open follow-ups: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
-(GH Actions job-level metrics), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
-(router traffic stats).
+This observer does not use GitHub APIs or expose the originating repository.
+It can miss very short jobs or infer stale status if log history rolls over.
+A live running-job test against GitHub has **not yet been verified**.
+Do not confuse `None running` with a failed exporter: first inspect the
+observer metrics and actual `docker logs`.
 
-### #7 research note
+The Prometheus config on `monitor-01` is bind-mounted from
+`/opt/monitoring/prometheus/prometheus.yml` and includes:
 
-Checked the existing third-party GitHub Actions Prometheus exporters before
-building anything. `amirwollman/github-actions-exporter` and its successor
-`Labbs/github-actions-exporter` (same project, migrated orgs) are **marked
-"no longer maintained"** by the original author — currently mid-revival
-under new stewardship, 26 open issues. Both also require a PAT scoped to
-`repo` + `admin:org` just to read workflow status, which is a lot of
-permission for read-only Actions data. `skroutz/github-actions-exporter` and
-`kaidotdev/github-actions-exporter` are both built around Actions Runner
-Controller (Kubernetes) — doesn't fit this setup, which runs runners as
-plain Docker containers.
+```yaml
+  - job_name: gha-runner-jobs
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - '192.168.10.189:9119'
+```
 
-**Decision:** build a small custom exporter instead (Python +
-`prometheus_client`, polling `/repos/{owner}/{repo}/actions/runs` directly),
-authenticated with a fine-grained PAT scoped to `Actions: Read-only` on just
-the tracked repos — same least-privilege pattern used everywhere else in
-this setup. Blocked on the actual GitHub org/repo names for the
-dfair/pl/kc runners.
+On 2026-10-22 `promtool check config` passed, Prometheus was HUP-reloaded,
+`curl` from `monitor-01` reached the exporter, and the Prometheus API returned
+`gha_runner_job_observer_up=1` for both `kc` and `dfair`. This verifies the
+exporter-to-Prometheus path, not a running-job capture or alert notification.
+Limit port 9119 to the monitoring host; it has no authentication and Docker
+access held by the exporter service is privileged.
+
+### Diagnostic commands
+
+On `gha-general-01`:
+
+```bash
+sudo systemctl status gha-runner-job-exporter.service --no-pager
+curl -fsS http://127.0.0.1:9119/metrics
+docker logs --tail 30 kc-gha-runner-local
+docker logs --tail 30 dfair-gha-runner-local
+```
+
+On `monitor-01`:
+
+```bash
+sudo docker exec prometheus promtool check config /etc/prometheus/prometheus.yml
+curl -fsSG http://localhost:9090/api/v1/query \
+  --data-urlencode 'query=gha_runner_job_observer_up' | jq '.data.result'
+```
+
+The versioned
+[Infrastructure Overview dashboard JSON](dashboards/infra-overview.json)
+is a **Grafana 13 Scenes-based JSON**, based on the supplied dashboard and
+updated with two runners, current-job stat panels, and corrected single-value
+container-health queries. CPU and RAM gauges use actual host capacity;
+network gauges show throughput without an assumed link maximum. Because KC
+uses host networking, its per-container network metric may be absent.
+The user reported importing/updating a Grafana dashboard with the job panels
+showing `None running` while both runners' latest observed jobs had completed.
+Import of this *exact version-controlled revision* into live Grafana has
+not been independently re-exported and compared. Treat live dashboard
+synchronization as a verification step.
+
+Existing Caddy scrape (`:9180`) and other infrastructure panels are retained.
+Outstanding work includes verifying a running workflow appears while active,
+reviewing alerts, and deploying authoritative GitHub API runner status if needed.
+Related tracking: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
+(job-level monitoring), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
+(router telemetry).
 
 ## Alerting — separate follow-up issue (not part of this deployment)
 
