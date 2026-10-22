@@ -1,0 +1,21 @@
+[Unit]
+Description=GitHub Actions Runner Job Exporter
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=simple
+User=seth
+Group=seth
+Environment=EXPORTER_LISTEN=192.168.10.189
+Environment=EXPORTER_PORT=9119
+ExecStart=/usr/bin/python3 /opt/gha-runner-observability/exporter.py
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
