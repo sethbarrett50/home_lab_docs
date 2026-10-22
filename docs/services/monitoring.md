@@ -61,7 +61,7 @@ graph TD
 
 | Container | Host | Port | Role |
 |---|---|---|---|
-| `grafana` | monitor-01 | 3000 | Visualization — Infrastructure Overview dashboard has been rebuilt; see [Dashboard Rebuild Status](#dashboard-rebuild-status) |
+| `grafana` | monitor-01 | 3000 | Visualization — Infrastructure Overview dashboard has been rebuilt |
 | `prometheus` | monitor-01 | 9090 | Metrics store. **Not** 3001 — that's Kuma (see below, was documented wrong) |
 | `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks; existing research-output-scraper monitors documented in [research-output-scraper.md](research-output-scraper.md#monitoring). Docker DNS pinned to `192.168.10.1`. Added internal-CA trust via `NODE_EXTRA_CA_CERTS` and read-only certificate mount (2026-10-20); new Grafana/Proxmox HTTPS monitor status not yet verified. |
 | `loki` | monitor-01 | 3100 | Log aggregation |
