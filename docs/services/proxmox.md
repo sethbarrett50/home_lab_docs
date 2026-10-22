@@ -28,7 +28,7 @@ services overview):
 
 | VM/LXC | ID | Role |
 |---|---|---|
-| `gha-general-01` | VM 101 | 3x GitHub Actions runner containers (`dfair`/`pl`/`kc`), Buildkit, Grafana Alloy, cAdvisor, node-exporter |
+| `gha-general-01` | VM 101 | 2x GitHub Actions runner containers (`dfair`/`kc`); PL retired 2026-10-22, Buildkit, Grafana Alloy, cAdvisor, node-exporter |
 | `monitor-01` | VM 102 | Grafana, Prometheus, Loki, Uptime Kuma, Alloy, cAdvisor, node-exporter — see [monitoring.md](monitoring.md) |
 | `nas` | LXC 105 | File storage — software TBD, see [nas.md](nas.md). Data is mp0 `/mnt/pve/hdd-1tb/nas-share` -> `/mnt/nas-share` (`sda1`); rootfs on `local-lvm` |
 | `certs-01` | LXC 106 | Debian 13, unprivileged; Caddy 2.6.2, internal CA and HTTPS reverse proxy; `192.168.10.50`, see [caddy.md](caddy.md) |
@@ -43,9 +43,31 @@ revisit here with real specs only once one is actually prioritized.
 
 ## GitHub Actions Runners
 
-Self-hosted, 3 runners (`dfair`/`pl`/`kc`) as Docker containers inside the
-`gha-general-01` VM — not directly on the Proxmox host. Each dispatches CI
-jobs from its respective repo:
+Self-hosted, **2 active runners** (`dfair` and `kc`) as Docker containers inside the
+`gha-general-01` VM — not directly on the Proxmox host. They register with their
+respective GitHub organizations and can execute jobs from authorized repositories
+within those organizations.
+
+| Runner | Private runner image/source repository | Container | Systemd service |
+|---|---|---|---|
+| KC | [Kart-Chaser/KC-GHA-Runner](https://github.com/Kart-Chaser/KC-GHA-Runner) | `kc-gha-runner-local` | `gha-runner-kc.service` |
+| DFAIR | [DFAIR-LAB-Augusta/dfair_runner](https://github.com/DFAIR-LAB-Augusta/dfair_runner) | `dfair-gha-runner-local` | `gha-runner-dfair.service` |
+
+These two GitHub repositories are **private**. `.lycheeignore` excludes only
+these exact URLs from unauthenticated CI link checking; it does not exempt
+other links.
+
+**PL retirement (2026-10-22):** `gha-runner-pl.service` disabled and its
+unit file removed; `pl-gha-runner-local` stopped and deleted, and
+`pl-gha-runner:dev` deleted. The old alias `pl-gha-runner.service` remains
+masked. Removal from the PrivateLingua GitHub organization runner registry
+was advised but **not independently verified**. Do not redeploy PL as part
+of routine VM maintenance.
+
+For deployment paths, the systemd KC cleanup override, manual updates, and
+the nightly source-update checker, see [Self-hosted GitHub Actions runners](github-actions-runners.md).
+Runner container/active job monitoring is documented in
+[Monitoring](monitoring.md#github-actions-runner-observability-2026-10-22).
 
 ```mermaid
 sequenceDiagram

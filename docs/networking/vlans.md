@@ -49,7 +49,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Subnet | 192.168.30.0/24 |
 | Gateway | 192.168.30.1 |
 | DNS | 192.168.30.1 (router) or dedicated resolver |
-| Internet | Restricted (allow only what's needed) |
+| Internet | Blocked by router-side `iot` → `wan` forwarding removal on 2026-10-22; client verification pending |
 | Inter-VLAN | Fully isolated — no access to Lab or Trusted. |
 
 **Devices:** Research IoT hardware, Samsung phone (for IoT testing), TP-Link OpenWrt AP
@@ -70,7 +70,7 @@ flowchart LR
 
     L10 -->|Direct| WAN
     L20 -->|Tunneled| VPN --> WAN
-    L30 -->|Restricted| WAN
+    L30 -.->|Blocked by firewall| WAN
 
     L10 -. blocked .- L20
     L10 -. blocked .- L30
@@ -87,6 +87,15 @@ flowchart LR
 | IoT | Lab | ❌ Blocked |
 | IoT | Trusted | ❌ Blocked |
 | Any | Internet | See per-VLAN policy above |
+
+## VLAN 30 Internet block (2026-10-22)
+
+Removed `iot` → `wan` forwarding on the Flint 2. The active network is
+`br-lan.30` (`192.168.30.0/24`), firewall zone `iot` with input and
+forward policies `DROP`. `fw4 check` passed and firewall was reloaded.
+VLAN 10 and 20 WAN forwardings were preserved. **Client-side IPv4/IPv6
+connectivity tests remain pending.** Router-side DHCP/DNS exception was
+not changed; see [firewall details](firewall.md#vlan-30-outbound-isolation--applied-2026-10-22).
 
 ## Rollout Plan (Phased)
 
@@ -121,7 +130,7 @@ Rolling out incrementally to isolate failures to one layer at a time:
       and forum.openwrt.org/t/gl-inet-flint-2-gl-mt6000-vlan-best-practices-on-openwrt-snapshot/251673)
 - [x] **Phase 2b** — DHCP server on `iot` interface (`.100`-`.249`, 12h lease),
       firewall zone (`input`/`forward` DROP by default, explicit allow only for
-      DHCP/DNS-to-router and forwarding to `wan`). Switch VLAN 30 added via
+      DHCP/DNS-to-router; initial forwarding to `wan` was removed 2026-10-22). Switch VLAN 30 added via
       native-VLAN-1 pattern (see above) — zero disruption to existing traffic.
       Switch port 6 is now VLAN 30 untagged/PVID 30, ready for the IoT AP.
       (Its VLAN 1 untagged membership was left in place by mistake until
@@ -131,7 +140,8 @@ Rolling out incrementally to isolate failures to one layer at a time:
       `192.168.30.2`, own DHCP server disabled (`dhcp.lan.ignore=1`), WAN
       disabled (`proto=none`), wired into switch port 6. Verified end-to-end:
       phone joined its `OpenWrt` SSID, got a `192.168.30.x` lease from the
-      Flint 2, has internet access.
+      Flint 2, and had internet access **at that time** (prior to the
+      2026-10-22 WAN block).
       **Phase 2 complete.**
 - [x] **Phase 3a** — VLAN 10 (Lab) and VLAN 20 (Trusted) router-side infra
       live: `br-lan.10` (192.168.10.1), `br-lan.20` (192.168.20.1), DHCP

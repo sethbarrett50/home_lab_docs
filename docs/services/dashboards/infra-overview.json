@@ -442,7 +442,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "count(container_last_seen{name=\"dfair-gha-runner-local\"})",
+                      "expr": "max((time() - container_last_seen{name=\"dfair-gha-runner-local\"}) < bool 120) or vector(0)",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -457,7 +457,7 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Container recently observed by cAdvisor (not GitHub runner registration state). One value: 1=UP, 0=DOWN.",
         "id": 13,
         "links": [],
         "title": "DFAIR Runner",
@@ -488,112 +488,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "dark-red",
                       "value": 0
                     },
                     {
-                      "color": "red",
-                      "value": 80
-                    }
-                  ]
-                }
-              },
-              "overrides": []
-            },
-            "options": {
-              "colorMode": "value",
-              "graphMode": "area",
-              "justifyMode": "auto",
-              "orientation": "auto",
-              "percentChangeColorMode": "standard",
-              "reduceOptions": {
-                "calcs": [
-                  "lastNotNull"
-                ],
-                "fields": "",
-                "values": false
-              },
-              "showPercentChange": false,
-              "textMode": "auto",
-              "wideLayout": true
-            }
-          },
-          "version": "13.0.1+security-01"
-        }
-      }
-    },
-    "panel-14": {
-      "kind": "Panel",
-      "spec": {
-        "data": {
-          "kind": "QueryGroup",
-          "spec": {
-            "queries": [
-              {
-                "kind": "PanelQuery",
-                "spec": {
-                  "hidden": false,
-                  "query": {
-                    "datasource": {
-                      "name": "PBFA97CFB590B2093"
-                    },
-                    "group": "prometheus",
-                    "kind": "DataQuery",
-                    "spec": {
-                      "editorMode": "code",
-                      "exemplar": false,
-                      "expr": "count(container_last_seen{name=\"pl-gha-runner-local\"})",
-                      "instant": true,
-                      "legendFormat": "__auto",
-                      "range": false
-                    },
-                    "version": "v0"
-                  },
-                  "refId": "A"
-                }
-              }
-            ],
-            "queryOptions": {},
-            "transformations": []
-          }
-        },
-        "description": "",
-        "id": 14,
-        "links": [],
-        "title": "PL Runner",
-        "vizConfig": {
-          "group": "stat",
-          "kind": "VizConfig",
-          "spec": {
-            "fieldConfig": {
-              "defaults": {
-                "mappings": [
-                  {
-                    "options": {
-                      "0": {
-                        "color": "dark-red",
-                        "index": 1,
-                        "text": "DOWN"
-                      },
-                      "1": {
-                        "color": "dark-green",
-                        "index": 0,
-                        "text": "UP"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ],
-                "thresholds": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": 0
-                    },
-                    {
-                      "color": "red",
-                      "value": 80
+                      "color": "dark-green",
+                      "value": 1
                     }
                   ]
                 }
@@ -642,7 +542,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "count(container_last_seen{name=\"kc-gha-runner-local\"})",
+                      "expr": "max((time() - container_last_seen{name=\"kc-gha-runner-local\"}) < bool 120) or vector(0)",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -657,7 +557,7 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Container recently observed by cAdvisor (not GitHub runner registration state). One value: 1=UP, 0=DOWN.",
         "id": 15,
         "links": [],
         "title": "Kart Chaser Runner",
@@ -688,12 +588,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "dark-red",
                       "value": 0
                     },
                     {
-                      "color": "red",
-                      "value": 80
+                      "color": "dark-green",
+                      "value": 1
                     }
                   ]
                 }
@@ -742,7 +642,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "rate(container_cpu_usage_seconds_total{name=\"dfair-gha-runner-local\"}[5m]) * 100",
+                      "expr": "(sum(rate(container_cpu_usage_seconds_total{name=\"dfair-gha-runner-local\"}[5m])) / count(node_cpu_seconds_total{job=\"gha-general-01-node\",mode=\"idle\"})) * 100",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -757,7 +657,7 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Container CPU utilization divided by the GHA host logical CPU count; 100% corresponds to all host CPUs. Requires node-exporter gha-general-01-node metrics.",
         "id": 16,
         "links": [],
         "title": "DFAIR Runner CPU",
@@ -780,11 +680,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 85
                     }
                   ]
                 },
-                "unit": "percent"
+                "unit": "percent",
+                "min": 0,
+                "max": 100
               },
               "overrides": []
             },
@@ -841,7 +743,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "container_memory_usage_bytes{name=\"dfair-gha-runner-local\"}",
+                      "expr": "100 * sum(container_memory_usage_bytes{name=\"dfair-gha-runner-local\"}) / scalar(node_memory_MemTotal_bytes{job=\"gha-general-01-node\"})",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -856,10 +758,10 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Container memory as a percentage of the physical memory reported by node-exporter for gha-general-01. Capacity adjusts with host RAM.",
         "id": 17,
         "links": [],
-        "title": "DFAIR Runner Ram",
+        "title": "DFAIR Runner RAM (% host)",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -869,7 +771,7 @@
                 "color": {
                   "mode": "thresholds"
                 },
-                "max": 2147483648,
+                "max": 100,
                 "min": 0,
                 "thresholds": {
                   "mode": "absolute",
@@ -880,11 +782,12 @@
                     },
                     {
                       "color": "red",
-                      "value": 1610612736
+                      "value": 85
                     }
                   ]
                 },
-                "unit": "bytes"
+                "unit": "percent",
+                "decimals": 1
               },
               "overrides": []
             },
@@ -956,12 +859,12 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Current aggregate RX+TX in bytes/s. No fixed maximum because the NIC/link rate has not been verified. Host-networked KC may lack distinct cAdvisor network metrics.",
         "id": 18,
         "links": [],
-        "title": "DFAIR Runner Network",
+        "title": "DFAIR Runner Network throughput",
         "vizConfig": {
-          "group": "gauge",
+          "group": "stat",
           "kind": "VizConfig",
           "spec": {
             "fieldConfig": {
@@ -969,18 +872,12 @@
                 "color": {
                   "mode": "thresholds"
                 },
-                "max": 10485760,
-                "min": 0,
                 "thresholds": {
                   "mode": "absolute",
                   "steps": [
                     {
                       "color": "green",
                       "value": 0
-                    },
-                    {
-                      "color": "red",
-                      "value": 8388608
                     }
                   ]
                 },
@@ -989,16 +886,9 @@
               "overrides": []
             },
             "options": {
-              "barShape": "flat",
-              "barWidthFactor": 0.5,
-              "effects": {
-                "barGlow": false,
-                "centerGlow": false,
-                "gradient": true
-              },
-              "endpointMarker": "point",
-              "minVizHeight": 75,
-              "minVizWidth": 75,
+              "colorMode": "none",
+              "graphMode": "area",
+              "justifyMode": "auto",
               "orientation": "auto",
               "reduceOptions": {
                 "calcs": [
@@ -1007,113 +897,8 @@
                 "fields": "",
                 "values": false
               },
-              "segmentCount": 1,
-              "segmentSpacing": 0.3,
-              "shape": "gauge",
-              "showThresholdLabels": false,
-              "showThresholdMarkers": true,
-              "sizing": "auto",
-              "sparkline": true,
-              "textMode": "auto"
-            }
-          },
-          "version": "13.0.1+security-01"
-        }
-      }
-    },
-    "panel-19": {
-      "kind": "Panel",
-      "spec": {
-        "data": {
-          "kind": "QueryGroup",
-          "spec": {
-            "queries": [
-              {
-                "kind": "PanelQuery",
-                "spec": {
-                  "hidden": false,
-                  "query": {
-                    "datasource": {
-                      "name": "PBFA97CFB590B2093"
-                    },
-                    "group": "prometheus",
-                    "kind": "DataQuery",
-                    "spec": {
-                      "editorMode": "code",
-                      "exemplar": false,
-                      "expr": "rate(container_cpu_usage_seconds_total{name=\"pl-gha-runner-local\"}[5m]) * 100",
-                      "instant": true,
-                      "legendFormat": "__auto",
-                      "range": false
-                    },
-                    "version": "v0"
-                  },
-                  "refId": "A"
-                }
-              }
-            ],
-            "queryOptions": {},
-            "transformations": []
-          }
-        },
-        "description": "",
-        "id": 19,
-        "links": [],
-        "title": "PL Runner CPU",
-        "vizConfig": {
-          "group": "gauge",
-          "kind": "VizConfig",
-          "spec": {
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "decimals": 2,
-                "thresholds": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": 0
-                    },
-                    {
-                      "color": "red",
-                      "value": 80
-                    }
-                  ]
-                },
-                "unit": "percent"
-              },
-              "overrides": []
-            },
-            "options": {
-              "barShape": "flat",
-              "barWidthFactor": 0.5,
-              "effects": {
-                "barGlow": false,
-                "centerGlow": false,
-                "gradient": true
-              },
-              "endpointMarker": "point",
-              "minVizHeight": 75,
-              "minVizWidth": 75,
-              "orientation": "auto",
-              "reduceOptions": {
-                "calcs": [
-                  "lastNotNull"
-                ],
-                "fields": "",
-                "values": false
-              },
-              "segmentCount": 1,
-              "segmentSpacing": 0.3,
-              "shape": "gauge",
-              "showThresholdLabels": false,
-              "showThresholdMarkers": true,
-              "sizing": "auto",
-              "sparkline": true,
-              "textMode": "auto"
+              "textMode": "value",
+              "wideLayout": true
             }
           },
           "version": "13.0.1+security-01"
@@ -1225,206 +1010,6 @@
         }
       }
     },
-    "panel-20": {
-      "kind": "Panel",
-      "spec": {
-        "data": {
-          "kind": "QueryGroup",
-          "spec": {
-            "queries": [
-              {
-                "kind": "PanelQuery",
-                "spec": {
-                  "hidden": false,
-                  "query": {
-                    "datasource": {
-                      "name": "PBFA97CFB590B2093"
-                    },
-                    "group": "prometheus",
-                    "kind": "DataQuery",
-                    "spec": {
-                      "editorMode": "code",
-                      "exemplar": false,
-                      "expr": "container_memory_usage_bytes{name=\"pl-gha-runner-local\"}",
-                      "instant": true,
-                      "legendFormat": "__auto",
-                      "range": false
-                    },
-                    "version": "v0"
-                  },
-                  "refId": "A"
-                }
-              }
-            ],
-            "queryOptions": {},
-            "transformations": []
-          }
-        },
-        "description": "",
-        "id": 20,
-        "links": [],
-        "title": "PL Runner Ram",
-        "vizConfig": {
-          "group": "gauge",
-          "kind": "VizConfig",
-          "spec": {
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "max": 2147483648,
-                "min": 0,
-                "thresholds": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": 0
-                    },
-                    {
-                      "color": "red",
-                      "value": 1610612736
-                    }
-                  ]
-                },
-                "unit": "bytes"
-              },
-              "overrides": []
-            },
-            "options": {
-              "barShape": "flat",
-              "barWidthFactor": 0.5,
-              "effects": {
-                "barGlow": false,
-                "centerGlow": false,
-                "gradient": true
-              },
-              "endpointMarker": "point",
-              "minVizHeight": 75,
-              "minVizWidth": 75,
-              "orientation": "auto",
-              "reduceOptions": {
-                "calcs": [
-                  "lastNotNull"
-                ],
-                "fields": "",
-                "values": false
-              },
-              "segmentCount": 1,
-              "segmentSpacing": 0.3,
-              "shape": "gauge",
-              "showThresholdLabels": false,
-              "showThresholdMarkers": true,
-              "sizing": "auto",
-              "sparkline": true,
-              "textMode": "auto"
-            }
-          },
-          "version": "13.0.1+security-01"
-        }
-      }
-    },
-    "panel-21": {
-      "kind": "Panel",
-      "spec": {
-        "data": {
-          "kind": "QueryGroup",
-          "spec": {
-            "queries": [
-              {
-                "kind": "PanelQuery",
-                "spec": {
-                  "hidden": false,
-                  "query": {
-                    "datasource": {
-                      "name": "PBFA97CFB590B2093"
-                    },
-                    "group": "prometheus",
-                    "kind": "DataQuery",
-                    "spec": {
-                      "editorMode": "code",
-                      "exemplar": false,
-                      "expr": "sum by (name) (rate(container_network_receive_bytes_total{name=\"pl-gha-runner-local\"}[5m]) + rate(container_network_transmit_bytes_total{name=\"pl-gha-runner-local\"}[5m]))",
-                      "instant": true,
-                      "legendFormat": "__auto",
-                      "range": false
-                    },
-                    "version": "v0"
-                  },
-                  "refId": "A"
-                }
-              }
-            ],
-            "queryOptions": {},
-            "transformations": []
-          }
-        },
-        "description": "",
-        "id": 21,
-        "links": [],
-        "title": "PL Runner Network",
-        "vizConfig": {
-          "group": "gauge",
-          "kind": "VizConfig",
-          "spec": {
-            "fieldConfig": {
-              "defaults": {
-                "color": {
-                  "mode": "thresholds"
-                },
-                "max": 10485760,
-                "min": 0,
-                "thresholds": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": 0
-                    },
-                    {
-                      "color": "red",
-                      "value": 8388608
-                    }
-                  ]
-                },
-                "unit": "Bps"
-              },
-              "overrides": []
-            },
-            "options": {
-              "barShape": "flat",
-              "barWidthFactor": 0.5,
-              "effects": {
-                "barGlow": false,
-                "centerGlow": false,
-                "gradient": true
-              },
-              "endpointMarker": "point",
-              "minVizHeight": 75,
-              "minVizWidth": 75,
-              "orientation": "auto",
-              "reduceOptions": {
-                "calcs": [
-                  "lastNotNull"
-                ],
-                "fields": "",
-                "values": false
-              },
-              "segmentCount": 1,
-              "segmentSpacing": 0.3,
-              "shape": "gauge",
-              "showThresholdLabels": false,
-              "showThresholdMarkers": true,
-              "sizing": "auto",
-              "sparkline": true,
-              "textMode": "auto"
-            }
-          },
-          "version": "13.0.1+security-01"
-        }
-      }
-    },
     "panel-22": {
       "kind": "Panel",
       "spec": {
@@ -1445,7 +1030,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "rate(container_cpu_usage_seconds_total{name=\"kc-gha-runner-local\"}[5m]) * 100",
+                      "expr": "(sum(rate(container_cpu_usage_seconds_total{name=\"kc-gha-runner-local\"}[5m])) / count(node_cpu_seconds_total{job=\"gha-general-01-node\",mode=\"idle\"})) * 100",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -1460,7 +1045,7 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Container CPU utilization divided by the GHA host logical CPU count; 100% corresponds to all host CPUs. Requires node-exporter gha-general-01-node metrics.",
         "id": 22,
         "links": [],
         "title": "Kart Chaser Runner CPU",
@@ -1483,11 +1068,13 @@
                     },
                     {
                       "color": "red",
-                      "value": 80
+                      "value": 85
                     }
                   ]
                 },
-                "unit": "percent"
+                "unit": "percent",
+                "min": 0,
+                "max": 100
               },
               "overrides": []
             },
@@ -1544,7 +1131,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "container_memory_usage_bytes{name=\"kc-gha-runner-local\"}",
+                      "expr": "100 * sum(container_memory_usage_bytes{name=\"kc-gha-runner-local\"}) / scalar(node_memory_MemTotal_bytes{job=\"gha-general-01-node\"})",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -1559,10 +1146,10 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Container memory as a percentage of the physical memory reported by node-exporter for gha-general-01. Capacity adjusts with host RAM.",
         "id": 23,
         "links": [],
-        "title": "Kart Chaser Runner Ram",
+        "title": "Kart Chaser Runner RAM (% host)",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -1572,7 +1159,7 @@
                 "color": {
                   "mode": "thresholds"
                 },
-                "max": 2147483648,
+                "max": 100,
                 "min": 0,
                 "thresholds": {
                   "mode": "absolute",
@@ -1583,11 +1170,12 @@
                     },
                     {
                       "color": "red",
-                      "value": 1610612736
+                      "value": 85
                     }
                   ]
                 },
-                "unit": "bytes"
+                "unit": "percent",
+                "decimals": 1
               },
               "overrides": []
             },
@@ -1659,12 +1247,12 @@
             "transformations": []
           }
         },
-        "description": "",
+        "description": "Current aggregate RX+TX in bytes/s. No fixed maximum because the NIC/link rate has not been verified. Host-networked KC may lack distinct cAdvisor network metrics.",
         "id": 24,
         "links": [],
-        "title": "Kart Chaser Runner Network",
+        "title": "Kart Chaser Runner Network throughput",
         "vizConfig": {
-          "group": "gauge",
+          "group": "stat",
           "kind": "VizConfig",
           "spec": {
             "fieldConfig": {
@@ -1672,18 +1260,12 @@
                 "color": {
                   "mode": "thresholds"
                 },
-                "max": 10485760,
-                "min": 0,
                 "thresholds": {
                   "mode": "absolute",
                   "steps": [
                     {
                       "color": "green",
                       "value": 0
-                    },
-                    {
-                      "color": "red",
-                      "value": 8388608
                     }
                   ]
                 },
@@ -1692,16 +1274,9 @@
               "overrides": []
             },
             "options": {
-              "barShape": "flat",
-              "barWidthFactor": 0.5,
-              "effects": {
-                "barGlow": false,
-                "centerGlow": false,
-                "gradient": true
-              },
-              "endpointMarker": "point",
-              "minVizHeight": 75,
-              "minVizWidth": 75,
+              "colorMode": "none",
+              "graphMode": "area",
+              "justifyMode": "auto",
               "orientation": "auto",
               "reduceOptions": {
                 "calcs": [
@@ -1710,14 +1285,8 @@
                 "fields": "",
                 "values": false
               },
-              "segmentCount": 1,
-              "segmentSpacing": 0.3,
-              "shape": "gauge",
-              "showThresholdLabels": false,
-              "showThresholdMarkers": true,
-              "sizing": "auto",
-              "sparkline": true,
-              "textMode": "auto"
+              "textMode": "value",
+              "wideLayout": true
             }
           },
           "version": "13.0.1+security-01"
@@ -3130,6 +2699,168 @@
           "version": "13.0.1+security-01"
         }
       }
+    },
+    "panel-32": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "PBFA97CFB590B2093"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "exemplar": false,
+                      "expr": "(gha_runner_current_job{runner=\"dfair\"} == 1) or label_replace((gha_runner_job_observer_up{runner=\"dfair\"} == 0) unless on(runner) gha_runner_current_job{runner=\"dfair\"}, \"job\", \"OBSERVER OFFLINE\", \"runner\", \".*\") or label_replace((gha_runner_job_observer_initialized{runner=\"dfair\"} == 0) unless on(runner) gha_runner_current_job{runner=\"dfair\"}, \"job\", \"STATUS UNKNOWN\", \"runner\", \".*\") or label_replace((gha_runner_job_observer_initialized{runner=\"dfair\"} == 1) unless on(runner) gha_runner_current_job{runner=\"dfair\"}, \"job\", \"None running\", \"runner\", \".*\")",
+                      "instant": true,
+                      "legendFormat": "{{job}}",
+                      "range": false
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Current job inferred from Docker runner logs via exporter on port 9119. Requires Prometheus scrape job gha-runner-jobs; absence of metrics means no data, not idle.",
+        "id": 32,
+        "links": [],
+        "title": "DFAIR Current Job",
+        "vizConfig": {
+          "group": "stat",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    }
+                  ]
+                },
+                "displayName": "${__field.labels.job}"
+              },
+              "overrides": []
+            },
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "percentChangeColorMode": "standard",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "showPercentChange": false,
+              "textMode": "name",
+              "wideLayout": true
+            }
+          },
+          "version": "13.0.1+security-01"
+        }
+      }
+    },
+    "panel-33": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "PBFA97CFB590B2093"
+                    },
+                    "group": "prometheus",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "exemplar": false,
+                      "expr": "(gha_runner_current_job{runner=\"kc\"} == 1) or label_replace((gha_runner_job_observer_up{runner=\"kc\"} == 0) unless on(runner) gha_runner_current_job{runner=\"kc\"}, \"job\", \"OBSERVER OFFLINE\", \"runner\", \".*\") or label_replace((gha_runner_job_observer_initialized{runner=\"kc\"} == 0) unless on(runner) gha_runner_current_job{runner=\"kc\"}, \"job\", \"STATUS UNKNOWN\", \"runner\", \".*\") or label_replace((gha_runner_job_observer_initialized{runner=\"kc\"} == 1) unless on(runner) gha_runner_current_job{runner=\"kc\"}, \"job\", \"None running\", \"runner\", \".*\")",
+                      "instant": true,
+                      "legendFormat": "{{job}}",
+                      "range": false
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Current job inferred from Docker runner logs via exporter on port 9119. Requires Prometheus scrape job gha-runner-jobs; absence of metrics means no data, not idle.",
+        "id": 33,
+        "links": [],
+        "title": "KC Current Job",
+        "vizConfig": {
+          "group": "stat",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [],
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": 0
+                    }
+                  ]
+                },
+                "displayName": "${__field.labels.job}"
+              },
+              "overrides": []
+            },
+            "options": {
+              "colorMode": "value",
+              "graphMode": "none",
+              "justifyMode": "auto",
+              "orientation": "auto",
+              "percentChangeColorMode": "standard",
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ],
+                "fields": "",
+                "values": false
+              },
+              "showPercentChange": false,
+              "textMode": "name",
+              "wideLayout": true
+            }
+          },
+          "version": "13.0.1+security-01"
+        }
+      }
     }
   },
   "layout": {
@@ -3320,6 +3051,15 @@
                     "spec": {
                       "element": {
                         "kind": "ElementReference",
+                        "name": "panel-32"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
                         "name": "panel-16"
                       }
                     }
@@ -3347,43 +3087,16 @@
                     "spec": {
                       "element": {
                         "kind": "ElementReference",
-                        "name": "panel-14"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
-                        "name": "panel-19"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
-                        "name": "panel-20"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
-                        "name": "panel-21"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
                         "name": "panel-15"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-33"
                       }
                     }
                   },
@@ -3480,7 +3193,9 @@
     }
   },
   "preload": false,
-  "tags": [],
+  "tags": [
+    "github-actions"
+  ],
   "timeSettings": {
     "autoRefresh": "5s",
     "autoRefreshIntervals": [

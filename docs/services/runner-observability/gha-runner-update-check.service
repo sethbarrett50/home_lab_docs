@@ -1,0 +1,14 @@
+[Unit]
+Description=Check KC and DFAIR GitHub Actions runner updates
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=seth
+Group=seth
+Environment=HOME=/home/seth
+Environment=XDG_CONFIG_HOME=/home/seth/.config
+WorkingDirectory=/home/seth
+ExecStart=/usr/local/sbin/gha-runner-update-check
+TimeoutStartSec=5min
