@@ -135,7 +135,7 @@ checked as usual.
 A Python HTTP exporter runs as `gha-runner-job-exporter.service` on
 `gha-general-01` (`192.168.10.189:9119`) and reads local Docker runner logs.
 Its repository copy and systemd unit are under
-[`runner-observability/`](runner-observability/).
+[`gha_runner_job_exporter.py`](runner-observability/gha_runner_job_exporter.py) and [`gha-runner-job-exporter.service`](runner-observability/gha-runner-job-exporter.service).
 It exposes:
 
 - `gha_runner_job_observer_up{runner="kc|dfair"}`: `1` when Docker logs can be read;
