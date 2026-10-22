@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Local wrapper: deliberately bypass KC Makefile's broad r.down cleanup.
+set -euo pipefail
+cd /opt/gha-runners/kc/KC-GHA-Runner
+make r.up
+exec make r.log
