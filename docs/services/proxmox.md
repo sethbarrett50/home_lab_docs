@@ -64,6 +64,8 @@ masked. Removal from the PrivateLingua GitHub organization runner registry
 was advised but **not independently verified**. Do not redeploy PL as part
 of routine VM maintenance.
 
+For deployment paths, the systemd KC cleanup override, manual updates, and
+the nightly source-update checker, see [Self-hosted GitHub Actions runners](github-actions-runners.md).
 Runner container/active job monitoring is documented in
 [Monitoring](monitoring.md#github-actions-runner-observability-2026-10-22).
 

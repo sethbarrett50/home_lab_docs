@@ -117,6 +117,9 @@ the Infrastructure Overview dashboard (issue #5) can include it.
 ## GitHub Actions runner observability (2026-10-22)
 
 The deployed `gha-general-01` runner inventory is **KC + DFAIR only**.
+Runner operations, maintenance, systemd safety overrides, and nightly
+source-update checks are documented in
+[Self-hosted GitHub Actions runners](github-actions-runners.md).
 PL was removed from Docker and its dedicated systemd unit was disabled and
 removed on 2026-10-22; its old `pl-gha-runner.service` alias is masked.
 Removing PL from GitHub's organization-level runner registration is still
@@ -175,7 +178,7 @@ On `gha-general-01`:
 
 ```bash
 sudo systemctl status gha-runner-job-exporter.service --no-pager
-curl -fsS http://127.0.0.1:9119/metrics
+curl -fsS http://192.168.10.189:9119/metrics
 docker logs --tail 30 kc-gha-runner-local
 docker logs --tail 30 dfair-gha-runner-local
 ```

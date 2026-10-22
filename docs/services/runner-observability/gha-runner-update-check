@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Read-only nightly source update check; run as seth for SSH aliases.
+set -euo pipefail
+
+REPOS=(
+  "/opt/gha-runners/kc/KC-GHA-Runner"
+  "/opt/gha-runners/dfair"
+)
+
+for repo in "${REPOS[@]}"; do
+  name=$(basename "$repo")
+  echo "========================================"
+  echo "Checking runner: $name"
+  echo "Repository: $repo"
+
+  if ! git -C "$repo" fetch --quiet origin main; then
+    echo "ERROR: Failed to fetch origin/main for $name"
+    exit 1
+  fi
+
+  local_sha=$(git -C "$repo" rev-parse HEAD)
+  remote_sha=$(git -C "$repo" rev-parse refs/remotes/origin/main)
+
+  if [[ "$local_sha" == "$remote_sha" ]]; then
+    echo "UP TO DATE: ${local_sha:0:12}"
+  elif git -C "$repo" merge-base --is-ancestor HEAD origin/main; then
+    echo "UPDATE AVAILABLE"
+    echo "Local:  ${local_sha:0:12}"
+    echo "Remote: ${remote_sha:0:12}"
+    git -C "$repo" log --oneline HEAD..origin/main
+  else
+    echo "WARNING: Local and remote branches have diverged."
+    echo "Local:  ${local_sha:0:12}"
+    echo "Remote: ${remote_sha:0:12}"
+  fi
+done

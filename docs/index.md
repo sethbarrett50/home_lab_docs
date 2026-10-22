@@ -46,6 +46,7 @@ graph TD
 | NAS / storage | ✅ Done |
 | VPN (inbound) | 🔲 Planned |
 | Mullvad on Trusted VLAN | 🔲 Planned |
+| GitHub Actions runners | ✅ KC + DFAIR updated 2026-10-22; [nightly source update checks](services/github-actions-runners.md) (check-only) |
 | Monitoring stack | 🔧 Running; runner job-exporter added 2026-10-22, job-active test pending |
 | VLAN 30 Internet egress | 🔒 IoT → WAN forwarding removed 2026-10-22; client validation pending |
 

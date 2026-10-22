@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly GitHub Actions runner update check
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=15min
+Persistent=true
+Unit=gha-runner-update-check.service
+
+[Install]
+WantedBy=timers.target

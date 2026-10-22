@@ -8,6 +8,7 @@ directly on `dell-mini` instead.
 
 - [Proxmox](proxmox.md) — hypervisor setup, VMs, GitHub Actions runner
 - [NAS & Storage](nas.md) — qBittorrent, NAS software, HDD setup
+- [GitHub Actions Runners](github-actions-runners.md) — KC/DFAIR setup, safe restarts, manual deployment and nightly update checks
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
@@ -55,6 +56,9 @@ graph TD
     PVE --> WIN
     PVE --> FW
     PVE --> GHA1
+    PVE --> GHA3
+    GHA1 --> BK
+    GHA3 --> BK
     PVE --> PROM
     PVE --> QB
     PVE --> CADDY
@@ -104,7 +108,7 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 
 | Service | Type | Status | Priority |
 |---|---|---|---|
-| GitHub Actions runners (dfair/kc) | 2x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
+| [GitHub Actions runners (dfair/kc)](github-actions-runners.md) | 2x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
 | [research-output-scraper](research-output-scraper.md) | nginx + systemd on `dell-mini`; HTTPS via Caddy | ✅ Running; HTTPS verified 2026-10-21 | Medium |
