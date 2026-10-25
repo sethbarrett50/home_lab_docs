@@ -71,6 +71,10 @@ graph TD
     SSID -.-> MBP
 ```
 
+## Remote access relay (2026-10-25)
+
+The router WAN is behind upstream NAT, so remote WireGuard peers connect to the public VPS (`155.138.215.171:51820`), and the Flint 2 forms an outbound tunnel to it. The remote Dell XPS uses a **split tunnel** for `10.100.0.0/24` and `192.168.10.0/24`. The Flint 2's UCI interface and firewall zone are named `wg_homelab` (VPS/XPS Linux interfaces use `wg-homelab`). Access is restricted to Proxmox TCP 22/8006, Caddy TCP 443, router DNS TCP/UDP 53, and specific WG ICMP rules; this does not authorize general access to Lab/Trusted/IoT networks. See [VPN](vpn.md) for detailed topology, public peer keys, verified tests, and outstanding isolation tests.
+
 ## IP Addressing Scheme
 
 | VLAN | Name | Subnet | Gateway | DHCP Range |

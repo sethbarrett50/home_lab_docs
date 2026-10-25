@@ -11,10 +11,8 @@ flowchart LR
     TRUST[lan_trusted\nVLAN 20]
     IOT[iot\nVLAN 30]
 
-    WAN -->|"DNAT — VPN tunnel\n& homelab ingress"| LAB
-    WAN -->|"DNAT — VPN tunnel"| TRUST
-    LAB -->|"allow outbound"| WAN
-    TRUST -->|"via Mullvad only"| WAN
+    LAB -->|"existing routed WAN policy"| WAN
+    TRUST -->|"existing WAN policy; Mullvad not deployed"| WAN
     IOT -.->|"WAN forwarding removed 2026-10-22"| WAN
 
     LAB -. blocked .- TRUST
@@ -32,17 +30,21 @@ flowchart LR
 | lan_trusted | ACCEPT | ACCEPT | ACCEPT |
 | iot (VLAN 30) | DROP | ACCEPT | DROP |
 
+## Deployed WireGuard relay allowlist (2026-10-25)
+
+The remote tunnel terminates at a public VPS, **not** the Flint 2 WAN. On the VPS, UFW defaults to `deny (routed)` and permits XPS peer `10.100.0.10` through interface `wg-homelab` only to: router WG peer `10.100.0.2` (routed), Proxmox `192.168.10.10` TCP 22/8006, Caddy `192.168.10.50` TCP 443, and router DNS `192.168.10.1` TCP/UDP 53. On Flint 2, firewall zone `wg_homelab` has REJECT input, ACCEPT output and REJECT forward with corresponding targeted rules. Router UCI rules include `allow_vps_wg_ping`, `allow_xps_wg_ping`, `wg_xps_proxmox`, `wg_xps_caddy`, `wg_xps_dns`. The router has no required inbound UDP port forward. These are the **verified rule definitions**, not proof of negative isolation tests. See [VPN](vpn.md) for routing, public peer keys and security follow-ups.
+
 ## Planned Firewall Rules
 
-### WAN → Router (INPUT)
+### WAN → Router (INPUT) — historical planning sketch
 | # | Protocol | Port | Action | Notes |
 |---|---|---|---|---|
-| 1 | UDP | 51820 | ACCEPT | WireGuard inbound (homelab VPN) |
+| 1 | UDP | 51820 | N/A on Flint 2 | WireGuard inbound is terminated on public VPS, **not** forwarded to router WAN |
 | 2 | TCP | 22 | DROP | No SSH from WAN — use VPN |
 | — | * | * | DROP | Default deny |
 
 ### Trusted VLAN → Internet
-All traffic from VLAN 20 is policy-routed to the Mullvad WireGuard interface. A kill switch rule drops traffic if the VPN interface is down:
+This is a **planned concept**, not deployed. Selective Mullvad egress for NAS and Kuma Telegram is proposed; blanket VLAN 20 tunneling and a kill switch have not been implemented:
 
 ```text
 # Conceptual nftables kill switch
@@ -105,6 +107,9 @@ The existing broad section above documents the planned baseline, **not a fully a
 The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10.158`) within VLAN 10. Caddy currently uses a source-IP matcher to reject other clients, but a cross-client test and additional Proxmox/LXC firewall restriction remain outstanding. The admin endpoint `127.0.0.1:2019` **must never be exposed on the network**. Same-VLAN traffic is not secured by OpenWrt's inter-VLAN rules alone.
 
 ## TODO
+
+- [ ] Negative tests from remote XPS to VLAN 20, VLAN 30, unapproved Lab services, and IPv6 paths
+- [ ] Verify dnsmasq UDP/TCP 53 not reachable from WAN after `localservice=0`
 
 - [x] VLAN 30 `iot` zone configured and IoT → WAN forwarding removed (2026-10-22); client testing pending
 - [ ] Configure Mullvad WireGuard interface + kill switch

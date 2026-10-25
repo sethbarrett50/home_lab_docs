@@ -231,3 +231,11 @@ No Alertmanager or notification routing exists yet for Prometheus/Grafana —
 they're collection + visualization only, nothing pages/notifies on these
 thresholds. Uptime Kuma *does* notify (its own notification channel, separate
 from this), but only for its up/down checks.
+
+## Prometheus outage and recovery — 2026-10-22 to 2026-10-25
+
+Prometheus was found `Exited (0)` on 2026-10-25, while Grafana and Uptime Kuma remained healthy. The Prometheus log recorded a graceful SIGTERM at **2026-10-22 20:34:33 UTC**. Host journal and package logs confirmed a user-initiated `apt upgrade -y` on 2026-10-22 at 16:33 EDT installed Docker packages and restarted containerd and Docker at 16:34 EDT. All other monitoring containers recovered, but Prometheus stayed stopped despite its `unless-stopped` restart policy; the exact non-restart mechanism remains unverified. Kuma reported `ECONNREFUSED` to `192.168.10.158:9090`, and Grafana queries failed until recovery.
+
+On `monitor-01`, `sudo docker start prometheus` restored service. `/-/healthy` and `/-/ready` endpoints returned healthy/ready, Prometheus `up` query reported **9/9 targets UP**, and Grafana dashboards displayed data again. Docker and containerd are both enabled at boot; Prometheus retains restart policy `unless-stopped`. Historical samples from the stopped period cannot be regenerated. This incident was not caused by the later WireGuard renaming and relay changes.
+
+For future Docker package upgrades, perform a post-upgrade `sudo docker ps -a`, check each critical container, query `http://127.0.0.1:9090/-/ready` and review Kuma. Do not indiscriminately recreate containers or discard volumes.

@@ -5,6 +5,12 @@
 **Platform:** GL.iNet Flint 2 / OpenWrt 23.05.5, dnsmasq
 **Scope:** Internal lab hostnames; the router continues to serve DNS and DHCP. HTTPS certificates are provided separately by Caddy on `certs-01`.
 
+## WireGuard remote DNS note (2026-10-25)
+
+The VPS-relayed remote VPN allows XPS `10.100.0.10` to query the Flint 2 DNS service at `192.168.10.1:53` over TCP and UDP. When the WireGuard /32 client was rejected by dnsmasq's local-subnet guard, `dhcp.@dnsmasq[0].localservice` was changed from `1` to `0`; DNS resolution through the WireGuard path then succeeded. This increases the importance of verifying that router firewall INPUT rules continue to deny WAN DNS. No router WAN DNS exposure has been demonstrated, but a dedicated exposure audit remains outstanding.
+
+The XPS **retains NetworkManager** and its existing resolver configuration. To resolve key homelab services off-network without changing the laptop's DNS manager, `/etc/hosts` was backed up to `/etc/hosts.pre-homelab` and static entries added: `pve.home.arpa → 192.168.10.10`, `grafana.home.arpa`/`uptime.home.arpa → 192.168.10.50`, `monitor.home.arpa → 192.168.10.158`, `nas.home.arpa → 192.168.10.170`. These host mappings do **not** confer permission to access each destination; remote routing/firewall access is still narrowly allowed. See [VPN](vpn.md).
+
 ## Design decision
 
 Use the Flint 2's existing dnsmasq service instead of hosting a DNS LXC on Proxmox. This keeps hostname resolution available even if Proxmox is offline, and avoids unnecessary additional services. DHCP reservations and DHCP-advertised client names produce DNS records automatically; infrastructure with statically configured IP addresses receives explicit records.
