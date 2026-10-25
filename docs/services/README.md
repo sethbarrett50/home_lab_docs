@@ -112,9 +112,17 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
 | [research-output-scraper](research-output-scraper.md) | nginx + systemd on `dell-mini`; HTTPS via Caddy | ✅ Running; HTTPS verified 2026-10-21 | Medium |
-| qBittorrent | LXC/Docker | 🔲 Planned | Medium |
-| NAS software | LXC/VM | 🔲 Planned (HDDs pending) | Medium |
+| [qBittorrent](nas.md) | qBittorrent-nox 4.5.2 in NAS CT 105 | ✅ Running via Mullvad, HTTPS `torrent.home.arpa` | Medium |
+| [NAS storage](nas.md) | CT 105 with bind-mounted HDD | ✅ CT/storage running; SMB/NFS management stack pending | Medium |
 | Firewall VM | VM | 🔲 Planned | Low |
 | Debian VM | VM | 🔲 Planned | Low |
 | macOS VM | VM | 🔲 Planned | Low |
 | Windows VM | VM | 🔲 Planned | Low |
+
+## Mullvad-dependent services (2026-10-25)
+
+- [NAS / qBittorrent](nas.md): CT 105, Mullvad-only PBR and WAN guard; Web UI via `torrent.home.arpa`.
+- [Telegram proxy and DNS](telegram-proxy.md): CT 107, Tinyproxy allowlisting `api.telegram.org`, plus VPN-mode DNS for Trusted VLAN.
+- [Monitoring](monitoring.md): Kuma upgraded to 2.5.7, Telegram DOWN/recovery alerts verified via CT 107.
+
+See [Mullvad router operations](../networking/mullvad.md) for subnet-level routing and toggle details.

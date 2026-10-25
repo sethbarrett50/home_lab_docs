@@ -5,7 +5,8 @@
 - [VLANs](vlans.md) — design, IP scheme, inter-VLAN policy
 - [Firewall](firewall.md) — rules and segmentation strategy
 - [Internal DNS](dns.md) — OpenWrt dnsmasq, `home.arpa` hostname resolution, VLAN 10 inventory, and maintenance procedures.
-- [VPN](vpn.md) — inbound remote access + Mullvad on Trusted VLAN
+- [VPN](vpn.md) — inbound VPS-relayed WireGuard remote access
+- [Mullvad](mullvad.md) — NAS and Telegram selective egress, VLAN 20 VPN/WAN toggle and kill switches
 
 ## Hardware
 
@@ -19,7 +20,7 @@
 
 ```mermaid
 graph TD
-    WAN[🌐 Home ISP]
+    WAN[University-connected upstream WAN]
 
     subgraph Edge
         Router["GL.iNet Flint 2\nstock OpenWrt 23.05.5\n192.168.1.1 (lan) + br-lan.10/.20/.30\nFirewall · DHCP"]
@@ -181,3 +182,7 @@ reachable afterwards.
 > only need to agree on the newly-added tagged VLAN, not renegotiate the
 > already-working native one. Apply this same pattern in Phase 3 for VLANs 10
 > and 20.
+
+## Selective Mullvad egress (2026-10-25)
+
+`wg_mullvad` provides selective policy-routed outbound connectivity for NAS CT 105, Telegram proxy CT 107 and optionally the entire Trusted VLAN 20. Router CLI `trusted-vpn on|off|status` toggles only VLAN 20. Lab/Trusted service routing and `wg_homelab` inbound remote-access tunnel are independent. CT 107 also provides VPN-mode DNS (public upstream via Mullvad, split `home.arpa`). Deployment was tested for both public egress modes, local DNS/HTTPS, and loss/recovery of Mullvad; **router cold-boot/early-start leak validation remains pending**. See [Mullvad operations](mullvad.md).
