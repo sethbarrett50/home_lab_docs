@@ -31,12 +31,12 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Subnet | 192.168.20.0/24 |
 | Gateway | 192.168.20.1 |
 | DNS | 192.168.20.1 (router) |
-| Internet | **Routed through Mullvad VPN** |
+| Internet | **Switchable: Mullvad (`trusted-vpn on`) or university WAN (`trusted-vpn off`)** |
 | Inter-VLAN | → Lab: blocked by default (allow specific services as needed). → IoT: blocked. |
 
 **Devices:** MacBook M1 Pro, Dell XPS 16, Pixel 6, Pixel 3, iPhone 7 (all on `dfair_lab` as of 2026-10-08)
 
-> All outbound traffic from VLAN 20 exits via Mullvad. If the VPN tunnel drops, implement a **kill switch** so traffic doesn't fall back to plain internet.
+> VLAN 20 is selectable between VPN and WAN modes using `trusted-vpn` on Flint 2. VPN-mode routed IPv4 traffic uses Mullvad and a WAN guard; a controlled Mullvad outage test passed. Router cold-boot and alternate-egress audits are still pending. See [Mullvad](mullvad.md).
 
 ---
 
@@ -171,8 +171,8 @@ Rolling out incrementally to isolate failures to one layer at a time:
       MacBook Pro reconnected to `dfair_lab` (VLAN 20), confirmed. All 10
       current IoT devices given static DHCP host reservations (MAC-pinned) so
       addresses don't drift — see [devices/README.md](../devices/README.md).
-      **Remaining:** Mullvad WireGuard + kill switch for VLAN 20 — separate
-      follow-up task, not started.
+      **Completed 2026-10-25:** Mullvad selective egress and switchable
+      VLAN 20 kill switch; router cold-boot validation remains outstanding.
 - [ ] **Phase 3d** — OS-level networking for the 3 idle debian boxes (Dell
       Micro/Acer/HP), tracked in [issue #19](https://github.com/sethbarrett50/home_lab_docs/issues/19).
       `dell-mini` and `acer-lap` done: `systemd-networkd` (chosen for a config
@@ -203,6 +203,6 @@ Rolling out incrementally to isolate failures to one layer at a time:
 - [x] Create VLAN interfaces on GL.iNet Flint 2 (stock OpenWrt — DSA bridge-vlan-filtering via UCI, not LuCI — see Phase 2a note on the GL-MT6000 lockout bug)
 - [x] Create SSID for VLAN 20 on Flint 2 WiFi (`dfair_lab`, both radios). VLAN 30 uses the old TP-Link's own AP instead of a Flint 2 radio SSID; VLAN 10 is wired-only per design, no SSID needed.
 - [x] Configure DHCP server per VLAN on router (10, 20, 30 all live; static host reservations for known devices)
-- [ ] Set up Mullvad WireGuard interface on router, policy-route VLAN 20 traffic through it
-- [ ] Configure kill switch (nftables/iptables) for Mullvad on VLAN 20
+- [x] Set up Mullvad WireGuard and optional Trusted VLAN routing (2026-10-25; `trusted-vpn on|off`)
+- [x] Configure and outage-test nftables WAN egress guard for VLAN 20 (router boot-order test pending)
 - [x] Set up OpenWrt IoT AP with VLAN 30 (simplified from the original "SSID + trunk" plan to a dumb-AP-on-a-single-access-port — no trunking needed on the AP itself since it only ever serves one VLAN)

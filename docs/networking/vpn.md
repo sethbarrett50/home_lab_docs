@@ -1,6 +1,6 @@
-# VPN — remote WireGuard relay and planned Mullvad egress
+# VPN — remote WireGuard relay and outbound Mullvad
 
-**Remote access status:** deployed and verified 2026-10-25. **Outbound Mullvad:** planned; not deployed. This document describes the verified deployment, not a generic router-hosted VPN design.
+**Remote access status:** deployed and verified 2026-10-25. **Outbound Mullvad:** deployed and operationally tested 2026-10-25; see [Mullvad selective egress](mullvad.md) for current routing, DNS, and VLAN 20 toggle. These tunnels are independent.
 
 ## Why a public relay
 
@@ -142,6 +142,6 @@ The XPS `/etc/hosts` entries were set for `pve.home.arpa` → `.10`, `grafana.ho
 - [ ] Audit router DNS exposure after relaxing dnsmasq `localservice`; WAN must remain unable to reach port 53.
 - [ ] Plan VPS Debian 11 upgrade separately from the tunnel deployment.
 
-## Outbound Mullvad — separate planned work
+## Outbound Mullvad — deployed separately
 
-Mullvad routing is **not deployed**. It is tracked separately from this inbound remote access setup. The updated scope is selective egress for Uptime Kuma Telegram notifications and NAS traffic, **not automatic full-VLAN-20 tunneling**. Any future policy-based routes and leak-prevention rules must preserve the Flint 2→VPS UDP 51820 endpoint, the existing `wg_homelab` routes, and university network policies. Implement and validate this in a separate feature branch (`feat/mullvad-routing`).
+Selective egress for NAS, Telegram proxy and switchable Trusted VLAN 20 is now deployed and tested. See [Outbound Mullvad operations](mullvad.md). The VPS-relayed `wg_homelab` remains separate; route/zone changes for Mullvad must not modify its peer or endpoint. Router reboot/startup safety remains unverified.

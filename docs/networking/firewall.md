@@ -12,7 +12,8 @@ flowchart LR
     IOT[iot\nVLAN 30]
 
     LAB -->|"existing routed WAN policy"| WAN
-    TRUST -->|"existing WAN policy; Mullvad not deployed"| WAN
+    TRUST -->|"WAN mode"| WAN
+    TRUST -->|"VPN mode via PBR"| VPN[Mullvad / wg_mullvad]
     IOT -.->|"WAN forwarding removed 2026-10-22"| WAN
 
     LAB -. blocked .- TRUST
@@ -43,15 +44,9 @@ The remote tunnel terminates at a public VPS, **not** the Flint 2 WAN. On the VP
 | 2 | TCP | 22 | DROP | No SSH from WAN — use VPN |
 | — | * | * | DROP | Default deny |
 
-### Trusted VLAN → Internet
-This is a **planned concept**, not deployed. Selective Mullvad egress for NAS and Kuma Telegram is proposed; blanket VLAN 20 tunneling and a kill switch have not been implemented:
+### Trusted VLAN → Internet (deployed 2026-10-25)
 
-```text
-# Conceptual nftables kill switch
-chain forward {
-    iifname "br-trusted" oifname != "mullvad0" drop
-}
-```
+`trusted-vpn on|off|status` switches source `192.168.20.0/24` between Mullvad VPN (`wg_mullvad`) and university WAN (`eth1`). VPN mode also enables `firewall.trusted_vpn_dns` (IPv4 UDP/TCP 53 DNAT → `192.168.10.171`) and a dedicated `trusted_mullvad_guard` drop chain for WAN fallback. WAN mode removes those protections intentionally. The NAS and Telegram proxy have independent always-VPN source policies and guards. [Operational details](mullvad.md).
 
 ### IoT VLAN — Planned exception policy (not deployed)
 Historic design only; **VLAN 30 WAN forwarding was removed on 2026-10-22**, and the table below is *not* a list of deployed rules. An existing DHCP/DNS exception remains and must be reviewed separately.
@@ -112,7 +107,18 @@ The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10
 - [ ] Verify dnsmasq UDP/TCP 53 not reachable from WAN after `localservice=0`
 
 - [x] VLAN 30 `iot` zone configured and IoT → WAN forwarding removed (2026-10-22); client testing pending
-- [ ] Configure Mullvad WireGuard interface + kill switch
+- [x] Configure Mullvad WireGuard selective routing and per-source kill switches (2026-10-25); boot-order and additional-egress-interface audit pending
 - [ ] Test VLAN isolation with `nmap` cross-VLAN scans
 - [ ] Set up firewall logging for dropped packets (helps with debugging IoT devices)
 - [ ] Consider running a dedicated firewall VM on Proxmox (e.g. pfSense/OPNsense) in the future for more granular control
+
+## Additional Mullvad firewall rules (2026-10-25)
+
+- `firewall.mullvad`: zone over `wg_mullvad`, with masquerading and MSS fix.
+- `firewall.nas_allow_mullvad` / `firewall.telegram_allow_mullvad`: targeted Lab→Mullvad permissions for CT 105 and 107.
+- `firewall.trusted_allow_mullvad`: Trusted→Mullvad allow rule; actual selection controlled by PBR.
+- `firewall.trusted_telegram_dns`: Trusted→Lab DNS allowance to CT 107 TCP/UDP 53.
+- `firewall.trusted_vpn_dns`: **disabled in WAN mode**, enabled only in Trusted VPN mode.
+- `/etc/nftables.d/30-nas-mullvad-guard.nft`, `/etc/nftables.d/31-telegram-mullvad-guard.nft`, `/etc/nftables.d/40-trusted-mullvad-guard.nft`: independent hooked forward chains; final file exists only in Trusted VPN mode.
+
+Observed outage and recovery tests passed for NAS/Telegram/Trusted specified routes; do not equate these checks with exhaustive leak testing. [Mullvad runbook](mullvad.md).

@@ -123,3 +123,7 @@ A restore must preserve Caddy's CA material to keep the existing installed trust
 - [ ] Test restoration and create a secure off-host backup of CA material.
 - [ ] Replace password-based root SSH access with appropriate key-based/least-privilege access.
 - [ ] Define a safer/automated Proxmox certificate renewal process before October 2027.
+
+## qBittorrent reverse proxy addition (2026-10-25)
+
+The deployed Caddy routing also includes `torrent.home.arpa` for the qBittorrent-nox Web UI in NAS CT 105 (`192.168.10.170`). The configuration block above is a **historical 2026-10-21 snapshot**, not a complete current Caddyfile. Validate the actual live route using `caddy validate --config /etc/caddy/Caddyfile` on `certs-01` and `curl -I https://torrent.home.arpa/` from an authorized CA-trusting client. Backend port and exact current Caddy stanza were not supplied in the handoff and are intentionally not invented. Keep qBittorrent authentication enabled.

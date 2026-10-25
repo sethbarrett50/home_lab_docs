@@ -15,7 +15,7 @@
 
 ```mermaid
 graph TD
-    WAN[🌐 Home ISP]
+    WAN[University-connected upstream WAN]
     Router[GL.iNet Flint 2<br/>stock OpenWrt · Router / Firewall]
     Switch[TP-Link TL-SG108E<br/>8-Port Smart Switch, 802.1Q]
     PATCH[Patch Panel<br/>12-Port Cat6]
@@ -45,9 +45,9 @@ graph TD
 | Proxmox setup | ✅ Running |
 | NAS / storage | ✅ Done |
 | VPN (inbound) | ✅ VPS-relayed WireGuard live 2026-10-25; XPS off-network access validated, reboot/isolation checks pending |
-| Mullvad selective egress | 🔲 Planned — separate NAS and Uptime Kuma Telegram routing |
+| Mullvad selective egress | ✅ NAS + Telegram proxy Mullvad egress and switchable VLAN 20 VPN/WAN mode verified 2026-10-25; reboot/boot-order audit pending |
 | GitHub Actions runners | ✅ KC + DFAIR updated 2026-10-22; [nightly source update checks](docs/services/github-actions-runners.md) (check-only) |
-| Monitoring stack | 🔧 Running; runner job-exporter added 2026-10-22, job-active test pending |
+| Monitoring stack | ✅ Kuma 2.5.7 with tested Telegram alerts; Prometheus/Grafana metrics running; runner job-active test pending |
 | VLAN 30 Internet egress | 🔒 IoT → WAN forwarding removed 2026-10-22; client validation pending |
 
 ## Repo Structure

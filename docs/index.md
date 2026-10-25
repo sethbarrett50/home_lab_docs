@@ -53,3 +53,7 @@ graph TD
 !!! note
     This page mirrors the repo's root `README.md` (GitHub's landing page) for
     the built site's homepage. Keep both in sync when either changes.
+
+## Mullvad egress and Telegram notifications (2026-10-25)
+
+Selective Mullvad egress is deployed for [NAS/qBittorrent](services/nas.md), [Telegram proxy CT 107](services/telegram-proxy.md), and switchable Trusted VLAN 20 using Flint 2 `trusted-vpn on|off|status`. [Uptime Kuma 2.5.7](services/monitoring.md) sends tested Telegram alerts via the proxy. See the [Mullvad runbook](networking/mullvad.md) for validation, safe rollback, and reboot/boot-order follow-ups.

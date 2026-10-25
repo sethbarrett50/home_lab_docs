@@ -124,3 +124,7 @@ Only after deciding that `.170` should be permanent, add a reservation and docum
 - Compare the router's active DHCP leases and ARP/neigh table with the VLAN 10 inventory; add entries for other verified hosts if necessary.
 - Keep network inventory and diagrams synchronized with new router-hosted DNS names and the `home.arpa` namespace.
 - HTTPS was deployed on 2026-10-20 and extended to the leaderboard on 2026-10-21; clients must trust the existing Caddy CA. See [Caddy](../services/caddy.md).
+
+## Trusted VLAN DNS in Mullvad mode (2026-10-25)
+
+Trusted DHCP currently advertises Flint 2 at `192.168.20.1`. In Trusted VPN mode, firewall redirect `firewall.trusted_vpn_dns` DNATs **IPv4 UDP/TCP destination port 53** from `192.168.20.0/24` to CT 107 `192.168.10.171:53`; in WAN mode this redirect is disabled. CT 107 uses local dnsmasq with `10.64.0.1` Mullvad upstream and `server=/home.arpa/192.168.10.1` for internal names. The inter-VLAN permission is `firewall.trusted_telegram_dns`. Tests returned correct Telegram IP (`149.154.166.110`), Proxmox (`192.168.10.10`), and TCP DNS results. Plain client `dig`, `dig @192.168.20.1`, and `dig @1.1.1.1` agreed in VPN mode. This is **not** a proof that DoH/DoT or other encrypted/private resolvers are intercepted. See [Mullvad](mullvad.md) and [Telegram proxy](../services/telegram-proxy.md).
