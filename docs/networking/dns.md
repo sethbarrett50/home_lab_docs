@@ -5,6 +5,12 @@
 **Platform:** GL.iNet Flint 2 / OpenWrt 23.05.5, dnsmasq
 **Scope:** Internal lab hostnames; the router continues to serve DNS and DHCP. HTTPS certificates are provided separately by Caddy on `certs-01`.
 
+## WireGuard remote DNS note (2026-10-25)
+
+The VPS-relayed remote VPN allows XPS `10.100.0.10` to query the Flint 2 DNS service at `192.168.10.1:53` over TCP and UDP. When the WireGuard /32 client was rejected by dnsmasq's local-subnet guard, `dhcp.@dnsmasq[0].localservice` was changed from `1` to `0`; DNS resolution through the WireGuard path then succeeded. This increases the importance of verifying that router firewall INPUT rules continue to deny WAN DNS. No router WAN DNS exposure has been demonstrated, but a dedicated exposure audit remains outstanding.
+
+The XPS **retains NetworkManager** and its existing resolver configuration. To resolve key homelab services off-network without changing the laptop's DNS manager, `/etc/hosts` was backed up to `/etc/hosts.pre-homelab` and static entries added: `pve.home.arpa → 192.168.10.10`, `grafana.home.arpa`/`uptime.home.arpa → 192.168.10.50`, `monitor.home.arpa → 192.168.10.158`, `nas.home.arpa → 192.168.10.170`. These host mappings do **not** confer permission to access each destination; remote routing/firewall access is still narrowly allowed. See [VPN](vpn.md).
+
 ## Design decision
 
 Use the Flint 2's existing dnsmasq service instead of hosting a DNS LXC on Proxmox. This keeps hostname resolution available even if Proxmox is offline, and avoids unnecessary additional services. DHCP reservations and DHCP-advertised client names produce DNS records automatically; infrastructure with statically configured IP addresses receives explicit records.
@@ -118,3 +124,7 @@ Only after deciding that `.170` should be permanent, add a reservation and docum
 - Compare the router's active DHCP leases and ARP/neigh table with the VLAN 10 inventory; add entries for other verified hosts if necessary.
 - Keep network inventory and diagrams synchronized with new router-hosted DNS names and the `home.arpa` namespace.
 - HTTPS was deployed on 2026-10-20 and extended to the leaderboard on 2026-10-21; clients must trust the existing Caddy CA. See [Caddy](../services/caddy.md).
+
+## Trusted VLAN DNS in Mullvad mode (2026-10-25)
+
+Trusted DHCP currently advertises Flint 2 at `192.168.20.1`. In Trusted VPN mode, firewall redirect `firewall.trusted_vpn_dns` DNATs **IPv4 UDP/TCP destination port 53** from `192.168.20.0/24` to CT 107 `192.168.10.171:53`; in WAN mode this redirect is disabled. CT 107 uses local dnsmasq with `10.64.0.1` Mullvad upstream and `server=/home.arpa/192.168.10.1` for internal names. The inter-VLAN permission is `firewall.trusted_telegram_dns`. Tests returned correct Telegram IP (`149.154.166.110`), Proxmox (`192.168.10.10`), and TCP DNS results. Plain client `dig`, `dig @192.168.20.1`, and `dig @1.1.1.1` agreed in VPN mode. This is **not** a proof that DoH/DoT or other encrypted/private resolvers are intercepted. See [Mullvad](mullvad.md) and [Telegram proxy](../services/telegram-proxy.md).

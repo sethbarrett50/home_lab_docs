@@ -1,83 +1,50 @@
-# NAS & Storage
+# NAS & Storage — CT 105
 
-## Status: Container running; NAS stack not finalized
+**Status (2026-10-25):** Debian 12 LXC CT 105, `nas.home.arpa` / `192.168.10.170`, in VLAN 10 on Proxmox. qBittorrent-nox 4.5.2 and selective Mullvad egress are deployed and tested. Samba/NFS, a NAS management UI, and redundant storage are not claimed deployed.
 
-`nas` (LXC 105) is running on the Proxmox host, VLAN 10
-(`192.168.10.170`, DHCP). The container's root filesystem is on
-`local-lvm`. Its bind mount (`mp0`) maps host
-`/mnt/pve/hdd-1tb/nas-share` to container `/mnt/nas-share` on the
-active Seagate 1 TB HDD. This bind-mounted data is not covered by the
-normal LXC guest backup.
+## Storage and shares
 
-The host now also has an empty 500 GB WD Blue ext4 directory storage
-(`hdd-500gb`) and a ~906 GiB Silicon Power LVM-thin pool (`ssd-1tb`),
-added 2026-10-21. Neither is currently a NAS share or a network-mounted
-Proxmox datastore. NAS software, Samba/NFS shares, qBittorrent and VPN
-integration remain unverified or planned, not completed.
+The container root is on Proxmox `local-lvm`. PVE host `/mnt/pve/hdd-1tb/nas-share` is bind-mounted as `/mnt/nas-share` (`mp0`) in CT 105. This data mount is **not included** in ordinary LXC guest backups; preserve host-volume backups separately. Other PVE storage includes the 500 GB WD Blue `hdd-500gb` and ~906 GiB Silicon Power `ssd-1tb` LVM-thin pool. These are not a mirrored NAS array.
 
-## Planned Stack
+## qBittorrent and HTTPS
 
-| Service | Role |
-|---|---|
-| NAS software (TBD) | File sharing, RAID management |
-| qBittorrent | Torrent client with web UI |
-| (Optional) Jellyfin/Plex | Media server |
+- qBittorrent-nox **4.5.2** runs directly inside CT 105. Its Web UI is exposed via Caddy as `https://torrent.home.arpa` through the router DNS and the `certs-01` reverse proxy. Auth remains required; do not publish credentials here.
+- qBittorrent downloads and seeding were observed to work over selective Mullvad routing. The deployment **does not** rely on binding qBittorrent to a hypothetical `wg0` device inside CT 105; tunnel and PBR live on Flint 2.
+- Container autostart and VPN-availability guards/dependencies were configured and tested during setup, but their exact unit names and definitions were not included in this documentation handoff. Capture their live definitions before adding a reproducible unit-file listing; do not invent them.
 
-### NAS Software Options
+## Mullvad egress and fail-closed policy
 
-| Option | Type | Notes |
-|---|---|---|
-| **TrueNAS SCALE** | VM/bare-metal | ZFS native, feature-rich, heavier |
-| **OpenMediaVault** | LXC/VM | Lighter, Debian-based, plugin ecosystem |
-| **Cockpit + Samba** | LXC | Minimal, manual config, most flexible |
-| **MergerFS + Snapraid** | LXC | Good for JBOD with parity, no RAID overhead |
+Router PBR rules `pbr.nas_local` (ignore internal destinations) and `pbr.nas_mullvad` (source `192.168.10.170/32` via `wg_mullvad`) are always enabled, regardless of the Trusted VLAN toggle. fw4 permits NAS→Mullvad and a separate `/etc/nftables.d/30-nas-mullvad-guard.nft` hooked forward chain blocks forwarded NAS traffic out university WAN `eth1`. The NAS uses local dnsmasq with public requests through Mullvad DNS `10.64.0.1` and `home.arpa` forwarded to the Flint 2 router; an outbound classic DNS guard prevents normal upstream port-53 fallback. See [Mullvad](../networking/mullvad.md).
 
-> Recommendation: Start with **OpenMediaVault** in an LXC — easy web UI, good Proxmox integration, and can be replaced later. MergerFS+Snapraid is worth considering if you're doing JBOD with parity rather than strict RAID.
+Controlled loss of Mullvad was tested without WAN fallback; reconnection and downloads/seeding succeeded. Router reboot persistence, more extensive DNS bypass tests, and startup ordering remain open.
 
-## qBittorrent
+## Operational verification
 
-Run as a Docker container or LXC, ideally with traffic **bound to a Mullvad VPN interface** for privacy.
+**On Proxmox:**
 
-```mermaid
-flowchart LR
-    QB[qBittorrent\nLXC/Docker]
-    VPN[Mullvad WireGuard\ninterface]
-    Internet[🌐 Internet\nTrackers / Peers]
-    NAS[NAS Storage\n/mnt/downloads]
-
-    QB -->|bound to wg0| VPN --> Internet
-    QB --> NAS
+```bash
+pct status 105
+pct config 105 | grep -E '^(net0|mp0|onboot):'
+pct exec 105 -- systemctl --failed
 ```
 
-### qBittorrent VPN Binding
+**On Flint 2:**
 
-Bind qBittorrent's network interface to the Mullvad WireGuard interface so torrent traffic never leaks:
+```sh
+uci show pbr.nas_local
+uci show pbr.nas_mullvad
+nft list chain inet fw4 nas_mullvad_guard
+/etc/init.d/pbr status | grep 'NAS Internet via Mullvad'
+```
 
-1. In qBittorrent Advanced settings, set **Network interface** to `wg0` (Mullvad interface)
-2. If the interface goes down, qBittorrent stops transferring — built-in kill switch
+**From an authorized client:** open `https://torrent.home.arpa` and confirm the qBittorrent Web UI is reachable and authenticated. Do not expose the Web UI directly on WAN.
 
-Alternatively, use a Docker setup like `binhex/arch-qbittorrentvpn` which handles the VPN binding automatically.
+## Remaining work
 
-## Storage Planning
-
-### HDD Recommendations (when purchasing)
-- Get at least **2 drives** of the same size for redundancy (RAID 1 or RAID Z1 in ZFS)
-- NAS-rated drives (WD Red, Seagate IronWolf) are worth the premium for 24/7 operation
-- Consider power draw — each spinning HDD adds ~5–8W to your budget
-
-### Mount Points (Planned)
-| Mount | Purpose |
-|---|---|
-| `/mnt/data` | General NAS shares |
-| `/mnt/downloads` | qBittorrent downloads |
-| `/mnt/backups` | Proxmox backups, device backups |
-
-## TODO
-
-- [x] Install additional local SSD/HDD storage (2026-10-21; not a redundant NAS array)
-- [ ] Decide on NAS software
-- [ ] Set up NAS as VM or LXC on Proxmox
-- [ ] Configure Samba/NFS shares
-- [ ] Set up qBittorrent with Mullvad VPN binding
-- [ ] Mount NAS storage in Proxmox as a datastore
-- [ ] Set up automated backups for important data
+- [x] CT 105 bind-mounted storage and qBittorrent-nox operational.
+- [x] Router-side Mullvad policy, DNS split and tested WAN kill switch.
+- [ ] Confirm router-reboot/startup ordering, CT autostart dependencies and recovery.
+- [ ] Capture exact qBittorrent service and guard unit files for reproducibility.
+- [ ] Deploy SMB/NFS/file-sharing only after choosing a NAS access model.
+- [ ] Implement off-host backups for bind-mounted data.
+- [ ] Decide on redundant disks / recovery strategy; current storage is not redundant.

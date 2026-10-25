@@ -63,7 +63,7 @@ graph TD
 |---|---|---|---|
 | `grafana` | monitor-01 | 3000 | Visualization — Infrastructure Overview dashboard has been rebuilt |
 | `prometheus` | monitor-01 | 9090 | Metrics store. **Not** 3001 — that's Kuma (see below, was documented wrong) |
-| `uptime-kuma` | monitor-01 | 3001 | Uptime/status checks; existing research-output-scraper monitors documented in [research-output-scraper.md](research-output-scraper.md#monitoring). Docker DNS pinned to `192.168.10.1`. Added internal-CA trust via `NODE_EXTRA_CA_CERTS` and read-only certificate mount (2026-10-20); new Grafana/Proxmox HTTPS monitor status not yet verified. |
+| `uptime-kuma` | monitor-01 | 3001 | **2.5.7**; health checks, CA trust, Telegram DOWN/recovery notification integration via dedicated Mullvad Tinyproxy. See [Telegram proxy](telegram-proxy.md). |
 | `loki` | monitor-01 | 3100 | Log aggregation |
 | `alloy` | monitor-01 + gha-general-01 | 12345 | Unified telemetry collector — ships node-exporter/cAdvisor data to Prometheus/Loki |
 | `cadvisor` | monitor-01 + gha-general-01 | 8080 | Per-container CPU/mem/network metrics |
@@ -98,17 +98,31 @@ Caddy runs on `certs-01` (LXC 106, `192.168.10.50`); full configuration and CA h
 
 `promtool check config` passed, the lifecycle reload succeeded, and the target API reported `health: up` with `up{job="caddy"} = 1` and no scrape error. Existing seven targets remain configured; **eight** targets are now configured including Caddy. Caddy exposes upstream health and HTTP metrics. The Prometheus API was rechecked on 2026-10-20: `up{job="caddy"} = 1`, and both `caddy_reverse_proxy_upstreams_healthy` series (`192.168.10.158:3000` and `192.168.10.158:3001`) returned `1`. The values show successful scraping and Caddy-reported upstream state, not verified end-to-end application health.
 
-**Uptime Kuma** (Docker Compose at `/opt/monitoring/compose.yml`) retains its named `/app/data` volume and router DNS (`192.168.10.1`). The service additionally sets:
+**Uptime Kuma 2.5.7** runs in Docker Compose at `/opt/monitoring/compose.yml` on `monitor-01`; upgraded from 1.23.17 on 2026-10-25 with existing monitors/history migrated and the persistent named `uptime-kuma-data` volume retained. A checked pre-migration backup is on monitor-01 at `/opt/monitoring/backups/kuma-v1-20261025-130228/uptime-kuma-v1-data.tar.gz` (plus Compose backup). Image is pinned to `louislam/uptime-kuma:2.5.7`, not `latest`.
 
 ```yaml
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.5.7
+    dns:
+      - 192.168.10.1
     environment:
       NODE_EXTRA_CA_CERTS: /etc/homelab-ca/root.crt
+      NOTIFICATION_PROXY: http://192.168.10.171:3128
     volumes:
-      # Existing uptime-kuma-data:/app/data mount is retained
+      - uptime-kuma-data:/app/data
       - /opt/monitoring/certs/homelab-root-ca.crt:/etc/homelab-ca/root.crt:ro
 ```
 
-`/opt/monitoring/certs/homelab-root-ca.crt` is a verified copy of the **public** internal CA certificate; `NODE_EXTRA_CA_CERTS` and the mount were confirmed inside the running Uptime Kuma **1.23.17** container following `docker compose up -d --no-deps uptime-kuma`. Its SQLite database loaded successfully. Adding/verifying HTTPS probes for `https://grafana.home.arpa/login` and `https://pve.home.arpa:8006/`, retaining TLS verification, and testing actual alert delivery are **still to be confirmed**. Do not count those checks as verified until Kuma reports them UP.
+Telegram notification provider **Homelab Telegram Alerts** is configured and applied to existing monitors; the user received a successful Telegram Test and actual downtime/recovery testing succeeded once the test monitor's notification was explicitly enabled. This notification proxy is a dedicated HTTPS CONNECT service on CT 107 with Mullvad egress; **monitor probes do not use that proxy simply because `NOTIFICATION_PROXY` is set**. New monitors still need the notification enabled, or the provider's Default Enabled option where available. See [Telegram proxy](telegram-proxy.md). The temporary alert test monitor should be deleted when no longer needed. Prometheus/Grafana alerts remain a separate task.
+
+```bash
+# On monitor-01
+cd /opt/monitoring
+docker compose config -q
+docker inspect uptime-kuma --format '{{.State.Status}}'
+docker exec uptime-kuma printenv NOTIFICATION_PROXY
+# Avoid printing notification configuration or bot tokens.
+```
 
 **Not yet instrumented:** `nas` (LXC 105) has no node-exporter and isn't in
 the scrape config at all — genuine gap, not a stale-IP issue. Needed before
@@ -211,11 +225,9 @@ Related tracking: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
 (job-level monitoring), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
 (router telemetry).
 
-## Alerting — separate follow-up issue (not part of this deployment)
+## Alerting — Telegram deployed; Prometheus/Grafana follow-up
 
-Grafana alerting and Uptime Kuma notification/expiry alert setup and
-validation will be tracked in a **separate GitHub issue**. No new alerts were
-configured in the October 20, 2026 Caddy monitoring session.
+Telegram DOWN/recovery notifications in **Uptime Kuma 2.5.7** were deployed and exercised 2026-10-25 via CT 107. Prometheus/Grafana native alert rules and certificate-expiry alert tuning are separate future work.
 
 ### Ideas (not configured)
 
@@ -227,7 +239,15 @@ configured in the October 20, 2026 Caddy monitoring session.
 | Disk full | >80% on any mount | Warning |
 | GHA runner container down | cAdvisor shows container not running | Warning |
 
-No Alertmanager or notification routing exists yet for Prometheus/Grafana —
+No Alertmanager or native notification routing exists yet for Prometheus/Grafana —
 they're collection + visualization only, nothing pages/notifies on these
 thresholds. Uptime Kuma *does* notify (its own notification channel, separate
 from this), but only for its up/down checks.
+
+## Prometheus outage and recovery — 2026-10-22 to 2026-10-25
+
+Prometheus was found `Exited (0)` on 2026-10-25, while Grafana and Uptime Kuma remained healthy. The Prometheus log recorded a graceful SIGTERM at **2026-10-22 20:34:33 UTC**. Host journal and package logs confirmed a user-initiated `apt upgrade -y` on 2026-10-22 at 16:33 EDT installed Docker packages and restarted containerd and Docker at 16:34 EDT. All other monitoring containers recovered, but Prometheus stayed stopped despite its `unless-stopped` restart policy; the exact non-restart mechanism remains unverified. Kuma reported `ECONNREFUSED` to `192.168.10.158:9090`, and Grafana queries failed until recovery.
+
+On `monitor-01`, `sudo docker start prometheus` restored service. `/-/healthy` and `/-/ready` endpoints returned healthy/ready, Prometheus `up` query reported **9/9 targets UP**, and Grafana dashboards displayed data again. Docker and containerd are both enabled at boot; Prometheus retains restart policy `unless-stopped`. Historical samples from the stopped period cannot be regenerated. This incident was not caused by the later WireGuard renaming and relay changes.
+
+For future Docker package upgrades, perform a post-upgrade `sudo docker ps -a`, check each critical container, query `http://127.0.0.1:9090/-/ready` and review Kuma. Do not indiscriminately recreate containers or discard volumes.

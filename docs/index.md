@@ -44,8 +44,8 @@ graph TD
 | VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Done — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
 | NAS / storage | ✅ Done |
-| VPN (inbound) | 🔲 Planned |
-| Mullvad on Trusted VLAN | 🔲 Planned |
+| VPN (inbound) | ✅ VPS-relayed WireGuard live 2026-10-25; XPS off-network access validated, reboot/isolation checks pending |
+| Mullvad selective egress | 🔲 Planned — separate NAS and Uptime Kuma Telegram routing |
 | GitHub Actions runners | ✅ KC + DFAIR updated 2026-10-22; [nightly source update checks](services/github-actions-runners.md) (check-only) |
 | Monitoring stack | 🔧 Running; runner job-exporter added 2026-10-22, job-active test pending |
 | VLAN 30 Internet egress | 🔒 IoT → WAN forwarding removed 2026-10-22; client validation pending |
@@ -53,3 +53,7 @@ graph TD
 !!! note
     This page mirrors the repo's root `README.md` (GitHub's landing page) for
     the built site's homepage. Keep both in sync when either changes.
+
+## Mullvad egress and Telegram notifications (2026-10-25)
+
+Selective Mullvad egress is deployed for [NAS/qBittorrent](services/nas.md), [Telegram proxy CT 107](services/telegram-proxy.md), and switchable Trusted VLAN 20 using Flint 2 `trusted-vpn on|off|status`. [Uptime Kuma 2.5.7](services/monitoring.md) sends tested Telegram alerts via the proxy. See the [Mullvad runbook](networking/mullvad.md) for validation, safe rollback, and reboot/boot-order follow-ups.

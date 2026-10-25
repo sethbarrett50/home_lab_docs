@@ -42,12 +42,14 @@ nav:
       - VLANs: networking/vlans.md
       - Firewall: networking/firewall.md
       - VPN: networking/vpn.md
+      - Mullvad Egress: networking/mullvad.md
   - Services:
       - Overview: services/README.md
       - Proxmox: services/proxmox.md
       - GitHub Actions Runners: services/github-actions-runners.md
       - NAS: services/nas.md
       - Monitoring: services/monitoring.md
+      - Telegram Proxy: services/telegram-proxy.md
       - Internal HTTPS / Caddy: services/caddy.md
       - IDS Research: services/ids-research.md
       - research-output-scraper: services/research-output-scraper.md

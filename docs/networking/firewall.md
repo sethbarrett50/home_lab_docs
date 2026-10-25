@@ -11,10 +11,9 @@ flowchart LR
     TRUST[lan_trusted\nVLAN 20]
     IOT[iot\nVLAN 30]
 
-    WAN -->|"DNAT — VPN tunnel\n& homelab ingress"| LAB
-    WAN -->|"DNAT — VPN tunnel"| TRUST
-    LAB -->|"allow outbound"| WAN
-    TRUST -->|"via Mullvad only"| WAN
+    LAB -->|"existing routed WAN policy"| WAN
+    TRUST -->|"WAN mode"| WAN
+    TRUST -->|"VPN mode via PBR"| VPN[Mullvad / wg_mullvad]
     IOT -.->|"WAN forwarding removed 2026-10-22"| WAN
 
     LAB -. blocked .- TRUST
@@ -32,24 +31,22 @@ flowchart LR
 | lan_trusted | ACCEPT | ACCEPT | ACCEPT |
 | iot (VLAN 30) | DROP | ACCEPT | DROP |
 
+## Deployed WireGuard relay allowlist (2026-10-25)
+
+The remote tunnel terminates at a public VPS, **not** the Flint 2 WAN. On the VPS, UFW defaults to `deny (routed)` and permits XPS peer `10.100.0.10` through interface `wg-homelab` only to: router WG peer `10.100.0.2` (routed), Proxmox `192.168.10.10` TCP 22/8006, Caddy `192.168.10.50` TCP 443, and router DNS `192.168.10.1` TCP/UDP 53. On Flint 2, firewall zone `wg_homelab` has REJECT input, ACCEPT output and REJECT forward with corresponding targeted rules. Router UCI rules include `allow_vps_wg_ping`, `allow_xps_wg_ping`, `wg_xps_proxmox`, `wg_xps_caddy`, `wg_xps_dns`. The router has no required inbound UDP port forward. These are the **verified rule definitions**, not proof of negative isolation tests. See [VPN](vpn.md) for routing, public peer keys and security follow-ups.
+
 ## Planned Firewall Rules
 
-### WAN → Router (INPUT)
+### WAN → Router (INPUT) — historical planning sketch
 | # | Protocol | Port | Action | Notes |
 |---|---|---|---|---|
-| 1 | UDP | 51820 | ACCEPT | WireGuard inbound (homelab VPN) |
+| 1 | UDP | 51820 | N/A on Flint 2 | WireGuard inbound is terminated on public VPS, **not** forwarded to router WAN |
 | 2 | TCP | 22 | DROP | No SSH from WAN — use VPN |
 | — | * | * | DROP | Default deny |
 
-### Trusted VLAN → Internet
-All traffic from VLAN 20 is policy-routed to the Mullvad WireGuard interface. A kill switch rule drops traffic if the VPN interface is down:
+### Trusted VLAN → Internet (deployed 2026-10-25)
 
-```text
-# Conceptual nftables kill switch
-chain forward {
-    iifname "br-trusted" oifname != "mullvad0" drop
-}
-```
+`trusted-vpn on|off|status` switches source `192.168.20.0/24` between Mullvad VPN (`wg_mullvad`) and university WAN (`eth1`). VPN mode also enables `firewall.trusted_vpn_dns` (IPv4 UDP/TCP 53 DNAT → `192.168.10.171`) and a dedicated `trusted_mullvad_guard` drop chain for WAN fallback. WAN mode removes those protections intentionally. The NAS and Telegram proxy have independent always-VPN source policies and guards. [Operational details](mullvad.md).
 
 ### IoT VLAN — Planned exception policy (not deployed)
 Historic design only; **VLAN 30 WAN forwarding was removed on 2026-10-22**, and the table below is *not* a list of deployed rules. An existing DHCP/DNS exception remains and must be reviewed separately.
@@ -106,8 +103,22 @@ The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10
 
 ## TODO
 
+- [ ] Negative tests from remote XPS to VLAN 20, VLAN 30, unapproved Lab services, and IPv6 paths
+- [ ] Verify dnsmasq UDP/TCP 53 not reachable from WAN after `localservice=0`
+
 - [x] VLAN 30 `iot` zone configured and IoT → WAN forwarding removed (2026-10-22); client testing pending
-- [ ] Configure Mullvad WireGuard interface + kill switch
+- [x] Configure Mullvad WireGuard selective routing and per-source kill switches (2026-10-25); boot-order and additional-egress-interface audit pending
 - [ ] Test VLAN isolation with `nmap` cross-VLAN scans
 - [ ] Set up firewall logging for dropped packets (helps with debugging IoT devices)
 - [ ] Consider running a dedicated firewall VM on Proxmox (e.g. pfSense/OPNsense) in the future for more granular control
+
+## Additional Mullvad firewall rules (2026-10-25)
+
+- `firewall.mullvad`: zone over `wg_mullvad`, with masquerading and MSS fix.
+- `firewall.nas_allow_mullvad` / `firewall.telegram_allow_mullvad`: targeted Lab→Mullvad permissions for CT 105 and 107.
+- `firewall.trusted_allow_mullvad`: Trusted→Mullvad allow rule; actual selection controlled by PBR.
+- `firewall.trusted_telegram_dns`: Trusted→Lab DNS allowance to CT 107 TCP/UDP 53.
+- `firewall.trusted_vpn_dns`: **disabled in WAN mode**, enabled only in Trusted VPN mode.
+- `/etc/nftables.d/30-nas-mullvad-guard.nft`, `/etc/nftables.d/31-telegram-mullvad-guard.nft`, `/etc/nftables.d/40-trusted-mullvad-guard.nft`: independent hooked forward chains; final file exists only in Trusted VPN mode.
+
+Observed outage and recovery tests passed for NAS/Telegram/Trusted specified routes; do not equate these checks with exhaustive leak testing. [Mullvad runbook](mullvad.md).
