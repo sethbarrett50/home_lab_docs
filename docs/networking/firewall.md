@@ -101,6 +101,10 @@ The existing broad section above documents the planned baseline, **not a fully a
 
 The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10.158`) within VLAN 10. Caddy currently uses a source-IP matcher to reject other clients, but a cross-client test and additional Proxmox/LXC firewall restriction remain outstanding. The admin endpoint `127.0.0.1:2019` **must never be exposed on the network**. Same-VLAN traffic is not secured by OpenWrt's inter-VLAN rules alone.
 
+## LLM inference access (verified 2026-10-27)
+
+The **guest** firewall on `llm-01` (`192.168.10.162`) uses nftables (`inet filter` input chain, default accept) to restrict TCP 8080 to Caddy `192.168.10.50`, permitting loopback and dropping IPv6 TCP 8080. The **Caddy** virtual host `llm.home.arpa` allows HTTPS proxying only for `192.168.20.0/24`, responds 403 otherwise, and passes through the Bearer token checked by `llama-server`. The backend is unencrypted HTTP on VLAN 10. This is service-specific enforcement, **not** a default-deny Lab or full cross-VLAN firewall audit. Observed: unauthorized Caddy origin returned 403; Trusted client without key returned 401; direct client-to-backend connection failed. See [LLM runbook](../services/local-llm.md).
+
 ## TODO
 
 - [ ] Negative tests from remote XPS to VLAN 20, VLAN 30, unapproved Lab services, and IPv6 paths

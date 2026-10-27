@@ -43,10 +43,11 @@ graph TD
 | GL.iNet Flint 2 as main router | ✅ Running |
 | VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Done — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
+| Local GPU LLM (Phase 4) | ✅ VM108 P4000 CUDA / Qwen3 8B, authenticated Caddy HTTPS and guest reboot validated 2026-10-27; host reboot pending — [runbook](docs/services/local-llm.md) |
 | NAS / storage | ✅ Done |
 | VPN (inbound) | ✅ VPS-relayed WireGuard live 2026-10-25; XPS off-network access validated, reboot/isolation checks pending |
 | Mullvad selective egress | ✅ NAS + Telegram proxy Mullvad egress and switchable VLAN 20 VPN/WAN mode verified 2026-10-25; reboot/boot-order audit pending |
-| GitHub Actions runners | ✅ KC + DFAIR updated 2026-10-22; [nightly source update checks](docs/services/github-actions-runners.md) (check-only) |
+| GitHub Actions runners | ✅ KC + DFAIR + KC-Timing; Timing deployed 2026-10-27; [nightly source update checks](docs/services/github-actions-runners.md) (check-only) |
 | Monitoring stack | ✅ Kuma 2.5.7 with tested Telegram alerts; Prometheus/Grafana metrics running; runner job-active test pending |
 | VLAN 30 Internet egress | 🔒 IoT → WAN forwarding removed 2026-10-22; client validation pending |
 
