@@ -51,6 +51,7 @@ nav:
       - Monitoring: services/monitoring.md
       - Telegram Proxy: services/telegram-proxy.md
       - Internal HTTPS / Caddy: services/caddy.md
+      - Local GPU LLM: services/local-llm.md
       - IDS Research: services/ids-research.md
       - research-output-scraper: services/research-output-scraper.md
   - Devices: devices/README.md

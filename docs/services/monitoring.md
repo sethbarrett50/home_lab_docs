@@ -155,7 +155,7 @@ Its repository copy and systemd unit are under
 [`gha_runner_job_exporter.py`](runner-observability/gha_runner_job_exporter.py) and [`gha-runner-job-exporter.service`](runner-observability/gha-runner-job-exporter.service).
 It exposes:
 
-- `gha_runner_job_observer_up{runner="kc|dfair"}`: `1` when Docker logs can be read;
+- `gha_runner_job_observer_up{runner="kc|dfair|kc_timing"}`: `1` when Docker logs can be read;
   **not** proof GitHub has registered or marked the runner online.
 - `gha_runner_job_observer_initialized`: whether a recognizable log marker was seen.
 - `gha_runner_current_job{runner="...",job="..."} 1`: inferred unfinished job;
@@ -181,7 +181,7 @@ The Prometheus config on `monitor-01` is bind-mounted from
 
 On 2026-10-22 `promtool check config` passed, Prometheus was HUP-reloaded,
 `curl` from `monitor-01` reached the exporter, and the Prometheus API returned
-`gha_runner_job_observer_up=1` for both `kc` and `dfair`. This verifies the
+`gha_runner_job_observer_up=1` for both `kc` and `dfair`. On 2026-10-27 the VM-local exporter additionally returned observer and initialized values of 1 for `kc_timing`; the user reports the Prometheus target was configured, but its new series in the Prometheus API have not yet been independently verified. This verifies the
 exporter-to-Prometheus path, not a running-job capture or alert notification.
 Limit port 9119 to the monitoring host; it has no authentication and Docker
 access held by the exporter service is privileged.
@@ -195,6 +195,7 @@ sudo systemctl status gha-runner-job-exporter.service --no-pager
 curl -fsS http://192.168.10.189:9119/metrics
 docker logs --tail 30 kc-gha-runner-local
 docker logs --tail 30 dfair-gha-runner-local
+docker logs --tail 30 kc-timing-runner-local
 ```
 
 On `monitor-01`:
@@ -208,18 +209,18 @@ curl -fsSG http://localhost:9090/api/v1/query \
 The versioned
 [Infrastructure Overview dashboard JSON](dashboards/infra-overview.json)
 is a **Grafana 13 Scenes-based JSON**, based on the supplied dashboard and
-updated with two runners, current-job stat panels, and corrected single-value
+updated with three runners, current-job stat panels, and corrected single-value
 container-health queries. CPU and RAM gauges use actual host capacity;
 network gauges show throughput without an assumed link maximum. Because KC
 uses host networking, its per-container network metric may be absent.
 The user reported importing/updating a Grafana dashboard with the job panels
-showing `None running` while both runners' latest observed jobs had completed.
+showing `None running` while KC and DFAIR latest observed jobs had completed.
 Import of this *exact version-controlled revision* into live Grafana has
 not been independently re-exported and compared. Treat live dashboard
 synchronization as a verification step.
 
 Existing Caddy scrape (`:9180`) and other infrastructure panels are retained.
-Outstanding work includes verifying a running workflow appears while active,
+The KC-Timing runner was observed Online / Idle in GitHub on 2026-10-27, and its exporter produces `kc_timing` series. The updated dashboard adds a KC-Timing container-status panel and a current-job stat; import into live Grafana is still required. Outstanding work includes verifying a running workflow appears while active,
 reviewing alerts, and deploying authoritative GitHub API runner status if needed.
 Related tracking: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
 (job-level monitoring), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)

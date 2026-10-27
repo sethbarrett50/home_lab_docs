@@ -1,6 +1,6 @@
 # Internal HTTPS and Caddy
 
-Deployed 2026-10-20; leaderboard route added and validated 2026-10-21. Runs on **`certs-01`**, Debian 13 unprivileged Proxmox LXC **CT 106**, VLAN 10, static `192.168.10.50`. Caddy **2.6.2** runs under systemd (`caddy.service`). The router (`flint2`, `192.168.10.1`) provides the `home.arpa` DNS records; Caddy does **not** provide DNS.
+Deployed 2026-10-20; leaderboard route added and validated 2026-10-21; LLM reverse proxy added and validated 2026-10-27. Runs on **`certs-01`**, Debian 13 unprivileged Proxmox LXC **CT 106**, VLAN 10, static `192.168.10.50`. Caddy **2.6.2** runs under systemd (`caddy.service`). The router (`flint2`, `192.168.10.1`) provides the `home.arpa` DNS records; Caddy does **not** provide DNS.
 
 ## Endpoints and traffic
 
@@ -9,6 +9,7 @@ Deployed 2026-10-20; leaderboard route added and validated 2026-10-21. Runs on *
 | `grafana.home.arpa` | HTTPS 443 → Caddy | `192.168.10.158:3000` | Caddy `tls internal` (automatic leaf renewal) |
 | `uptime.home.arpa` | HTTPS 443 → Caddy | `192.168.10.158:3001` | Caddy `tls internal` (automatic leaf renewal) |
 | `cs-leaderboard.home.arpa` | HTTPS 443 → Caddy | `192.168.10.117:80` (nginx on `dell-mini`) | Caddy `tls internal` (automatic leaf renewal) |
+| `llm.home.arpa` | HTTPS 443 → Caddy; Trusted VLAN only | `192.168.10.162:8080` (`llm-01`, Qwen3 API with Bearer key) | Caddy `tls internal`; backend is restricted HTTP |
 | `pve.home.arpa:8006` | Direct to Proxmox `192.168.10.10:8006` | Proxmox `pveproxy` (not routed through Caddy) | Manually signed custom certificate; see [Proxmox](proxmox.md#internal-https-certificate) |
 | `192.168.10.50:9180/metrics` | HTTP metrics-only listener on `certs-01` | Scraped by Prometheus on `monitor-01` | Plain HTTP, IP-restricted by Caddy matcher; firewall restriction still needs testing |
 
@@ -16,7 +17,7 @@ Deployed 2026-10-20; leaderboard route added and validated 2026-10-21. Runs on *
 
 ## Running Caddyfile
 
-`/etc/caddy/Caddyfile` on **`certs-01`** (updated 2026-10-21; includes leaderboard block):
+`/etc/caddy/Caddyfile` on **`certs-01`** (updated 2026-10-27; includes torrent and LLM blocks):
 
 ```caddyfile
 {
@@ -41,6 +42,28 @@ cs-leaderboard.home.arpa {
     tls internal
     encode zstd gzip
     reverse_proxy 192.168.10.117:80
+}
+
+torrent.home.arpa {
+    tls internal
+    encode zstd gzip
+
+    @trusted remote_ip 192.168.20.0/24
+    handle @trusted {
+        reverse_proxy 192.168.10.170:8080
+    }
+    respond 403
+}
+
+llm.home.arpa {
+    tls internal
+    encode zstd gzip
+
+    @trusted remote_ip 192.168.20.0/24
+    handle @trusted {
+        reverse_proxy 192.168.10.162:8080
+    }
+    respond 403
 }
 
 http://192.168.10.50:9180 {
@@ -80,6 +103,10 @@ Both proxy URLs returned HTTP 200 from `certs-01` after installing the internal 
 ### Leaderboard acceptance test (2026-10-21)
 
 From an XPS client on VLAN 20, `curl -v https://cs-leaderboard.home.arpa/` returned HTTP/2 200 and `SSL certificate verify ok`; the TLS SAN matched `cs-leaderboard.home.arpa`. `GET /api/universities` returned HTTP/2 200 and nonempty JSON; HTTP port 80 returned a 308 redirect to HTTPS. On `certs-01`, `curl -I http://192.168.10.117/` returned 200. `caddy fmt --overwrite`, configuration validation, and service reload succeeded. The initial leaf certificate was valid for 12 hours; Caddy manages renewal automatically. These checks establish service reachability, not a complete audit of the router firewall rules.
+
+### LLM route acceptance (2026-10-27)
+
+A Trusted VLAN 20 laptop accessed `https://llm.home.arpa/v1/models` with HTTP 401 without credentials; a Bearer-authenticated chat completion returned correct output at ~29.15 tokens/sec with 4,096 context. From `certs-01` (outside Trusted VLAN), Caddy returned HTTP 403. Direct laptop connection to the backend failed. Caddy forwards the client-supplied Bearer token over **unencrypted HTTP** on the Caddy→VM internal hop; the backend is nftables-restricted to source `192.168.10.50`. See [LLM deployment](local-llm.md).
 
 ## Internal CA and client trust
 

@@ -8,9 +8,10 @@ directly on `dell-mini` instead.
 
 - [Proxmox](proxmox.md) — hypervisor setup, VMs, GitHub Actions runner
 - [NAS & Storage](nas.md) — qBittorrent, NAS software, HDD setup
-- [GitHub Actions Runners](github-actions-runners.md) — KC/DFAIR setup, safe restarts, manual deployment and nightly update checks
+- [GitHub Actions Runners](github-actions-runners.md) — KC/DFAIR/KC-Timing setup, safe restarts, manual deployment and nightly update checks
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
+- [Local GPU LLM](local-llm.md) — VM108, Quadro P4000 passthrough, Qwen3 8B, private HTTPS API and reboot recovery
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
   likely uses this network's IoT VLAN as its real-world testbed
 - [research-output-scraper](research-output-scraper.md) — CS researcher
@@ -33,6 +34,7 @@ graph TD
     subgraph "VM 101 - gha-general-01"
         GHA1[dfair runner]
         GHA3[kc runner]
+        GHA4[KC-Timing runner]
         BK[Buildkit]
     end
 
@@ -41,6 +43,10 @@ graph TD
         GRAF[Grafana]
         LOKI[Loki]
         KUMA[Uptime Kuma]
+    end
+
+    subgraph "VM 108 - llm-01"
+        LLM[Qwen3 8B / llama.cpp\nNVIDIA P4000 passthrough]
     end
 
     subgraph "LXC 106 - certs-01"
@@ -57,11 +63,15 @@ graph TD
     PVE --> FW
     PVE --> GHA1
     PVE --> GHA3
+    PVE --> GHA4
     GHA1 --> BK
     GHA3 --> BK
+    GHA4 --> BK
     PVE --> PROM
     PVE --> QB
     PVE --> CADDY
+    PVE --> LLM
+    CADDY -->|Trusted VLAN HTTPS / API key| LLM
     CADDY -->|HTTPS reverse proxy| GRAF
     CADDY -->|HTTPS reverse proxy| KUMA
     LEADERBOARD[research-output-scraper\nnginx on dell-mini] 
@@ -97,6 +107,7 @@ The router maintains hostname records from DHCP leases and reservations, with ex
 | CS publication leaderboard | `cs-leaderboard.home.arpa` | HTTPS 443 via Caddy → `dell-mini:80` |
 | NAS LXC | `nas.home.arpa` | Service-dependent |
 | GitHub Actions VM | `gha-general-01.home.arpa` | SSH port 22 |
+| Local LLM API | `llm.home.arpa` | HTTPS port 443, Trusted VLAN + Bearer API key |
 
 The NAS currently uses DHCP at `192.168.10.170`. A permanent reservation is recommended but has not yet been configured.
 
@@ -108,7 +119,7 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 
 | Service | Type | Status | Priority |
 |---|---|---|---|
-| [GitHub Actions runners (dfair/kc)](github-actions-runners.md) | 2x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
+| [GitHub Actions runners (DFAIR/KC/KC-Timing)](github-actions-runners.md) | 3x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
 | [research-output-scraper](research-output-scraper.md) | nginx + systemd on `dell-mini`; HTTPS via Caddy | ✅ Running; HTTPS verified 2026-10-21 | Medium |
