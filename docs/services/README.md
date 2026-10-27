@@ -11,6 +11,7 @@ directly on `dell-mini` instead.
 - [GitHub Actions Runners](github-actions-runners.md) — KC/DFAIR/KC-Timing setup, safe restarts, manual deployment and nightly update checks
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
+- [Local GPU LLM](local-llm.md) — VM108, Quadro P4000 passthrough, Qwen3 8B, private HTTPS API and reboot recovery
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
   likely uses this network's IoT VLAN as its real-world testbed
 - [research-output-scraper](research-output-scraper.md) — CS researcher
@@ -44,6 +45,10 @@ graph TD
         KUMA[Uptime Kuma]
     end
 
+    subgraph "VM 108 - llm-01"
+        LLM[Qwen3 8B / llama.cpp\nNVIDIA P4000 passthrough]
+    end
+
     subgraph "LXC 106 - certs-01"
         CADDY[Caddy / internal CA\nHTTPS reverse proxy and metrics]
     end
@@ -65,6 +70,8 @@ graph TD
     PVE --> PROM
     PVE --> QB
     PVE --> CADDY
+    PVE --> LLM
+    CADDY -->|Trusted VLAN HTTPS / API key| LLM
     CADDY -->|HTTPS reverse proxy| GRAF
     CADDY -->|HTTPS reverse proxy| KUMA
     LEADERBOARD[research-output-scraper\nnginx on dell-mini] 
@@ -100,6 +107,7 @@ The router maintains hostname records from DHCP leases and reservations, with ex
 | CS publication leaderboard | `cs-leaderboard.home.arpa` | HTTPS 443 via Caddy → `dell-mini:80` |
 | NAS LXC | `nas.home.arpa` | Service-dependent |
 | GitHub Actions VM | `gha-general-01.home.arpa` | SSH port 22 |
+| Local LLM API | `llm.home.arpa` | HTTPS port 443, Trusted VLAN + Bearer API key |
 
 The NAS currently uses DHCP at `192.168.10.170`. A permanent reservation is recommended but has not yet been configured.
 

@@ -9,7 +9,7 @@
 | IP | 192.168.10.10 (static) |
 | Web UI | `https://pve.home.arpa:8006/` (CA-trusted hostname); IP-based access also available on port 8006 but certificate name does not match IP |
 | VLAN | 10 — Lab |
-| Proxmox | VE 9.1.1 (kernel 6.17.2-1-pve) |
+| Proxmox | VE 9.2.0 (`pve-manager` 9.2.21), running kernel `7.0.14-25-pve` (verified 2026-10-27) |
 | BIOS | 2.8.1 |
 | CPU | Intel Core i7-6700K (Skylake) — 4C/8T, 4.0–4.2 GHz |
 | RAM | 32 GB — 4× 8 GB DDR4-2400 (all slots full), running at 2133 MT/s (the i7-6700K's rated max). ~18 GiB used at time of writing. 8 GiB swap |
@@ -32,6 +32,8 @@ services overview):
 | `monitor-01` | VM 102 | Grafana, Prometheus, Loki, Uptime Kuma, Alloy, cAdvisor, node-exporter — see [monitoring.md](monitoring.md) |
 | `nas` | LXC 105 | File storage — software TBD, see [nas.md](nas.md). Data is mp0 `/mnt/pve/hdd-1tb/nas-share` -> `/mnt/nas-share` (`sda1`); rootfs on `local-lvm` |
 | `certs-01` | LXC 106 | Debian 13, unprivileged; Caddy 2.6.2, internal CA and HTTPS reverse proxy; `192.168.10.50`, see [caddy.md](caddy.md) |
+| `telegram-proxy-01` | LXC 107 | Telegram notification proxy; see [telegram-proxy.md](telegram-proxy.md) |
+| `llm-01` | VM 108 | Debian 13, NVIDIA P4000 PCIe passthrough, Qwen3 8B CUDA API; `192.168.10.162`, see [local-llm.md](local-llm.md) |
 
 ### Future ideas (not started, no concrete plan)
 
@@ -40,6 +42,10 @@ VM were floated before any of the above was actually deployed — none have
 specs, a timeline, or active work behind them. Listed in
 [Service Status](README.md#service-status) as low-priority "Planned" items;
 revisit here with real specs only once one is actually prioritized.
+
+## GPU passthrough VM 108 (2026-10-27)
+
+The P4000 GPU and its audio function are passed through with `hostpci0: 0000:01:00.0,pcie=1` and `hostpci1: 0000:01:00.1,pcie=1`. VT-d/IOMMU were already available; binding via VFIO succeeded without rebooting the Proxmox host. An initial PCI reset warning did not prevent VM execution. VM108 has 4 vCPU, 6 GiB RAM, a 100 GB virtual SCSI disk on `ssd-1tb`, Q35/OVMF, and a VirtIO NIC on `vmbr0`. Guest reboot persistence was verified; full Proxmox host reboot persistence was **not**. The 2026-10-27 GPU/LLM setup is documented in [local-llm.md](local-llm.md). Do not reboot the shared host as part of routine LLM debugging.
 
 ## GitHub Actions Runners
 

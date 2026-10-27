@@ -109,6 +109,24 @@ uci show dhcp | grep -i -B2 -A2 "bc:24:11:4d:7e:3a"
 
 Only after deciding that `.170` should be permanent, add a reservation and document that change separately.
 
+### LLM DHCP reservation and API DNS (2026-10-27)
+
+The Flint 2 router has committed DHCP and DNS entries; dnsmasq reload and lookups were confirmed:
+
+```text
+dhcp.llm_01=host
+dhcp.llm_01.name='llm-01'
+dhcp.llm_01.mac='BC:24:11:34:49:AC'
+dhcp.llm_01.ip='192.168.10.162'
+dhcp.llm_01.dns='1'
+
+dhcp.llm_proxy=domain
+dhcp.llm_proxy.name='llm.home.arpa'
+dhcp.llm_proxy.ip='192.168.10.50'
+```
+
+`llm-01.home.arpa` resolves to the VM's reserved `.162` address; `llm.home.arpa` resolves to **Caddy `.50`**, not the backend. Router-local `nslookup` returned both expected addresses. A Trusted client resolved `llm.home.arpa` to `.50`, and an unauthenticated HTTPS request produced HTTP 401. See [local LLM](../services/local-llm.md).
+
 ## Operational guidance
 
 - For new DHCP clients, assign meaningful DHCP hostnames; configure static reservations for devices that should retain stable addresses.
