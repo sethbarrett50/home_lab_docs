@@ -12,4 +12,5 @@
 
 # Private runner repositories: unauthenticated CI sees 404. Scope exclusions to these links only.
 ^https://github\.com/Kart-Chaser/KC-GHA-Runner/?$
+^https://github\.com/Kart-Chaser/KC-Timing-Runner/?$
 ^https://github\.com/DFAIR-LAB-Augusta/dfair_runner/?$
