@@ -14,6 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 RUNNERS = {
     'kc-gha-runner-local': 'kc',
     'dfair-gha-runner-local': 'dfair',
+    'kc-timing-runner-local': 'kc_timing',
 }
 START = re.compile(r'(?:\d{4}-\d\d-\d\d[^ ]*\s+)?(?:\d{4}-\d\d-\d\d [0-9:]+Z:\s*)?Running job:\s*(.+)$')
 END = re.compile(r'(?:\d{4}-\d\d-\d\d[^ ]*\s+)?(?:\d{4}-\d\d-\d\d [0-9:]+Z:\s*)?Job\s+(.+?)\s+completed with result:')

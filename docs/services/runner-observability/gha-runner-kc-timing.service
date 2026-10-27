@@ -1,0 +1,23 @@
+[Unit]
+Description=KC Timing GitHub Actions Runner
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+
+[Service]
+Type=simple
+User=seth
+Group=seth
+WorkingDirectory=/opt/gha-runners/kc-timing/KC-Timing-Runner
+Environment=HOME=/home/seth
+Environment=XDG_CONFIG_HOME=/home/seth/.config
+ExecStartPre=/usr/bin/make r.up
+ExecStart=/usr/bin/make r.log
+ExecStop=/usr/bin/docker stop -t 45 kc-timing-runner-local
+Restart=always
+RestartSec=15
+TimeoutStartSec=0
+TimeoutStopSec=65
+
+[Install]
+WantedBy=multi-user.target
