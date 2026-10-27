@@ -5,6 +5,7 @@ set -euo pipefail
 REPOS=(
   "/opt/gha-runners/kc/KC-GHA-Runner"
   "/opt/gha-runners/dfair"
+  "/opt/gha-runners/kc-timing/KC-Timing-Runner"
 )
 
 for repo in "${REPOS[@]}"; do
