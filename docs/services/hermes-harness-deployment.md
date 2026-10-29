@@ -1,6 +1,6 @@
 # Hermes Harness deployment readiness — HP and llm-01
 
-**Status: planned; not installed on hp-lap. Last reviewed 2026-10-29.** This page is a deployment contract for [Hermes Harness](https://github.com/sethbarrett50/hermes-harness), not a claim that native commands, code-editing workers, or host sandbox enforcement have been qualified.
+**Status: planned; not installed on hp-lap. Last reviewed 2026-10-29.** This page is a deployment contract for `sethbarrett50/hermes-harness` (private GitHub repository), not a claim that native commands, code-editing workers, or host sandbox enforcement have been qualified.
 
 ## Verified infrastructure
 
@@ -27,10 +27,10 @@ Actual local Qwen3.5 chat and terminal invocations worked, but repeated tool-cal
 
 ## Pre-install blockers and linked issues
 
-- [Harness #25 — llama.cpp/OpenAI-compatible endpoint qualification](https://github.com/sethbarrett50/hermes-harness/issues/25): auth, model identity, TLS, context, lifecycle and failure classification.
-- [Harness #24 — hybrid GPU model residency](https://github.com/sethbarrett50/hermes-harness/issues/24): pinned service policy, GPU lease, bounded transactional rotation and rollback.
-- [Harness #26 — Qwen/Granite evaluation](https://github.com/sethbarrett50/hermes-harness/issues/26): validated terminal receipts, tool schema success rates and correction/review quality.
-- [Harness #27 — HP integration qualification](https://github.com/sethbarrett50/hermes-harness/issues/27): native Hermes command invocation, bridge identity, approval/sandbox, deployment preflight and rollback.
+- `hermes-harness#25` — llama.cpp/OpenAI-compatible endpoint qualification: auth, model identity, TLS, context, lifecycle and failure classification.
+- `hermes-harness#24` — hybrid GPU model residency: pinned service policy, GPU lease, bounded transactional rotation and rollback.
+- `hermes-harness#26` — Qwen/Granite evaluation: validated terminal receipts, tool schema success rates and correction/review quality.
+- `hermes-harness#27` — HP integration qualification: native Hermes command invocation, bridge identity, approval/sandbox, deployment preflight and rollback.
 
 Recent `hermes-harness/dev` incorporates bounded Ollama inference and immutable repair receipts using other models. This is reusable design evidence, **not** verification that the remote, authenticated llama.cpp endpoints or GPU switching are implemented. Do not duplicate the Harness's canonical broker/receipt/repair controller.
 
