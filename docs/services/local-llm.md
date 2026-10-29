@@ -162,7 +162,6 @@ These are point-in-time single-user results; `--parallel 1` means one slot. Mode
 - [ ] Evaluate longer contexts, model upgrades, GPU resource headroom and sustained-load performance separately.
 - [ ] Verify whether remote VPN clients should be allowed; not included in Phase 4 access policy.
 
-
 ## Second endpoint: Qwen3.5 2B / 64K (observed 2026-10-29)
 
 The second enabled systemd service is `llama-qwen35-2b.service` on `192.168.10.162:8081`. Model file: `/home/pooltab/models/qwen3.5-2b/Qwen3.5-2B-Q4_K_M.gguf` (1,280,835,840 bytes). Its active arguments were tested with `--alias qwen35-2b --ctx-size 65536 --cache-type-k q8_0 --cache-type-v q8_0 --gpu-layers 99 --parallel 1 --threads 4 --jinja --reasoning off --no-webui --api-key-file /home/pooltab/.config/llama-server/api-keys`. The endpoint uses the same Caddy TLS/root CA and backend bearer-key mechanism as the original 8B service.
