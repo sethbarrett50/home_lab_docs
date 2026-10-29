@@ -26,7 +26,7 @@ curl -fsS --max-time 5 http://127.0.0.1:11435/api/tags | jq -r '.models[].name'
 
 On **XPS**, inspect `systemctl --user status hermes-xps-tunnel.service --no-pager` and `journalctl --user -u hermes-xps-tunnel.service -n 30 --no-pager`. The deployed `doctor` still does not assert fully qualified live execution or tool sandboxing. Do not restart the gateway, enable GPU switching, or automatically apply/push code as a diagnostic.
 
-For exact operator approval boundaries and the disposable task workflow, see the Harness [HP deployment guide](https://github.com/sethbarrett50/hermes-harness/blob/main/docs/deployment/hp-lap.md) and [Hermes workflow guide](https://github.com/sethbarrett50/hermes-harness/blob/main/docs/user-guide/hermes-workflows.md).
+For exact operator approval boundaries and the disposable task workflow, see the Harness Harness repository file `docs/deployment/hp-lap.md` and Harness repository file `docs/user-guide/hermes-workflows.md`.
 
 ## Verified infrastructure
 
