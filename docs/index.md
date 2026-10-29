@@ -43,7 +43,8 @@ graph TD
 | GL.iNet Flint 2 as main router | ✅ Running |
 | VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Done — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
-| Local GPU LLM (Phase 4) | ✅ VM108 P4000 CUDA / Qwen3 8B, authenticated Caddy HTTPS and guest reboot validated 2026-10-27; host reboot pending — [runbook](services/local-llm.md) |
+| Hermes HP gateway | ✅ Codex OAuth primary + Telegram gateway active; Qwen3.5 2B alias verified, automatic fallback pending live qualification — [runbook](services/hermes-gateway.md) |
+| Local GPU LLM (Phase 4) | ✅ VM108 P4000 with Qwen3 8B (4K) and Qwen3.5 2B (64K) systemd services, authenticated Caddy HTTPS; host reboot and second-service reboot recovery pending — [runbook](services/local-llm.md) |
 | NAS / storage | ✅ Done |
 | VPN (inbound) | ✅ VPS-relayed WireGuard live 2026-10-25; XPS off-network access validated, reboot/isolation checks pending |
 | Mullvad selective egress | 🔲 Planned — separate NAS and Uptime Kuma Telegram routing |

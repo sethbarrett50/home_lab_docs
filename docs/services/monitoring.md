@@ -252,3 +252,43 @@ Prometheus was found `Exited (0)` on 2026-10-25, while Grafana and Uptime Kuma r
 On `monitor-01`, `sudo docker start prometheus` restored service. `/-/healthy` and `/-/ready` endpoints returned healthy/ready, Prometheus `up` query reported **9/9 targets UP**, and Grafana dashboards displayed data again. Docker and containerd are both enabled at boot; Prometheus retains restart policy `unless-stopped`. Historical samples from the stopped period cannot be regenerated. This incident was not caused by the later WireGuard renaming and relay changes.
 
 For future Docker package upgrades, perform a post-upgrade `sudo docker ps -a`, check each critical container, query `http://127.0.0.1:9090/-/ready` and review Kuma. Do not indiscriminately recreate containers or discard volumes.
+
+## llm-01 NVIDIA GPU telemetry and endpoint monitoring (2026-10-29)
+
+**Live checks completed:** Both Caddy HTTPS LLM endpoints `https://llm.home.arpa/v1/models` and `https://llm-long.home.arpa/v1/models` have green Uptime Kuma monitors. Monitoring uses unauthenticated HTTP with **401 as the accepted response**, establishing reachability/auth enforcement, **not authenticated inference or model correctness**. To allow Kuma from `monitor-01` (192.168.10.158), the `@trusted remote_ip` matcher in **both** Caddy virtual hosts additionally permits this single IP; the Trusted VLAN and HP 192.168.10.147 entries remain. Do not broadly enable VLAN 10. Kuma notification enablement for these particular monitors has not been independently verified.
+
+On `llm-01` (192.168.10.162), the NVIDIA Quadro P4000 has an independent read-only `nvidia-smi-exporter.service` on `192.168.10.162:9835/metrics`, running via a systemd **dynamic user**. The versioned exporter and clean service unit are at [gpu-monitoring/](gpu-monitoring/). Runtime tests returned HTTP 200 with GPU utilization, VRAM used/total bytes, temperature, power, and aggregate compute process count. Two resident llama.cpp processes consumed 7,201 MiB of 8,192 MiB at measurement. This exporter does **not** indicate which process owns how much memory and is not an inference readiness check.
+
+`llm-01` `/etc/nftables.conf` retains the existing Caddy-only restrictions on TCP 8080/8081 and adds, after loopback accept:
+
+```nft
+meta nfproto ipv6 tcp dport 9835 drop
+ip saddr != 192.168.10.158 tcp dport 9835 drop
+```
+
+This allows remote IPv4 scrapes from `monitor-01` only; input policy remains ACCEPT for other ports. The firewall was syntax-checked and reloaded, and `monitor-01` successfully scraped `/metrics` afterward. Tests from disallowed remote sources were not independently recorded.
+
+Prometheus is the `prometheus` Docker container on `monitor-01`. The actual bind-mounted configuration is **`/opt/monitoring/prometheus/prometheus.yml`** (container path `/etc/prometheus/prometheus.yml`). An additional job was deployed:
+
+```yaml
+  - job_name: "llm-01-gpu"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["192.168.10.162:9835"]
+        labels:
+          host: "llm-01"
+          role: "gpu-inference"
+```
+
+`curl -X POST http://127.0.0.1:9090/-/reload` succeeded, target health became **up** with no scrape error (~29.5 ms), and PromQL returned **7.03 GiB** used VRAM. `docker exec prometheus promtool check config /etc/prometheus/prometheus.yml` returned SUCCESS. This makes **10 active targets** at verification. The dashboard's new GPU row is tracked in [infra-overview.json](dashboards/infra-overview.json); see [dashboard import and validation](dashboards/README.md) before deploying it.
+
+```bash
+# On monitor-01
+curl -fsSG --data-urlencode 'query=up{job="llm-01-gpu"}' \
+  http://127.0.0.1:9090/api/v1/query
+curl -fsS http://192.168.10.162:9835/metrics
+docker exec prometheus promtool check config /etc/prometheus/prometheus.yml
+```
+
+**Known limits:** No GPU Prometheus alert rules yet. Qwen3 8B and Qwen3.5 2B remain concurrently resident; adaptive model swapping and Codex-to-local fallback are not demonstrated by these monitoring checks. Grafana UI import/rendering of the newly generated JSON is pending live confirmation.

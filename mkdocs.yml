@@ -52,6 +52,7 @@ nav:
       - Telegram Proxy: services/telegram-proxy.md
       - Internal HTTPS / Caddy: services/caddy.md
       - Local GPU LLM: services/local-llm.md
+      - Hermes Gateway: services/hermes-gateway.md
       - IDS Research: services/ids-research.md
       - research-output-scraper: services/research-output-scraper.md
   - Devices: devices/README.md
