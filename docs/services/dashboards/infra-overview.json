@@ -3379,7 +3379,7 @@
                   "steps": [
                     {
                       "color": "green",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -3477,7 +3477,7 @@
                   "steps": [
                     {
                       "color": "green",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -3575,7 +3575,7 @@
                   "steps": [
                     {
                       "color": "red",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "green",
@@ -3673,7 +3673,7 @@
                   "steps": [
                     {
                       "color": "green",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -3771,7 +3771,7 @@
                   "steps": [
                     {
                       "color": "green",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -3869,7 +3869,7 @@
                   "steps": [
                     {
                       "color": "green",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -3966,12 +3966,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "red",
-                      "value": null
+                      "color": "green",
+                      "value": 0
                     },
                     {
-                      "color": "green",
-                      "value": 1
+                      "color": "red",
+                      "value": 0
                     }
                   ]
                 },
@@ -4065,7 +4065,7 @@
                   "steps": [
                     {
                       "color": "red",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "green",
@@ -4476,7 +4476,6 @@
           "kind": "RowsLayoutRow",
           "spec": {
             "collapse": false,
-            "title": "LLM / GPU (llm-01)",
             "layout": {
               "kind": "AutoGridLayout",
               "spec": {
@@ -4558,7 +4557,8 @@
                 "maxColumnCount": 4,
                 "rowHeightMode": "short"
               }
-            }
+            },
+            "title": "LLM / GPU (llm-01)"
           }
         }
       ]
