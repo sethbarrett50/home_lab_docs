@@ -1,42 +1,36 @@
-# Infra Overview dashboard deployment (Grafana 13)
+# Infra Overview dashboard
 
-The authoritative dashboard **spec** is [infra-overview.json](infra-overview.json). It uses Grafana's V2 dashboard JSON model with an `elements` map and `RowsLayout`, **not** the older classic `panels` array. The file retains all 34 preexisting panels and adds 8 GPU gauges in a fourth row, `LLM / GPU (llm-01)`.
+One authoritative dashboard file: [infra-overview.json](infra-overview.json).
 
-**Important:** The Grafana 13 **JSON Model editor** works with a dashboard spec, while API operations expecting a full V2 resource require `apiVersion`, `kind`, `metadata`, and `spec`. A complete V2 resource can be constructed when needed by wrapping the single spec JSON with live Grafana metadata. For updates to an **existing** dashboard through the API, obtain and retain its real UID, namespace, resourceVersion and metadata from Grafana; do **not** blindly create a second dashboard with the example metadata. Grafana's classic legacy `/api/dashboards/db` endpoint and legacy file provisioning may reject V2 dashboards. Avoid using that path with this file.
+The JSON is in **Classic Grafana dashboard format** (`schemaVersion`, `panels`, `targets`, `gridPos`) for compatibility with the **Dashboards → New → Import** workflow. It replaces the earlier V2 spec-only export, which was unsuitable for that import path. All 34 original visualization panels, 8 NVIDIA GPU visualization panels, and four organizational row headings remain.
 
-## Update the existing live dashboard (preferred)
+## Import into existing Grafana dashboard
 
-1. Open the existing **Infra Overview** dashboard in Grafana, select **Edit**, open dashboard settings → **JSON Model**.
-2. Back up the live JSON model locally before editing. Compare with the version in Git; if live changes were made since the repo snapshot, merge those changes first.
-3. Replace the **spec** in the JSON model editor with the contents of `infra-overview.json` (do not paste the wrapped resource into a spec-only editor). Save changes and verify the original three sections plus the new fourth section. If the UI expects the full resource instead, use the full V2 resource shape, preserving the live metadata/UID.
-4. Confirm that `up{job="llm-01-gpu"} == 1` and that the new gauges display readings. Return to edit if the dashboard shows a schema validation message; save the **exact validation error** to debug fields, not merely JSON syntax.
+1. Back up your live **Infra Overview** dashboard using Grafana's Export function. Any edits made directly in Grafana after the repo's previous snapshot may not be represented here.
+2. Open **Dashboards → New → Import** in Grafana and upload the latest `infra-overview.json` from this feature branch (or `dev` after PR merge). **The old `dev` file does not have the new format until this PR is merged.**
+3. In Grafana's import workflow, choose the existing dashboard's UID/overwrite option where offered to avoid a duplicate. The JSON uses `uid: null`, because the live dashboard UID was not available from the repository export. If Grafana cannot replace by selection, retrieve the existing UID from the dashboard URL, insert it in `uid`, and back up the existing dashboard before import.
+4. Confirm the existing Infrastructure, GHA Runners, and Internal HTTPS / Caddy rows plus **LLM / GPU (llm-01)** row. Verify the GPU exporter is up: `up{job="llm-01-gpu"} == 1`.
 
-## Automated structural checks (repository)
+The dashboard uses the original Prometheus datasource UID `PBFA97CFB590B2093`. If the target Grafana instance has a different UID, select or edit the datasource after import. This JSON **does not automatically deploy** via the Grafana bind-mounted datasource provisioning directory.
+
+## Local static verification
 
 ```bash
 python3 -m json.tool docs/services/dashboards/infra-overview.json >/dev/null
 python3 - <<'PY'
 import json
 from pathlib import Path
-p = Path('docs/services/dashboards')
-spec = json.loads((p / 'infra-overview.json').read_text())
-assert len(spec['elements']) == 42
-ids = [v['spec']['id'] for v in spec['elements'].values()]
+d = json.loads(Path("docs/services/dashboards/infra-overview.json").read_text())
+assert "panels" in d and "elements" not in d
+assert d["schemaVersion"] >= 40
+viz = [p for p in d["panels"] if p["type"] != "row"]
+assert len(viz) == 42
+assert len([p for p in d["panels"] if p["type"] == "row"]) == 4
+ids = [p["id"] for p in d["panels"]]
 assert len(ids) == len(set(ids))
-for row in spec['layout']['spec']['rows']:
-    for item in row['spec']['layout']['spec']['items']:
-        assert item['spec']['element']['name'] in spec['elements']
-print('JSON, panel IDs and layout references valid')
+assert all(p["targets"] and p["targets"][0]["expr"] for p in viz)
+print("Classic JSON structurally valid, 42 visualizations + 4 rows")
 PY
 ```
 
-These checks verify JSON syntax and dashboard references but **do not substitute for a Grafana server-side schema check**. Grafana rendering/import of the PR revision is not yet verified, and the exact UI error that prompted this change was not supplied.
-
-## Source and live configuration
-
-- Grafana container: `grafana`, `monitor-01:3000` via `https://grafana.home.arpa`.
-- Grafana datasource config bind mount: `/opt/monitoring/grafana/provisioning` → `/etc/grafana/provisioning`. No dashboard-provider provisioning has been configured.
-- Prometheus datasource used by this dashboard: `PBFA97CFB590B2093`, copied from original panels.
-- Prometheus scrape job: `llm-01-gpu` at `192.168.10.162:9835`, confirmed up on 2026-10-29.
-
-**Do not** copy V2 spec JSON into a classic dashboard provider and assume Grafana will pick it up; existing dashboard remains database-managed until an explicit compatible deployment mechanism is installed.
+**Status:** Static structure confirmed in the PR. A live Grafana server-side import/validation and render check has **not** yet been completed; an exact error message would be necessary to debug any remaining failure.
