@@ -1,6 +1,6 @@
 # Local GPU LLM — llm-01 (Phase 4)
 
-Deployed and validated **2026-10-27**. A Debian 13 VM on the Dell Precision 3620 Proxmox host serves a private, authenticated, OpenAI-compatible LLM API. GPU passthrough, CUDA inference, HTTPS access, client rejection, VM guest reboot recovery, and a 4,096-token context load were observed. **A full Proxmox host restart and recovery was not tested.**
+First endpoint deployed and validated **2026-10-27**; second 64K endpoint and dual-model operation validated **2026-10-29**. A Debian 13 VM on the Dell Precision 3620 Proxmox host serves a private, authenticated, OpenAI-compatible LLM API. GPU passthrough, CUDA inference, HTTPS access, client rejection, VM guest reboot recovery, and a 4,096-token context load were observed. **A full Proxmox host restart and recovery was not tested.**
 
 ## Inventory and deployment
 
@@ -13,12 +13,12 @@ Deployed and validated **2026-10-27**. A Debian 13 VM on the Dell Precision 3620
 | GPU | NVIDIA Quadro P4000, 8 GiB Pascal (CUDA architecture 61) |
 | Driver and CUDA | Debian NVIDIA driver `550.163.01`, CUDA toolkit `12.4.131` |
 | Runtime | `llama.cpp` build `b11942-338fce651`, CUDA backend enabled, `CMAKE_CUDA_ARCHITECTURES=61` |
-| Model | `Qwen/Qwen3-8B-GGUF`, `Qwen3-8B-Q4_K_M.gguf` (~4.7 GiB on disk); SHA-256 verified at install |
-| Backend | `192.168.10.162:8080` (HTTP **only for Caddy**; Bearer token required) |
-| User-facing URL | `https://llm.home.arpa/v1`, TLS from Caddy `certs-01` (`192.168.10.50`) |
-| Allowed front-end clients | Trusted VLAN `192.168.20.0/24`, enforced by Caddy `remote_ip` matcher |
+| Models | Qwen3 8B Q4_K_M (4K context, 8080) and Qwen3.5 2B Q4_K_M (64K context, 8081); original Qwen3 8B SHA-256 verified at install |
+| Backends | `192.168.10.162:8080` (8B) and `:8081` (2B); HTTP **only from Caddy**; Bearer token required |
+| User-facing URLs | `https://llm.home.arpa/v1` (8B) and `https://llm-long.home.arpa/v1` (2B), TLS via Caddy `certs-01` (`192.168.10.50`) |
+| Allowed front-end clients | Trusted VLAN `192.168.20.0/24` and HP `192.168.10.147/32`, enforced by Caddy `remote_ip` matcher |
 | API credentials | `/home/pooltab/.config/llama-server/api-keys`, mode `0600`; **never commit, print in logs, or distribute in docs** |
-| Context and concurrency | `--ctx-size 4096`, `--parallel 1`, `--gpu-layers 99`, 4 CPU threads |
+| Context and concurrency | Qwen3 8B: 4,096; Qwen3.5 2B: 65,536 with q8 KV; both `--parallel 1`, `--gpu-layers 99`, 4 CPU threads |
 
 The host's IOMMU group contains the P4000 graphics, its audio function and their upstream PCI bridge, without other unrelated endpoints. The host has a separate Intel integrated GPU. On initial VM start, Proxmox emitted a PCI reset warning but VFIO assignment succeeded, and the guest driver identified the passed-through P4000. No ACS override or Proxmox BIOS/bootloader changes were needed in this session. **Do not assume full host-reboot or subsequent cold-start behavior has been validated.**
 
@@ -33,8 +33,8 @@ graph LR
     U -.->|direct :8080 denied| L
 ```
 
-1. Caddy's `llm.home.arpa` site uses `tls internal`, allows `remote_ip 192.168.20.0/24`, proxies to `192.168.10.162:8080`, and returns 403 otherwise. Other Caddy virtual hosts remain unchanged.
-2. `llm-01` nftables uses an `inet filter` input chain with `policy accept`; loopback is allowed, IPv6 TCP/8080 is dropped, and IPv4 TCP/8080 is dropped unless the source is `192.168.10.50`. This is an **API-specific restriction**, not a host-wide default-deny firewall. `nftables.service` is enabled.
+1. Caddy's `llm.home.arpa` and `llm-long.home.arpa` sites use `tls internal`, allow `remote_ip 192.168.20.0/24` and `192.168.10.147`, proxy to `192.168.10.162:8080` and `:8081` respectively, and return 403 otherwise. Other Caddy virtual hosts remain unchanged.
+2. `llm-01` nftables uses an `inet filter` input chain with `policy accept`; loopback is allowed, IPv6 TCP/8080 and TCP/8081 are dropped, and IPv4 TCP/8080 and TCP/8081 are dropped unless the source is `192.168.10.50`. This is an **API-specific restriction**, not a host-wide default-deny firewall. `nftables.service` is enabled.
 3. `llama-server` enforces an API key via `--api-key-file`, disables its Web UI, and configures conservative CORS options. Caddy forwards the Bearer token; it does not store the key.
 4. Traffic on the **Caddy-to-guest segment is unencrypted HTTP**, including the Bearer token. Restricting source IPs does not encrypt that hop. For a stronger threat model, deploy encrypted upstream transport and evaluate internal lateral-movement risks.
 5. SSH on `llm-01` remains available; do not turn this scoped port rule into a blanket firewall policy without separately planning SSH access.
@@ -78,7 +78,7 @@ table inet filter {
 }
 ```
 
-This reflects the verified `/etc/nftables.conf` on 2026-10-27. Validate with `sudo /usr/sbin/nft -c -f /etc/nftables.conf` before applying; inspect live rules with `sudo /usr/sbin/nft list ruleset`. Keep SSH open during firewall modifications.
+**Historical reference (2026-10-27):** this snippet shows the original 8080-only rule; the 2026-10-29 live nftables configuration additionally protects TCP 8081 with the same Caddy-source restriction. Do not apply the historical snippet unchanged to the dual-model deployment. Validate with `sudo /usr/sbin/nft -c -f /etc/nftables.conf` before applying; inspect live rules with `sudo /usr/sbin/nft list ruleset`. Keep SSH open during firewall modifications.
 
 ## Service management and recovery
 
@@ -161,3 +161,41 @@ These are point-in-time single-user results; `--parallel 1` means one slot. Mode
 - [ ] Review driver updates for Pascal GPU support and security; a successful current build is not a promise of compatibility with newer CUDA releases.
 - [ ] Evaluate longer contexts, model upgrades, GPU resource headroom and sustained-load performance separately.
 - [ ] Verify whether remote VPN clients should be allowed; not included in Phase 4 access policy.
+
+
+## Second endpoint: Qwen3.5 2B / 64K (observed 2026-10-29)
+
+The second enabled systemd service is `llama-qwen35-2b.service` on `192.168.10.162:8081`. Model file: `/home/pooltab/models/qwen3.5-2b/Qwen3.5-2B-Q4_K_M.gguf` (1,280,835,840 bytes). Its active arguments were tested with `--alias qwen35-2b --ctx-size 65536 --cache-type-k q8_0 --cache-type-v q8_0 --gpu-layers 99 --parallel 1 --threads 4 --jinja --reasoning off --no-webui --api-key-file /home/pooltab/.config/llama-server/api-keys`. The endpoint uses the same Caddy TLS/root CA and backend bearer-key mechanism as the original 8B service.
+
+The model was tested at 16K/32K/64K configured allocation, and a real 16,040-token prompt retrieval succeeded. Full 64K-input retrieval has **not** been demonstrated. The `--reasoning off` setting was required to obtain normal final answer text in prior checks.
+
+| GPU memory snapshot (both services running) | Observed |
+|---|---:|
+| Qwen3 8B / 8080 | 5,230 MiB |
+| Qwen3.5 2B / 8081 | 1,966 MiB |
+| Total NVIDIA memory allocated | 7,201 MiB of 8,192 MiB |
+| Unallocated at snapshot | approximately 991 MiB |
+
+At that snapshot llm-01 had ~3.9 GiB available system RAM and 73 GiB disk available. These are point-in-time measurements; VRAM headroom is insufficient to assume a third model can safely remain resident. There is currently **no Harness-managed model rotation**.
+
+### Safe dual-model inventory and checks
+
+```bash
+# On llm-01; read-only checks.
+systemctl is-active llama-server.service llama-qwen35-2b.service nftables.service
+systemctl is-enabled llama-server.service llama-qwen35-2b.service
+nvidia-smi
+sudo ss -ltnp | grep -E ':8080|:8081'
+sudo nft list ruleset
+# On an allowlisted, CA-trusting client: 401 without a token is expected.
+curl -sS -o /dev/null -w '%{http_code}\\n' https://llm-long.home.arpa/v1/models
+```
+
+Backend firewall and Caddy configuration must preserve **both** ports and hostnames, and any future GPU scheduler must preserve pinned, in-use services. Read [Harness deployment readiness](hermes-harness-deployment.md) for the proposed hybrid resident/switchable model design.
+
+### Validation boundaries
+
+- The 8B endpoint reports a 4,096-token context and was rejected by Hermes native agent execution requiring at least 64K. Do not advertise a fictitious 64K context to satisfy this check.
+- Hermes `homelab-long` custom alias with `key_env: LOCAL_LLM_API_KEY` successfully performed native chat, and executed `pwd` and `uname -s` in controlled tests. Other tool tasks failed from schema mistakes, discovery loops and a policy block; it is not a reliable autonomous coding worker yet.
+- Automatic Codex-to-local failover, double-service recovery after llm-01 guest reboot, and full Proxmox host reboot remain unverified.
+- Caddy-to-guest HTTP remains unencrypted, including bearer token transit. Backend source filtering is not encryption.
