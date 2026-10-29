@@ -2,7 +2,7 @@
 
 The authoritative dashboard **spec** is [infra-overview.json](infra-overview.json). It uses Grafana's V2 dashboard JSON model with an `elements` map and `RowsLayout`, **not** the older classic `panels` array. The file retains all 34 preexisting panels and adds 8 GPU gauges in a fourth row, `LLM / GPU (llm-01)`.
 
-**Important:** The Grafana 13 **JSON Model editor** works with a dashboard spec, while API operations expecting a full V2 resource require `apiVersion`, `kind`, `metadata`, and `spec`. A complete resource-shaped example is [infra-overview-resource.json](infra-overview-resource.json). For updates to an **existing** dashboard through the API, retain its real UID, namespace, resourceVersion and metadata obtained from Grafana; do **not** blindly create a second dashboard with the example metadata. Grafana's classic legacy `/api/dashboards/db` endpoint and legacy file provisioning may reject V2 dashboards. Avoid using that path with this file.
+**Important:** The Grafana 13 **JSON Model editor** works with a dashboard spec, while API operations expecting a full V2 resource require `apiVersion`, `kind`, `metadata`, and `spec`. A complete V2 resource can be constructed when needed by wrapping the single spec JSON with live Grafana metadata. For updates to an **existing** dashboard through the API, obtain and retain its real UID, namespace, resourceVersion and metadata from Grafana; do **not** blindly create a second dashboard with the example metadata. Grafana's classic legacy `/api/dashboards/db` endpoint and legacy file provisioning may reject V2 dashboards. Avoid using that path with this file.
 
 ## Update the existing live dashboard (preferred)
 
@@ -15,16 +15,11 @@ The authoritative dashboard **spec** is [infra-overview.json](infra-overview.jso
 
 ```bash
 python3 -m json.tool docs/services/dashboards/infra-overview.json >/dev/null
-python3 -m json.tool docs/services/dashboards/infra-overview-resource.json >/dev/null
 python3 - <<'PY'
 import json
 from pathlib import Path
 p = Path('docs/services/dashboards')
 spec = json.loads((p / 'infra-overview.json').read_text())
-resource = json.loads((p / 'infra-overview-resource.json').read_text())
-assert resource['apiVersion'] == 'dashboard.grafana.app/v2'
-assert resource['kind'] == 'Dashboard'
-assert resource['spec'] == spec
 assert len(spec['elements']) == 42
 ids = [v['spec']['id'] for v in spec['elements'].values()]
 assert len(ids) == len(set(ids))
