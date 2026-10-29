@@ -152,6 +152,10 @@ For a deliberately unauthenticated smoke test, `curl -sS -o /dev/null -w '%{http
 
 These are point-in-time single-user results; `--parallel 1` means one slot. Model quality, longer prompt performance, thermals under prolonged load, and full-host recovery remain unbenchmarked.
 
+## Optional XPS GPU inference alongside llm-01 (2026-10-29)
+
+The XPS RTX 4060 (8 GiB) now serves installed Ollama models over an SSH **reverse tunnel initiated from XPS to HP**. On HP, its inventory is accessible at `http://127.0.0.1:11435/api/tags`, with the Hermes Harness bridge at `/home/hermes/projects/hermes-harness-qualification` supporting dynamic model discovery and bounded inference. This is distinct from the always-on Proxmox `llm-01` HTTPS llama.cpp service, and its models may be offline whenever XPS sleeps or disconnects. The tunnel does **not** expose XPS Ollama to the whole lab, and no automatic Hermes coordinator-to-XPS scheduling/failback has been qualified. The Harness `agents-assemble` path can select two distinct installed XPS worker/reviewer models for an approved single existing-file task; production host sandbox qualification is pending. See [Hermes Harness deployment](hermes-harness-deployment.md).
+
 ## Operational follow-ups
 
 - [ ] Test full **Proxmox host** reboot/VFIO assignment and recovery in a maintenance window; do not reboot the host solely for this validation.
