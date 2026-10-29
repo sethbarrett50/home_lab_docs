@@ -1,6 +1,6 @@
 # Hermes gateway: HP baseline, live Codex/Telegram and local fallback
 
-**Status, 2026-10-29:** HP baseline, persistent Hermes gateway, Codex OAuth primary, owner Telegram messaging, authenticated Qwen3.5 native alias, and local terminal smoke execution are observed. **Automatic primary-to-local failover, reliable local coding tools, Harness integration and XPS booster are not yet qualified.** See [Harness deployment readiness](hermes-harness-deployment.md). Historical tracking: [#85](https://github.com/sethbarrett50/home_lab_docs/issues/85).
+**Status, 2026-10-29:** HP baseline, persistent Hermes gateway, Codex OAuth primary, owner Telegram messaging, authenticated Qwen3.5 native alias, and local terminal smoke execution are observed. **Automatic primary-to-local failover and full tool-using Harness workflows are not qualified; Harness and XPS bounded inference are now installed and directly observed.** See [Harness deployment readiness](hermes-harness-deployment.md). Historical tracking: [#85](https://github.com/sethbarrett50/home_lab_docs/issues/85).
 
 ## Completed HP baseline (#86)
 
@@ -46,7 +46,7 @@ flowchart LR
   H -->|explicit alias: homelab-qwen| E[Qwen3 8B 4K]
   Q --> P[Caddy HTTPS to llm-01 :8081]
   E --> P2[Caddy HTTPS to llm-01 :8080]
-  H -.->|future, not installed| A[Hermes Harness]
+  H -.->|six skills installed; execution not fully qualified| A[Hermes Harness]\n  A -.->|SSH reverse tunnel, bounded inference| X[XPS Ollama GPU]
 ```
 
 - Hermes Agent: `v0.22.5+2971.ga938f00` (2026.9.24), installed for system user `hermes` under `/home/hermes/src/hermes-agent`.
@@ -76,9 +76,9 @@ getent hosts llm.home.arpa llm-long.home.arpa
 sudo journalctl -u hermes-gateway-7944f2ae.service -n 40 --no-pager
 ```
 
-**Booster (optional):** XPS16 is at homelab WireGuard `10.100.0.10`. XPS→lab is tested; **HP→XPS route and firewall are not yet tested**. Expose to HP **only the dedicated LLM inference API endpoint**, preferably authenticated and encrypted. Explicitly deny HP access to XPS SSH, file shares, desktop services, Docker socket and general LAN ports. Enforce the restriction at VPS/Flint/XPS firewalls and service binding. No XPS connection is required for normal Hermes usage. Route eligible larger/faster inference tasks to XPS only while healthy; use Proxmox when XPS is offline; implement bounded retries, timeouts and interruption-safe fallback.
+**Historical planned WireGuard booster (not the deployed route):** XPS16 is at homelab WireGuard `10.100.0.10`. XPS→lab is tested; **HP→XPS route and firewall are not yet tested**. Expose to HP **only the dedicated LLM inference API endpoint**, preferably authenticated and encrypted. Explicitly deny HP access to XPS SSH, file shares, desktop services, Docker socket and general LAN ports. Enforce the restriction at VPS/Flint/XPS firewalls and service binding. No XPS connection is required for normal Hermes usage. Route eligible larger/faster inference tasks to XPS only while healthy; use Proxmox when XPS is offline; implement bounded retries, timeouts and interruption-safe fallback.
 
-**Hermes Harness:** all coding workflows must ultimately go through native Hermes skills/commands with supervised Harness delegation, not a parallel CLI frontend. Harness remains a separate repository; do not declare enforcement complete until integration is tested.
+**Hermes Harness (new observed state):** pinned `41fa1c3` is installed at `/home/hermes/projects/hermes-harness-qualification`, all six skills are enabled, and the dynamic XPS bridge successfully discovered twelve Ollama models and invoked Granite 4 3B. XPS connects to HP via a persistent user-systemd SSH **reverse tunnel**; HP reads `127.0.0.1:11435`. This is not the earlier planned WireGuard/API-listener deployment and not proof of enforced native coding workflow. The prior diagram's optional inference pool must not be mistaken for full autonomous coding. See [Harness deployment](hermes-harness-deployment.md) and [#91](https://github.com/sethbarrett50/home_lab_docs/issues/91).
 
 ## Remaining tracked work
 

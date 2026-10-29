@@ -1,6 +1,32 @@
 # Hermes Harness deployment readiness — HP and llm-01
 
-**Status: planned; not installed on hp-lap. Last reviewed 2026-10-29.** This page is a deployment contract for `sethbarrett50/hermes-harness` (private GitHub repository), not a claim that native commands, code-editing workers, or host sandbox enforcement have been qualified.
+**Status: installed on hp-lap at pinned Harness `41fa1c3` (2026-10-29); limited local inference verified, live autonomous workflow NOT qualified.** This page is a deployment contract for `sethbarrett50/hermes-harness` (private GitHub repository), not a claim that native commands, code-editing workers, or host sandbox enforcement have been qualified.
+
+## HP deployed Harness and XPS model pool — observed 2026-10-29
+
+The dedicated `hermes` account deployed Hermes Harness (`sethbarrett50/hermes-harness`, private GitHub repository) in `/home/hermes/projects/hermes-harness-qualification` at **`41fa1c3bccfc6dd217f936c348f2a31bfc08f1c0`** (PRs #45–#46). The operator verified `uv sync --frozen --extra dev`, Harness import, six local enabled Hermes skills (`lets-investigate`, `what-we-know`, `game-plan`, `agents-assemble`, `cyber-warrior`, `stick-the-landing`), and active system gateway `hermes-gateway-7944f2ae.service`. The current dynamic bridge provides `xps-models` discovery and `xps-infer` for installed XPS Ollama models, plus approved worker/reviewer selection via `assemble-live --xps-worker-model NAME --xps-reviewer-model OTHER_NAME`. This is **not** proof that Hermes itself successfully completed an end-to-end task from Telegram. The six `SKILL.md` files are discoverable by Hermes but **do not register `/` commands with Telegram**; no phone slash-command autocomplete or gateway slash-command dispatch has been verified. Until a separate Telegram command/router integration is built, invoke these as ordinary-language requests to Hermes to use the named skill.
+
+**XPS connection:** XPS systemd **user** unit `hermes-xps-tunnel.service` initiates a persistent SSH reverse tunnel to `pooltab@192.168.10.147`, exposing the XPS Ollama listener only on HP loopback `127.0.0.1:11435`. HP `curl http://127.0.0.1:11435/api/tags` saw twelve installed models, including Granite 4 3B, Qwen2.5-Coder 7B, Qwen3 8B and Cyber-Ornith 9B. HP's Harness dynamic `xps-infer --model granite4:3b` produced a real structured inference reply; fixed registry worker/reviewer tests also passed for Qwen2.5-Coder 7B and Qwen3 8B. No autonomous tool calls or host file changes are implied by these probes.
+
+**Network scope:** The validated arrangement is **XPS → HP SSH reverse forwarding on the currently reachable lab route**, not HP → XPS inference over WireGuard. Do not claim WireGuard reachability, XPS listening public service, VPN failover or model API bearer authentication. HP loopback port 11435 can be used by other local HP users unless independently restricted. The SSH tunnel reconnects while the XPS systemd user manager runs; XPS sleep/offline or Wi-Fi isolation makes it unavailable. This connection does not require opening Ollama on the XPS LAN.
+
+### Read-only operator checks — run on hp-lap
+
+```bash
+sudo systemctl is-active hermes-gateway-7944f2ae.service
+sudo -u hermes -H bash -c '
+  cd /home/hermes/projects/hermes-harness-qualification
+  git log -1 --oneline
+  uv run --frozen python -m hermes_harness.native.skill_bridge xps-models --session operator-check
+  uv run --frozen python -m hermes_harness.native.skill_bridge doctor
+  /home/hermes/.local/bin/hermes skills list
+'
+curl -fsS --max-time 5 http://127.0.0.1:11435/api/tags | jq -r '.models[].name'
+```
+
+On **XPS**, inspect `systemctl --user status hermes-xps-tunnel.service --no-pager` and `journalctl --user -u hermes-xps-tunnel.service -n 30 --no-pager`. The deployed `doctor` still does not assert fully qualified live execution or tool sandboxing. Do not restart the gateway, enable GPU switching, or automatically apply/push code as a diagnostic.
+
+For exact operator approval boundaries and the disposable task workflow, see the Harness Harness repository file `docs/deployment/hp-lap.md` and Harness repository file `docs/user-guide/hermes-workflows.md`.
 
 ## Verified infrastructure
 
@@ -25,7 +51,7 @@ Actual local Qwen3.5 chat and terminal invocations worked, but repeated tool-cal
 - Do not interrupt a live fallback request, Codex primary or Telegram gateway to run background workers. The Hermes fallback chain is distinct from Harness per-role routing.
 - Maintain per-role capability policies: tool-free analysis, bounded worker, independent reviewer and optional local-only security specialist. Model capability and OS-level confinement require independent evidence.
 
-## Pre-install blockers and linked issues
+## Remaining production qualification and linked issues
 
 - `hermes-harness#25` — llama.cpp/OpenAI-compatible endpoint qualification: auth, model identity, TLS, context, lifecycle and failure classification.
 - `hermes-harness#24` — hybrid GPU model residency: pinned service policy, GPU lease, bounded transactional rotation and rollback.
@@ -54,7 +80,7 @@ sudo nft list ruleset
 
 These checks alone **do not** establish reliability, security qualification or an authorized deployment. Model key material and OAuth credentials must never be printed in diagnostics. Any tests using keys should retrieve them from protected process environments/files rather than pass them as argv.
 
-## Acceptance gate before deployment on HP
+## Acceptance gate for production live execution on HP
 
 1. A tested Hermes-native skill or supported command routes the originating session into the existing Harness; `hermes-harness` CLI remains diagnostic, not the primary user surface.
 2. A scoped, disposable worktree and operator-approved task produce a real local model proposal, independent review, functional verification, Git ownership audit and `pending_human_decision` with immutable receipts.
@@ -65,4 +91,4 @@ These checks alone **do not** establish reliability, security qualification or a
 
 ## Current rollback boundaries
 
-No Harness-specific service or GPU switcher has yet been installed. Do not disable, stop or alter `llama-server.service`, `llama-qwen35-2b.service`, `hermes-gateway-7944f2ae.service`, Caddy, CT107 DNS, router policy routing or initramfs unlock as part of documentation or read-only qualification. Preserve existing encrypted-boot and Telegram access. Follow [Hermes gateway](hermes-gateway.md) and [Local LLM](local-llm.md) runbooks for service-specific recovery.
+The Harness Python package and six native skill files are installed in the dedicated qualification checkout; **no separately qualified automatic GPU switcher or end-to-end worker executor is enabled**. Do not disable, stop or alter `llama-server.service`, `llama-qwen35-2b.service`, `hermes-gateway-7944f2ae.service`, Caddy, CT107 DNS, router policy routing or initramfs unlock as part of documentation or read-only qualification. Preserve existing encrypted-boot and Telegram access. Follow [Hermes gateway](hermes-gateway.md) and [Local LLM](local-llm.md) runbooks for service-specific recovery.
