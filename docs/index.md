@@ -43,6 +43,7 @@ graph TD
 | GL.iNet Flint 2 as main router | ✅ Running |
 | VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Done — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
+| Hermes HP gateway baseline | ✅ Debian 13 / LUKS remote unlock / Docker Trixie verified 2026-10-29; Hermes installation pending — [runbook](services/hermes-gateway.md) |
 | Local GPU LLM (Phase 4) | ✅ VM108 P4000 CUDA / Qwen3 8B, authenticated Caddy HTTPS and guest reboot validated 2026-10-27; host reboot pending — [runbook](services/local-llm.md) |
 | NAS / storage | ✅ Done |
 | VPN (inbound) | ✅ VPS-relayed WireGuard live 2026-10-25; XPS off-network access validated, reboot/isolation checks pending |
