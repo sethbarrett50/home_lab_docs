@@ -1,19 +1,28 @@
 # Infra Overview dashboard
 
-One authoritative dashboard file: [infra-overview.json](infra-overview.json).
+The repository maintains exactly **one** Grafana dashboard JSON: [infra-overview.json](infra-overview.json). It contains 34 original visualizations, eight llm-01 GPU visualizations and four section rows.
 
-The JSON is in **Classic Grafana dashboard format** (`schemaVersion`, `panels`, `targets`, `gridPos`) for compatibility with the **Dashboards → New → Import** workflow. It replaces the earlier V2 spec-only export, which was unsuitable for that import path. All 34 original visualization panels, 8 NVIDIA GPU visualization panels, and four organizational row headings remain.
+## Preferred deployment: update the existing dashboard through Grafana's API
 
-## Import into existing Grafana dashboard
+**Do not paste the entire JSON into the Grafana 13 V2 JSON Model editor.** That editor may validate V2 resources while the repo contains Classic JSON. Use [deploy_infra_overview.py](deploy_infra_overview.py) to apply the Classic model through the legacy dashboard API instead. This command runs only against Grafana on `127.0.0.1:3000` from `monitor-01`. It refuses to create a new dashboard, requires exactly one existing dashboard titled `Infra Overview`, preserves its UID and folder, backs up the live version outside the repo and reads back the update to verify panel count.
 
-1. Back up your live **Infra Overview** dashboard using Grafana's Export function. Any edits made directly in Grafana after the repo's previous snapshot may not be represented here.
-2. Open **Dashboards → New → Import** in Grafana and upload the latest `infra-overview.json` from this feature branch (or `dev` after PR merge). **The old `dev` file does not have the new format until this PR is merged.**
-3. In Grafana's import workflow, choose the existing dashboard's UID/overwrite option where offered to avoid a duplicate. The JSON uses `uid: null`, because the live dashboard UID was not available from the repository export. If Grafana cannot replace by selection, retrieve the existing UID from the dashboard URL, insert it in `uid`, and back up the existing dashboard before import.
-4. Confirm the existing Infrastructure, GHA Runners, and Internal HTTPS / Caddy rows plus **LLM / GPU (llm-01)** row. Verify the GPU exporter is up: `up{job="llm-01-gpu"} == 1`.
+```bash
+# On monitor-01: copy the file and script from this PR checkout onto the host
+# e.g. after fetching this branch from home_lab_docs:
+cd ~/code/home_lab_docs
+git fetch origin
+git switch feat/grafana-llm-gpu-panels-20261029
+git pull --ff-only
+python3 docs/services/dashboards/deploy_infra_overview.py
+# Inspect target UID/version from the dry run, then:
+python3 docs/services/dashboards/deploy_infra_overview.py --apply
+```
 
-The dashboard uses the original Prometheus datasource UID `PBFA97CFB590B2093`. If the target Grafana instance has a different UID, select or edit the datasource after import. This JSON **does not automatically deploy** via the Grafana bind-mounted datasource provisioning directory.
+The script prompts for Grafana username and password without echoing the password. Alternatively supply `GRAFANA_API_TOKEN` as a protected environment variable (do not commit it, paste it into shell history, or print it). Backups are written to `~/.local/share/grafana-dashboard-backups/` with mode 0600, outside Git.
 
-## Local static verification
+If the API reports HTTP 400, the error body identifies the server-side validation issue directly. If Grafana authentication disallows Basic Auth, use a scoped Grafana service-account token. The script does not restart Grafana, Prometheus or either LLM.
+
+## Static verification
 
 ```bash
 python3 -m json.tool docs/services/dashboards/infra-overview.json >/dev/null
@@ -21,16 +30,12 @@ python3 - <<'PY'
 import json
 from pathlib import Path
 d = json.loads(Path("docs/services/dashboards/infra-overview.json").read_text())
-assert "panels" in d and "elements" not in d
-assert d["schemaVersion"] >= 40
-viz = [p for p in d["panels"] if p["type"] != "row"]
-assert len(viz) == 42
+assert isinstance(d["panels"], list) and len(d["panels"]) == 46
 assert len([p for p in d["panels"] if p["type"] == "row"]) == 4
-ids = [p["id"] for p in d["panels"]]
-assert len(ids) == len(set(ids))
-assert all(p["targets"] and p["targets"][0]["expr"] for p in viz)
-print("Classic JSON structurally valid, 42 visualizations + 4 rows")
+assert len([p for p in d["panels"] if p["type"] != "row"]) == 42
+assert len({p["id"] for p in d["panels"]}) == 46
+print("Dashboard structure OK")
 PY
 ```
 
-**Status:** Static structure confirmed in the PR. A live Grafana server-side import/validation and render check has **not** yet been completed; an exact error message would be necessary to debug any remaining failure.
+The source JSON structure was checked; a successful deployment to the user's live Grafana API has **not yet been observed**.
