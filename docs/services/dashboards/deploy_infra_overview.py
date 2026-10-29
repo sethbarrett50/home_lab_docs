@@ -72,7 +72,7 @@ def main():
         print("Dry run only. Re-run with --apply to update the existing dashboard.")
         return
 
-    backup_dir = args.file.parent / "backups"
+    backup_dir = Path.home() / ".local/share/grafana-dashboard-backups"
     backup_dir.mkdir(parents=True, exist_ok=True)
     os.chmod(backup_dir, 0o700)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
