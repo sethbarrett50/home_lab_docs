@@ -154,3 +154,13 @@ A restore must preserve Caddy's CA material to keep the existing installed trust
 ## qBittorrent reverse proxy addition (2026-10-25)
 
 The deployed Caddy routing also includes `torrent.home.arpa` for the qBittorrent-nox Web UI in NAS CT 105 (`192.168.10.170`). The configuration block above is a **historical 2026-10-21 snapshot**, not a complete current Caddyfile. Validate the actual live route using `caddy validate --config /etc/caddy/Caddyfile` on `certs-01` and `curl -I https://torrent.home.arpa/` from an authorized CA-trusting client. Backend port and exact current Caddy stanza were not supplied in the handoff and are intentionally not invented. Keep qBittorrent authentication enabled.
+
+## LLM endpoint allowance for monitoring (2026-10-29)
+
+Both `llm.home.arpa` and `llm-long.home.arpa` Caddy site blocks have the following verified `@trusted` client matcher (in addition to their existing proxy targets and authentication enforced by llama.cpp):
+
+```caddyfile
+@trusted remote_ip 192.168.20.0/24 192.168.10.147 192.168.10.158
+```
+
+The newly added `192.168.10.158` is **monitor-01** for Uptime Kuma HTTP availability checks. This is an intentionally narrow source allowance and does not grant access to all lab VLAN10 clients. Both LLM endpoints returned **401** to an unauthenticated `/v1/models` request from the monitoring host, then Kuma reported both checks green with 401 configured as accepted. This validates route, proxy, and authorization rejection; it does **not** prove authenticated inference success. Caddy validation and reload were successful. The saved backup at the time was `/etc/caddy/Caddyfile.bak-before-kuma-20261029-145516` on `certs-01`.

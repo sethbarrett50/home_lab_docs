@@ -198,3 +198,11 @@ Backend firewall and Caddy configuration must preserve **both** ports and hostna
 - Hermes `homelab-long` custom alias with `key_env: LOCAL_LLM_API_KEY` successfully performed native chat, and executed `pwd` and `uname -s` in controlled tests. Other tool tasks failed from schema mistakes, discovery loops and a policy block; it is not a reliable autonomous coding worker yet.
 - Automatic Codex-to-local failover, double-service recovery after llm-01 guest reboot, and full Proxmox host reboot remain unverified.
 - Caddy-to-guest HTTP remains unencrypted, including bearer token transit. Backend source filtering is not encryption.
+
+## Monitoring status (2026-10-29)
+
+Two Uptime Kuma HTTP monitors on `monitor-01` were reported green for `https://llm.home.arpa/v1/models` and `https://llm-long.home.arpa/v1/models`, accepting the intentionally unauthenticated **401** response. Caddy's per-site `@trusted remote_ip` was extended by **192.168.10.158/32** for monitoring in addition to Trusted VLAN and `hp-lap`; the backend API restrictions were not relaxed. This checks HTTP availability/auth enforcement, not successful inference.
+
+A read-only [NVIDIA SMI Prometheus exporter](gpu-monitoring/nvidia-smi-exporter.py) is running as `nvidia-smi-exporter.service` via systemd `DynamicUser=yes`, bound to `192.168.10.162:9835`. `llm-01` nftables drops IPv6 to TCP9835 and IPv4 from sources other than Prometheus host `192.168.10.158`. Existing restrictions on 8080/8081 remain. `monitor-01` scrapes job `llm-01-gpu` every 15 seconds; `promtool` validation passed, target health is **up**, and Prometheus queried 7.03 GiB VRAM used with both servers resident. Dashboard updates are in [Infra Overview](dashboards/infra-overview.json).
+
+**Not yet verified:** automated GPU/LLM alerts, actual authenticated recurring inference health checks, dynamic model rotation, or live Grafana rendering of the amended dashboard.
