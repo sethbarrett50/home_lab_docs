@@ -11,8 +11,9 @@ directly on `dell-mini` instead.
 - [GitHub Actions Runners](github-actions-runners.md) — KC/DFAIR/KC-Timing setup, safe restarts, manual deployment and nightly update checks
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
-- [Hermes Gateway](hermes-gateway.md) — HP Debian 13 baseline, encrypted-boot recovery, Proxmox-primary inference and planned XPS booster
-- [Local GPU LLM](local-llm.md) — VM108, Quadro P4000 passthrough, Qwen3 8B, private HTTPS API and reboot recovery
+- [Hermes Gateway](hermes-gateway.md) — HP Debian 13, live Codex/Telegram gateway, local fallback and recovery (Harness pending)
+- [Local GPU LLM](local-llm.md) — VM108 Quadro P4000, Qwen3 8B plus Qwen3.5 2B, private authenticated HTTPS APIs
+- [Harness Deployment Readiness](hermes-harness-deployment.md) — hybrid GPU residency design, prerequisites and pre-install checks
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
   likely uses this network's IoT VLAN as its real-world testbed
 - [research-output-scraper](research-output-scraper.md) — CS researcher
@@ -47,7 +48,7 @@ graph TD
     end
 
     subgraph "VM 108 - llm-01"
-        LLM[Qwen3 8B / llama.cpp\nNVIDIA P4000 passthrough]
+        LLM[Qwen3 8B + Qwen3.5 2B / llama.cpp\nNVIDIA P4000 passthrough]
     end
 
     subgraph "LXC 106 - certs-01"
@@ -108,7 +109,8 @@ The router maintains hostname records from DHCP leases and reservations, with ex
 | CS publication leaderboard | `cs-leaderboard.home.arpa` | HTTPS 443 via Caddy → `dell-mini:80` |
 | NAS LXC | `nas.home.arpa` | Service-dependent |
 | GitHub Actions VM | `gha-general-01.home.arpa` | SSH port 22 |
-| Local LLM API | `llm.home.arpa` | HTTPS port 443, Trusted VLAN + Bearer API key |
+| Local LLM 8B API | `llm.home.arpa` | HTTPS port 443, Trusted VLAN plus HP host + Bearer API key |
+| Local LLM 64K API | `llm-long.home.arpa` | HTTPS port 443, Trusted VLAN plus HP host + Bearer API key |
 
 The NAS currently uses DHCP at `192.168.10.170`. A permanent reservation is recommended but has not yet been configured.
 
