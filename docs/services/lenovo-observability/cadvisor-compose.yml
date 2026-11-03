@@ -3,7 +3,9 @@ services:
     image: ghcr.io/google/cadvisor:v0.53.0
     container_name: lenovo-cadvisor
     restart: unless-stopped
-    privileged: false
+    # cAdvisor's upstream Docker recipe uses privileged mode for host metrics.
+    # Expose this ONLY to monitor-01; privileged metrics collectors need trust.
+    privileged: true
     ports:
       - "192.168.10.193:8080:8080"
     volumes:
@@ -11,7 +13,6 @@ services:
       - "/var/run:/var/run:ro"
       - "/sys:/sys:ro"
       - "/var/lib/docker:/var/lib/docker:ro"
+      - "/dev/disk:/dev/disk:ro"
     devices:
       - "/dev/kmsg:/dev/kmsg"
-    security_opt:
-      - "no-new-privileges:true"
