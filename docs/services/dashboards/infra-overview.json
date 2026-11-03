@@ -4624,7 +4624,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "(gha_runner_container_running{job=\"lenovo-lap-runners\",runner=\"kc_backend\"} * on(job,instance) group_left() up{job=\"lenovo-lap-runners\"}) or vector(0)",
+                      "expr": "gha_runner_container_running{job=\"lenovo-lap-runners\",runner=\"kc_backend\"} or on() vector(0)",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -4639,10 +4639,10 @@
             "transformations": []
           }
         },
-        "description": "1 = Docker running; 0 = stopped or monitoring unavailable. Not authoritative GitHub registration.",
+        "description": "Single 1=UP/0=DOWN Docker running status, not GitHub registration. Scrape health shown separately.",
         "id": 53,
         "links": [],
-        "title": "KC Backend Container",
+        "title": "KC Backend Runner",
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -4724,7 +4724,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "(gha_runner_container_running{job=\"lenovo-lap-runners\",runner=\"kc_infra\"} * on(job,instance) group_left() up{job=\"lenovo-lap-runners\"}) or vector(0)",
+                      "expr": "gha_runner_container_running{job=\"lenovo-lap-runners\",runner=\"kc_infra\"} or on() vector(0)",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -4739,10 +4739,10 @@
             "transformations": []
           }
         },
-        "description": "1 = Docker running; 0 = stopped or monitoring unavailable. Not authoritative GitHub registration.",
+        "description": "Single 1=UP/0=DOWN Docker running status, not GitHub registration. Scrape health shown separately.",
         "id": 54,
         "links": [],
-        "title": "KC Infra Container",
+        "title": "KC Infrastructure Runner",
         "vizConfig": {
           "group": "stat",
           "kind": "VizConfig",
@@ -4986,7 +4986,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "100 * sum(rate(container_cpu_usage_seconds_total{job=\"lenovo-lap-containers\",name=\"kc-backend-runner-local\"}[5m])) / count(node_cpu_seconds_total{job=\"lenovo-lap-node\",mode=\"idle\"})",
+                      "expr": "gha_runner_container_cpu_host_percent{job=\"lenovo-lap-runners\",runner=\"kc_backend\"}",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -5001,10 +5001,10 @@
             "transformations": []
           }
         },
-        "description": "Backend container CPU as percentage of total host capacity.",
+        "description": "Host-relative percentage from Docker stats on lenovo-lap. A missing series means stats collection failed; requires updated Lenovo exporter.",
         "id": 57,
         "links": [],
-        "title": "KC Backend CPU (%)",
+        "title": "KC Backend CPU (% host)",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -5084,7 +5084,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "100 * sum(rate(container_cpu_usage_seconds_total{job=\"lenovo-lap-containers\",name=\"kc-infra-runner-local\"}[5m])) / count(node_cpu_seconds_total{job=\"lenovo-lap-node\",mode=\"idle\"})",
+                      "expr": "gha_runner_container_cpu_host_percent{job=\"lenovo-lap-runners\",runner=\"kc_infra\"}",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -5099,10 +5099,10 @@
             "transformations": []
           }
         },
-        "description": "Infra container CPU as percentage of total host capacity.",
+        "description": "Host-relative percentage from Docker stats on lenovo-lap. A missing series means stats collection failed; requires updated Lenovo exporter.",
         "id": 58,
         "links": [],
-        "title": "KC Infra CPU (%)",
+        "title": "KC Infrastructure CPU (% host)",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -5182,7 +5182,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "100 * sum(container_memory_usage_bytes{job=\"lenovo-lap-containers\",name=\"kc-backend-runner-local\"}) / scalar(node_memory_MemTotal_bytes{job=\"lenovo-lap-node\"})",
+                      "expr": "gha_runner_container_memory_host_percent{job=\"lenovo-lap-runners\",runner=\"kc_backend\"}",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -5197,7 +5197,7 @@
             "transformations": []
           }
         },
-        "description": "Backend container RAM as percentage of total host capacity.",
+        "description": "Host-relative percentage from Docker stats on lenovo-lap. A missing series means stats collection failed; requires updated Lenovo exporter.",
         "id": 59,
         "links": [],
         "title": "KC Backend RAM (% host)",
@@ -5280,7 +5280,7 @@
                     "spec": {
                       "editorMode": "code",
                       "exemplar": false,
-                      "expr": "100 * sum(container_memory_usage_bytes{job=\"lenovo-lap-containers\",name=\"kc-infra-runner-local\"}) / scalar(node_memory_MemTotal_bytes{job=\"lenovo-lap-node\"})",
+                      "expr": "gha_runner_container_memory_host_percent{job=\"lenovo-lap-runners\",runner=\"kc_infra\"}",
                       "instant": true,
                       "legendFormat": "__auto",
                       "range": false
@@ -5295,10 +5295,10 @@
             "transformations": []
           }
         },
-        "description": "Infra container RAM as percentage of total host capacity.",
+        "description": "Host-relative percentage from Docker stats on lenovo-lap. A missing series means stats collection failed; requires updated Lenovo exporter.",
         "id": 60,
         "links": [],
-        "title": "KC Infra RAM (% host)",
+        "title": "KC Infrastructure RAM (% host)",
         "vizConfig": {
           "group": "gauge",
           "kind": "VizConfig",
@@ -5859,43 +5859,7 @@
                     "spec": {
                       "element": {
                         "kind": "ElementReference",
-                        "name": "panel-52"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
                         "name": "panel-53"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
-                        "name": "panel-54"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
-                        "name": "panel-55"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
-                        "name": "panel-56"
                       }
                     }
                   },
@@ -5913,15 +5877,6 @@
                     "spec": {
                       "element": {
                         "kind": "ElementReference",
-                        "name": "panel-58"
-                      }
-                    }
-                  },
-                  {
-                    "kind": "AutoGridLayoutItem",
-                    "spec": {
-                      "element": {
-                        "kind": "ElementReference",
                         "name": "panel-59"
                       }
                     }
@@ -5931,7 +5886,52 @@
                     "spec": {
                       "element": {
                         "kind": "ElementReference",
+                        "name": "panel-55"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-54"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-58"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
                         "name": "panel-60"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-56"
+                      }
+                    }
+                  },
+                  {
+                    "kind": "AutoGridLayoutItem",
+                    "spec": {
+                      "element": {
+                        "kind": "ElementReference",
+                        "name": "panel-52"
                       }
                     }
                   }
