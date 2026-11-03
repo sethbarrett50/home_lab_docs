@@ -1,0 +1,18 @@
+services:
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.53.0
+    container_name: lenovo-cadvisor
+    restart: unless-stopped
+    # cAdvisor's upstream Docker recipe uses privileged mode for host metrics.
+    # Expose this ONLY to monitor-01; privileged metrics collectors need trust.
+    privileged: true
+    # Host networking: traffic traverses the host nftables input hook.
+    network_mode: host
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker:/var/lib/docker:ro"
+      - "/dev/disk:/dev/disk:ro"
+    devices:
+      - "/dev/kmsg:/dev/kmsg"

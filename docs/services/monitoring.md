@@ -57,6 +57,49 @@ graph TD
     LOKI --> GF
 ```
 
+## Lenovo CI runner observability (deployed 2026-11-03)
+
+The physical `lenovo-lap` (`192.168.10.193`, VLAN 10) has two working
+Docker-based GitHub Actions runners. The independent monitoring deployment is
+documented under [lenovo-observability/](lenovo-observability/README.md).
+It includes native node-exporter (`:9100`), cAdvisor (`:8080`) and a
+read-only runner job/container observer (`:9119`) to be scraped by the
+existing Prometheus on `monitor-01` (`192.168.10.158`). The Grafana
+panels cover host CPU/RAM/disk, runner container state and current inferred
+job. Uptime Kuma includes an SSH/TCP port 22 check and separate HTTP keyword
+checks for both runner containers; Telegram delivery still needs a test.
+
+**Deployment verified by operator on 2026-11-03:** the dedicated nftables
+metrics firewall was loaded on Lenovo; native node-exporter was installed
+and reached from monitor-01, the Python GitHub runner exporter returned
+`gha_runner_container_running=1` and observer metrics for both runners,
+and cAdvisor served container CPU metrics. Prometheus on monitor-01 was
+validated with `promtool`, reloaded using HUP, and confirmed the three
+new jobs (`lenovo-lap-node`, `lenovo-lap-containers`,
+`lenovo-lap-runners`) **UP**, bringing the observed total from ten
+to thirteen active scrape targets. The user also configured an SSH/TCP 22
+monitor in Uptime Kuma.
+
+**2026-11-03 exporter verification:** Following an exporter-only restart,
+`gha_runner_container_stats_up=1` for both `kc_backend` and `kc_infra`.
+Observed host-relative CPU was 0.00000% / 0.03333% and host-relative RAM
+1.06468% / 1.82642%, respectively. The updated Grafana panels were
+reported to display host-percentage values. The exporter remained active
+on TCP 9119 and Prometheus scraped it every 15 seconds with HTTP 200.
+These are point-in-time readings, not workload benchmarks.
+
+**Operator reports:** the revised Grafana dashboard layout appears correct
+and the host-percentage runner panels show data. Two additional Uptime Kuma
+HTTP keyword checks were added, one per runner; their heartbeat status and
+Telegram notifications have not been independently verified.
+
+**Not yet verified:** persistent nftables rules after a reboot, negative
+tests from unauthorized Lab clients, and Telegram DOWN/recovery notification
+delivery on the new Kuma monitors. Do not equate a
+healthy container with authoritative GitHub runner online status.
+Deployment and testing guidance: [Lenovo runbook](lenovo-observability/README.md).
+Versioned dashboard: [Infrastructure Overview](dashboards/infra-overview.json).
+
 ## Components (as deployed)
 
 | Container | Host | Port | Role |

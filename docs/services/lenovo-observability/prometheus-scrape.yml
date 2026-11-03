@@ -1,0 +1,25 @@
+# Add these scrape_configs entries to:
+#   monitor-01:/opt/monitoring/prometheus/prometheus.yml
+# Do not replace the complete existing configuration.
+# Prometheus is in Docker; its config is mounted read-only.
+  - job_name: "lenovo-lap-node"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["192.168.10.193:9100"]
+        labels:
+          host: "lenovo-lap"
+
+  - job_name: "lenovo-lap-containers"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["192.168.10.193:8080"]
+        labels:
+          host: "lenovo-lap"
+
+  - job_name: "lenovo-lap-runners"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["192.168.10.193:9119"]
+        labels:
+          host: "lenovo-lap"
