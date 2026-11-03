@@ -5,7 +5,7 @@ Full inventory of all devices in the homelab ecosystem.
 ## Infrastructure (Rack)
 
 Superseded the original PhD-lab RPi-based plan — actual hardware post-move is
-Proxmox host + LXC/VM services + 3 debian boxes (2 of 3 networked so far).
+Proxmox host + LXC/VM services + multiple physical Debian hosts, including the dedicated Lenovo CI laptop.
 
 | Hostname | Device | OS/Firmware | VLAN | IP | Notes |
 |---|---|---|---|---|---|
@@ -21,6 +21,8 @@ Proxmox host + LXC/VM services + 3 debian boxes (2 of 3 networked so far).
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). Runs `research-output-scraper` (nginx + systemd, see that repo's `docs/deploy.md`); served internally through Caddy at `https://cs-leaderboard.home.arpa`. nginx trusts Caddy `.50` for forwarded client IP. SSH (22) and direct HTTP (80) still documented open from lan/trusted |
 | `acer-lap` | Acer Aspire 5 A515-54 (laptop) — i5-10210U, 8 GB, 512 GB NVMe, see [specs](#acer-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC `b4:a9:fc:2b:d2:6d`, `enp1s0`). Networked via `systemd-networkd`. Run closed-lid with the built-in panel disconnected; suspend-on-close prevented via drop-in `/etc/systemd/logind.conf.d/10-headless.conf` (`HandleLidSwitch*`/`HandleSuspendKey`/`HandleHibernateKey`/`IdleAction` = `ignore`) plus masked `sleep`/`suspend`/`hibernate`/`hybrid-sleep`/`suspend-then-hibernate` targets — applies to any laptop run this way, see HP below. Planned role: edge-device test host for custom IDS (dissertation direction four). SSH open from lan/trusted |
 | `hp-lap` | HP EliteBook 840 G2 (laptop) — i5-5300U, 16 GB, 240 GB SATA SSD, see [specs](#hp-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 10 (switch port 5) | 192.168.10.147 | DHCP host reservation (pinned to MAC `70:5a:0f:ce:1a:ae`, `enp0s25`). Networked via `systemd-networkd` (`/etc/systemd/network/10-wired.network`, matched on MAC); was previously on the IoT AP's WiFi (VLAN 30) — NetworkManager disabled and WiFi (`wlo1`) rfkill-blocked. Hostname renamed from `poolTab`; login user is `pooltab`. Same closed-lid setup as acer-lap (`/etc/systemd/logind.conf.d/10-headless.conf` + masked sleep targets). Docker installed (`docker0` present). Full-disk encryption — requires an interactive passphrase, but remote unlock via `dropbear-initramfs` on port 2222 from XPS is now verified after Debian 13 kernel reboot (LUKS2 `sda5` → LVM). Docker Trixie packages active; Hermes v0.22.5+2971.ga938f00 gateway active with Codex OAuth primary, owner Telegram bot confirmed, Qwen3.5 2B local alias tested; automatic failover and Harness deployment still unverified; see [gateway runbook](../services/hermes-gateway.md). SSH open from lan/trusted |
+
+| `lenovo-lap` | Lenovo ThinkBook 15 G4 IAP (21DJ), i7-1255U, 40 GB RAM, 1 TB NVMe; [details](#lenovo-lap-hardware) | Debian 13.7, headless (`multi-user.target`) | 10 (switch port 7) | 192.168.10.193 (DHCP; reservation not independently confirmed) | Wired `enp0s31f6` via ifupdown/dhcpcd, MAC `e4:a8:df:dd:bd:29`; SSH from XPS `192.168.20.173` allowed TCP 22 through `firewall.allow_xps_to_lenovo_ssh`; runs dedicated Docker runners for `kc-backend-core` and `kartchaser-infrastructure` (see [runner runbook](../services/lenovo-github-runners.md)). |
 
 ### acer-lap hardware
 
@@ -54,6 +56,23 @@ Collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `lspci` and sysfs.
 | Wireless | `wlo1` — Intel Wireless 7265 [8086:095a], `iwlwifi` driver, MAC `64:80:99:e3:e5:54` (rfkill-blocked, unused) |
 | Battery | "Primary", reports 100% of design (4,290,000 / 4,290,000 µAh) — likely a replacement pack or unreliable firmware reporting |
 | Kernel | 6.12.113+deb13-amd64 (6.1.0-54-amd64 retained as fallback) |
+
+### lenovo-lap hardware
+
+Collected 2026-11-02–03 from Debian system diagnostics and validated by reboot/SSH testing.
+
+| Component | Detail |
+|---|---|
+| Model | Lenovo ThinkBook 15 G4 IAP, product 21DJ |
+| CPU | Intel Core i7-1255U — 2 performance + 8 efficiency cores, 12 threads |
+| RAM | 40 GB (8 GB onboard + 32 GB DDR4-3200 SO-DIMM) |
+| Storage | WD Blue SN570 1 TB NVMe; SMART PASSED, 0% used, 0 media/data-integrity errors (2026-11-03) |
+| Wired NIC | `enp0s31f6` — Intel I219-V, `e1000e`, MAC `e4:a8:df:dd:bd:29` |
+| Wireless | `wlp0s20f3` — prior temporary-home Wi-Fi configuration retained |
+| Ethernet management | `ifupdown` with `/etc/network/interfaces.d/enp0s31f6` (`auto`, DHCP using dhcpcd), reboot-tested |
+| Power | Headless `multi-user.target`, lid/suspend overrides in `/etc/systemd/logind.conf.d/10-ci-headless.conf`, sleep targets masked |
+| Battery | 36.85 Wh full versus 45 Wh design (~82%); 355 cycles at inspection |
+| Kernel | `6.12.115+deb13.1-amd64` at deployment |
 
 ## Personal Devices (Mobile / Off-rack)
 
@@ -125,6 +144,7 @@ outside it:
 | dell-mini (192.168.10.117) | 22, 80 | lan, trusted |
 | acer-lap (192.168.10.199) | 22 | lan, trusted |
 | hp-lap (192.168.10.147) | 22 | lan, trusted |
+| lenovo-lap (192.168.10.193) | 22 | XPS 192.168.20.173 (trusted), verified 2026-11-03; router UCI section `allow_xps_to_lenovo_ssh` |
 
 ## Device Naming Convention
 

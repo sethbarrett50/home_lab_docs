@@ -1,8 +1,35 @@
 # Self-hosted GitHub Actions runners
 
+## Dedicated physical Lenovo host (2026-11-03)
+
+`lenovo-lap` is a **physical Lenovo ThinkBook 15 G4 IAP** running Debian 13.7 on
+Lab VLAN 10 at `192.168.10.193` (`lenovo-lap.home.arpa`). It runs two
+**repository-scoped** runners, each in its own Docker container. This host is
+separate from `gha-general-01`, which remains in service for other workloads.
+
+| GitHub repository served | Runner source | Container / image | Workspace | systemd instance |
+|---|---|---|---|---|
+| `Kart-Chaser/kc-backend-core` | `kc-backend-runner` (private) | `kc-backend-runner-local` / `kc-backend-runner:dev` | `/workspace-backend` | `gha-runner@kc-backend-runner-local.service` |
+| `Kart-Chaser/kartchaser-infrastructure` | `kc-infra-runner` (private) | `kc-infra-runner-local` / `kc-infra-runner:dev` | `/workspace-infra` | `gha-runner@kc-infra-runner-local.service` |
+
+Both runners were registered online and observed executing real GitHub Actions jobs.
+The infrastructure repository's `RUNNER_LABELS` variable was changed to
+`["self-hosted","kc-infra-runner"]`; workflows with hard-coded labels are
+not automatically migrated. The backend runner successfully executed several
+jobs during PR #233 validation; CI failures were being investigated separately.
+The systemd instances were confirmed `enabled` and `active`, with both Docker
+containers `running` using `unless-stopped` restart policies.
+
+Unlike the older VM runner services, the Lenovo's template service uses a
+`Type=oneshot` helper that **starts only an existing container**, never
+rebuilds or registers it. Explicit updates/re-registration use each checkout's
+`make r.up` only during maintenance, after jobs are drained. Both containers
+mount `/var/run/docker.sock`, granting workflows powerful control of the
+physical host. See the [Lenovo CI host runbook](lenovo-github-runners.md).
+
 ## Deployment and inventory
 
-Three self-hosted runners operate as Docker containers on
+The legacy self-hosted runners below operate as Docker containers on
 **`gha-general-01`** (Debian 13, Proxmox VM 101, `192.168.10.189`, VLAN 10).
 These are **not** installed on the Proxmox host. The repository-specific
 Docker images are built on the VM and registered using GitHub CLI tokens.
