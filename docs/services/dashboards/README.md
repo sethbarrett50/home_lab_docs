@@ -51,5 +51,10 @@ not required.
 The current-job panels show `None running` when the log observer is healthy
 and has observed an idle state. They show no data if the Prometheus scrape
 itself fails. They are **not** authoritative GitHub online/busy telemetry.
-Container-CPU and RAM panels depend on cAdvisor retaining the Docker
-container `name` label; inspect exported metric labels if they show no data.
+Container-CPU and RAM panels use the dedicated Lenovo exporter’s
+`gha_runner_container_cpu_host_percent` and
+`gha_runner_container_memory_host_percent` gauges, not cAdvisor's
+container-name labels. Both require deployment of the updated exporter and
+`gha_runner_container_stats_up=1` for the corresponding runner.
+Container status panels use `or on() vector(0)` to produce a single 0/1
+series, rather than displaying simultaneous UP and DOWN values.
