@@ -185,6 +185,26 @@ instrumentation and Prometheus scraping are complete. The specific target
 address/job was not included in the supplied verification output; inspect the
 live Prometheus target inventory before reproducing this configuration.
 
+## GitHub Actions monitoring scope decision (2026-11-03)
+
+**Final intended scope — no further GitHub Actions API exporter planned.**
+The existing local Docker-log observers and Prometheus/Grafana metrics meet
+the operator's monitoring needs. Keep container status, exporter health,
+log-inferred current-job labels, CPU/RAM capacity-relative gauges, and Kuma
+availability/Telegram checks as the maintained observability surface.
+
+Existing coverage includes `gha-general-01` runner log observations and
+`lenovo-lap` backend/infrastructure runner monitoring. The operator confirms
+that this implementation is sufficient and considers
+[issue #7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
+finished at this scope. The earlier issue proposed API-derived queue,
+success/failure, job duration, and originating-repository telemetry; **those
+features are intentionally out of scope**, not implemented or silently
+represented as available. No authenticated GitHub API polling, extra exporter,
+or additional dashboard expansion is planned. Revisit only for a separately
+approved requirement. Distinguish a running Docker container and log-derived
+job inference from authoritative GitHub online and job-result state.
+
 ## GitHub Actions runner observability (2026-10-22)
 
 The deployed `gha-general-01` runner inventory is **KC + DFAIR only**.
