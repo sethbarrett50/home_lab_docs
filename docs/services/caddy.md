@@ -144,9 +144,9 @@ A restore must preserve Caddy's CA material to keep the existing installed trust
 ## Follow-ups
 
 - [ ] Verify port 9180 rejects clients other than `monitor-01`; add host-level/Proxmox firewall restriction as defense in depth.
-- [x] Prepare three Caddy/HTTPS status panels in the **version-controlled** Grafana dashboard JSON. Prometheus queries are verified; **live Grafana import and saved-panel verification remain pending**.
-- [ ] Import/verify the updated Scenes dashboard in live Grafana and export its final saved JSON back to the repository.
-- [ ] Verify Uptime Kuma HTTPS monitors in the UI (container CA trust is configured; monitor health was not demonstrated in the session). Notifications and certificate-expiry alerts are deferred to a **separate issue**.
+- [x] Prepare three Caddy/HTTPS status panels in the **version-controlled** Grafana dashboard JSON. Prometheus queries were verified previously, and the operator confirms the live Grafana panel rendering was reviewed on 2026-11-03 (#104).
+- [x] Import/verify the updated Scenes dashboard in live Grafana (operator-confirmed, 2026-11-03, #104). A final exported live JSON comparison was not supplied and is recommended on the next dashboard revision.
+- [x] Verify Uptime Kuma HTTPS monitor health and internal CA trust; the operator reports TLS validation and certificate-expiration alerting tested on 2026-11-03 (#104). The alert definition and exact UI evidence were not attached to this documentation update.
 - [ ] Test restoration and create a secure off-host backup of CA material.
 - [ ] Replace password-based root SSH access with appropriate key-based/least-privilege access.
 - [ ] Define a safer/automated Proxmox certificate renewal process before October 2027.

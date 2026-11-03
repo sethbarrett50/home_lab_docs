@@ -196,9 +196,10 @@ The certificate **does not automatically renew** with Caddy's own leaf certifica
 
 ## Notifications
 
-- Current target: builtin `mail-to-root` (sendmail) with `default-matcher` routing all notifications to it
-- It cannot deliver from this network (SMTP does not work), so failures of the backup job will not alert anyone
-- Email was declined 2026-10-13; a webhook is the follow-up once Mullvad gives working egress, tracked in [#12](https://github.com/sethbarrett50/home_lab_docs/issues/12)
+- Current target: builtin `mail-to-root` (sendmail), with `default-matcher` routing notifications to it.
+- **Known limitation:** SMTP delivery does not work from this network. Proxmox backup failures therefore **do not send a working alert** through this target. A scheduled backup is not proof of successful notification.
+- **Scope decision (2026-11-03):** the operator has explicitly decided **not to implement Proxmox backup-failure notifications** (email, webhook, or Telegram) under [#106](https://github.com/sethbarrett50/home_lab_docs/issues/106). This work is intentionally not planned, **not completed or verified**. Existing Kuma/Telegram monitoring elsewhere in the lab must not be described as a replacement for Proxmox backup-job failure notifications.
+- Backup retention, off-host copies, and restore testing remain separate work in [#71](https://github.com/sethbarrett50/home_lab_docs/issues/71). Revisit this decision only if explicitly requested.
 
 ## TODO
 
@@ -211,5 +212,5 @@ The certificate **does not automatically renew** with Caddy's own leaf certifica
 - [x] Add `hdd-500gb` ext4 directory storage on WD Blue — 2026-10-21
 - [ ] Review backup placement, retention, off-host copies and restore testing
 - [ ] Add scheduled SMART health checks/alerts (separate issue)
-- [ ] Investigate undetected optical-bay drive (deferred)
-- [ ] Set up Proxmox notifications (email or webhook) — blocked on [#12](https://github.com/sethbarrett50/home_lab_docs/issues/12)
+- [ ] Undetected optical-bay drive remains unverified and out of service; investigation intentionally not planned under #106 (2026-11-03 operator decision). Do not assume the drive is connected or healthy.
+- [ ] Proxmox backup-failure alerts intentionally not planned under [#106](https://github.com/sethbarrett50/home_lab_docs/issues/106); the existing `mail-to-root` path is nonfunctional.
