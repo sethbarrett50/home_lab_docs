@@ -80,6 +80,14 @@ new jobs (`lenovo-lap-node`, `lenovo-lap-containers`,
 to thirteen active scrape targets. The user also configured an SSH/TCP 22
 monitor in Uptime Kuma.
 
+**2026-11-03 exporter verification:** Following an exporter-only restart,
+`gha_runner_container_stats_up=1` for both `kc_backend` and `kc_infra`.
+Observed host-relative CPU was 0.00000% / 0.03333% and host-relative RAM
+1.06468% / 1.82642%, respectively. The updated Grafana panels were
+reported to display host-percentage values. The exporter remained active
+on TCP 9119 and Prometheus scraped it every 15 seconds with HTTP 200.
+These are point-in-time readings, not workload benchmarks.
+
 **Not yet verified:** persistent nftables rules after a reboot, negative
 tests from unauthorized Lab clients, Grafana's updated dashboard imported
 and rendered in the live application, Kuma's per-runner keyword monitors,
