@@ -1,0 +1,14 @@
+[Unit]
+Description=Restrict Lenovo monitoring endpoints to monitor-01
+Wants=network-pre.target
+After=nftables.service
+Before=docker.service prometheus-node-exporter.service gha-runner-exporter.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=-/usr/sbin/nft delete table inet lenovo_observability
+ExecStart=/usr/sbin/nft -f /etc/nftables.d/lenovo-metrics-firewall.nft
+
+[Install]
+WantedBy=multi-user.target
