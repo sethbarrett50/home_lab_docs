@@ -84,4 +84,3 @@ Repeat separately for infrastructure with its checkout, container and service na
 - Infrastructure runner auto-updated successfully to `2.338.2` and executed Label Pull Request, Trivy misconfiguration scan and Terraform Detect successfully; additional jobs were running at the last captured log. The operator later reported both runners working as expected.
 - Add monitoring to the existing `monitor-01` Prometheus/Grafana stack (node-exporter, container metrics, and runner-specific job/online status). These monitors have **not** been shown installed on Lenovo.
 - Confirm DHCP reservation, verify lid-closed operation on this host if necessary, and consider a maintenance procedure that drains jobs before Docker/systemd restarts.
-
