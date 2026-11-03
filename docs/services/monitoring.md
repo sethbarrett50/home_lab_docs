@@ -100,6 +100,19 @@ healthy container with authoritative GitHub runner online status.
 Deployment and testing guidance: [Lenovo runbook](lenovo-observability/README.md).
 Versioned dashboard: [Infrastructure Overview](dashboards/infra-overview.json).
 
+## Monitoring validation closure — issue #104 (2026-11-03)
+
+**Operator-reported complete:** The operator confirmed the full [#104](https://github.com/sethbarrett50/home_lab_docs/issues/104) acceptance checklist after the Lenovo observability deployment in PRs #113 and #114. The following checklist records that confirmation; it is not a fresh independent capture of service configuration or alert logs.
+
+- [x] Grafana 13 Scenes/V2 Infrastructure Overview dashboard imported and rendered; Lenovo, Caddy, and GPU panels reviewed. Lenovo's backend/infra CPU and memory panels display percentages of host capacity.
+- [x] Active GitHub Actions job observations checked: running jobs appear, and completed jobs clear back to idle in the log-derived observer and Grafana. This does **not** prove GitHub API-backed queued/success/failed status or durations; [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7) remains separate.
+- [x] NAS node-exporter added to monitoring and its Prometheus scrape verified, per operator. The NAS endpoint, scrape-job name, and live configuration diff were not supplied in this session and should be captured during a future configuration export; do not invent them here.
+- [x] Certificate-expiration monitoring and GPU outage/fallback alerting configured and tested, per operator. Exact expressions, alert thresholds, and delivery routing were not independently recorded here; retain the live rules/configuration as the authoritative source until exported.
+- [x] Uptime Kuma HTTPS monitors validated with the homelab internal CA, without bypassing TLS validation, per operator. Earlier LLM endpoint monitors accepted HTTP 401 as evidence of reachability/auth enforcement, not inference correctness.
+- [x] Telegram DOWN/recovery notifications exercised for the monitoring checks, per operator. The Lenovo SSH check and the separate backend/infra HTTP-keyword checks were configured earlier; none checks authoritative GitHub runner registration.
+
+**Evidence boundary:** Node/cAdvisor/runner metrics, Prometheus scrape health (13 targets before the subsequently reported NAS addition), and host-relative Lenovo CPU/RAM measurements were observed directly in terminal output earlier on 2026-11-03. The remaining checklist items above are reported completed by the operator, with no raw validation artifacts supplied for this documentation change. Avoid asserting a new total scrape-target count, NAS address, alert-rule definitions, or notification timestamps without live output.
+
 ## Components (as deployed)
 
 | Container | Host | Port | Role |
@@ -167,9 +180,10 @@ docker exec uptime-kuma printenv NOTIFICATION_PROXY
 # Avoid printing notification configuration or bot tokens.
 ```
 
-**Not yet instrumented:** `nas` (LXC 105) has no node-exporter and isn't in
-the scrape config at all — genuine gap, not a stale-IP issue. Needed before
-the Infrastructure Overview dashboard (issue #5) can include it.
+**Update (2026-11-03):** the operator reports NAS (LXC 105) node-exporter
+instrumentation and Prometheus scraping are complete. The specific target
+address/job was not included in the supplied verification output; inspect the
+live Prometheus target inventory before reproducing this configuration.
 
 ## GitHub Actions runner observability (2026-10-22)
 
@@ -207,7 +221,8 @@ It exposes:
 
 This observer does not use GitHub APIs or expose the originating repository.
 It can miss very short jobs or infer stale status if log history rolls over.
-A live running-job test against GitHub has **not yet been verified**.
+**Update (2026-11-03):** the operator reports validating an active job
+and its subsequent idle transition in Prometheus/Grafana for issue #104.
 Do not confuse `None running` with a failed exporter: first inspect the
 observer metrics and actual `docker logs`.
 
@@ -263,17 +278,23 @@ not been independently re-exported and compared. Treat live dashboard
 synchronization as a verification step.
 
 Existing Caddy scrape (`:9180`) and other infrastructure panels are retained.
-The KC-Timing runner was observed Online / Idle in GitHub on 2026-10-27, and its exporter produces `kc_timing` series. The updated dashboard adds a KC-Timing container-status panel and a current-job stat; import into live Grafana is still required. Outstanding work includes verifying a running workflow appears while active,
-reviewing alerts, and deploying authoritative GitHub API runner status if needed.
+The KC-Timing runner was observed Online / Idle in GitHub on 2026-10-27, and its exporter produces `kc_timing` series. The updated dashboard adds a KC-Timing container-status panel and a current-job stat; the operator now reports the live dashboard and running-job transitions verified
+(2026-11-03). Authoritative GitHub API runner/job lifecycle metrics remain
+outside #104 and are tracked under #7.
 Related tracking: [#7](https://github.com/sethbarrett50/home_lab_docs/issues/7)
 (job-level monitoring), [#8](https://github.com/sethbarrett50/home_lab_docs/issues/8)
 (router telemetry).
 
 ## Alerting — Telegram deployed; Prometheus/Grafana follow-up
 
-Telegram DOWN/recovery notifications in **Uptime Kuma 2.5.7** were deployed and exercised 2026-10-25 via CT 107. Prometheus/Grafana native alert rules and certificate-expiry alert tuning are separate future work.
+Telegram DOWN/recovery notifications in **Uptime Kuma 2.5.7** were deployed
+and exercised 2026-10-25 via CT 107; the operator reports revalidating the
+new monitoring checks on 2026-11-03. The operator also reports certificate
+expiry and GPU outage/fallback alerts complete under #104. The live alert
+expressions and routing were not supplied and must not be reconstructed from
+these notes.
 
-### Ideas (not configured)
+### Additional alert ideas (configuration not inventoried here)
 
 | Alert | Condition | Severity |
 |---|---|---|
@@ -283,10 +304,11 @@ Telegram DOWN/recovery notifications in **Uptime Kuma 2.5.7** were deployed and 
 | Disk full | >80% on any mount | Warning |
 | GHA runner container down | cAdvisor shows container not running | Warning |
 
-No Alertmanager or native notification routing exists yet for Prometheus/Grafana —
-they're collection + visualization only, nothing pages/notifies on these
-thresholds. Uptime Kuma *does* notify (its own notification channel, separate
-from this), but only for its up/down checks.
+The thresholds in this table are **examples**, not proof of currently
+configured native rules. The operator reports GPU and certificate alerting
+complete; whether a separate Alertmanager or Grafana-native routing pipeline
+exists has not been independently inventoried. Kuma has its own tested
+DOWN/recovery notification path.
 
 ## Prometheus outage and recovery — 2026-10-22 to 2026-10-25
 
@@ -298,7 +320,9 @@ For future Docker package upgrades, perform a post-upgrade `sudo docker ps -a`, 
 
 ## llm-01 NVIDIA GPU telemetry and endpoint monitoring (2026-10-29)
 
-**Live checks completed:** Both Caddy HTTPS LLM endpoints `https://llm.home.arpa/v1/models` and `https://llm-long.home.arpa/v1/models` have green Uptime Kuma monitors. Monitoring uses unauthenticated HTTP with **401 as the accepted response**, establishing reachability/auth enforcement, **not authenticated inference or model correctness**. To allow Kuma from `monitor-01` (192.168.10.158), the `@trusted remote_ip` matcher in **both** Caddy virtual hosts additionally permits this single IP; the Trusted VLAN and HP 192.168.10.147 entries remain. Do not broadly enable VLAN 10. Kuma notification enablement for these particular monitors has not been independently verified.
+**Live checks completed:** Both Caddy HTTPS LLM endpoints `https://llm.home.arpa/v1/models` and `https://llm-long.home.arpa/v1/models` have green Uptime Kuma monitors. Monitoring uses unauthenticated HTTP with **401 as the accepted response**, establishing reachability/auth enforcement, **not authenticated inference or model correctness**. To allow Kuma from `monitor-01` (192.168.10.158), the `@trusted remote_ip` matcher in **both** Caddy virtual hosts additionally permits this single IP; the Trusted VLAN and HP 192.168.10.147 entries remain. Do not broadly enable VLAN 10. As of 2026-11-03, the operator confirms HTTPS CA validation and notification
+testing for the monitoring checks; exact per-monitor notification settings
+were not exported.
 
 On `llm-01` (192.168.10.162), the NVIDIA Quadro P4000 has an independent read-only `nvidia-smi-exporter.service` on `192.168.10.162:9835/metrics`, running via a systemd **dynamic user**. The versioned exporter and clean service unit are at [gpu-monitoring/](gpu-monitoring/). Runtime tests returned HTTP 200 with GPU utilization, VRAM used/total bytes, temperature, power, and aggregate compute process count. Two resident llama.cpp processes consumed 7,201 MiB of 8,192 MiB at measurement. This exporter does **not** indicate which process owns how much memory and is not an inference readiness check.
 
@@ -334,4 +358,9 @@ curl -fsS http://192.168.10.162:9835/metrics
 docker exec prometheus promtool check config /etc/prometheus/prometheus.yml
 ```
 
-**Known limits:** No GPU Prometheus alert rules yet. Qwen3 8B and Qwen3.5 2B remain concurrently resident; adaptive model swapping and Codex-to-local fallback are not demonstrated by these monitoring checks. Grafana UI import/rendering of the newly generated JSON is pending live confirmation.
+**Updated 2026-11-03:** The operator reports GPU outage/fallback alerts and
+live Grafana UI rendering validated under #104; actual alert expressions and
+live dashboard export were not supplied with this documentation update.
+Qwen3 8B and Qwen3.5 2B were concurrently resident at the earlier
+measurement; monitoring cannot by itself demonstrate Codex-to-local fallback
+or adaptive model swapping.

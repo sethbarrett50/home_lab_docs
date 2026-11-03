@@ -28,9 +28,13 @@ print("Grafana V2 structural checks passed")
 PY
 ```
 
-These checks are **not** live Grafana server-side validation. Live rendering of the PR revision has not been verified.
+These structural checks are **not** Grafana server-side tests. On
+2026-11-03 the operator separately confirmed the live Grafana 13 V2 dashboard
+renders correctly, including Caddy/GPU panels, Lenovo host metrics, runner
+CPU/RAM host percentages, and job transitions. No exported post-validation
+live dashboard JSON was provided for comparison with this repository file.
 
-## Lenovo CI row (prepared 2026-11-03)
+## Lenovo CI row (deployed and operator-reviewed 2026-11-03)
 
 The fifth row groups 13 panels: host up, CPU, memory, root disk; runner
 exporter health; backend and infrastructure container running indicators;
@@ -39,8 +43,8 @@ of host capacity. All metrics originate from the three live Prometheus
 scrape jobs on monitor-01: `lenovo-lap-node`, `lenovo-lap-containers`,
 and `lenovo-lap-runners`.
 
-**Deploy deliberately:** export/backup the live Grafana dashboard model
-before applying this repository version. Its structure is the Grafana 13
+**For future changes:** export/backup the live Grafana dashboard model
+before applying a revised repository version. Its structure is the Grafana 13
 V2 / Scenes model, not an importable classic `panels` JSON. If live-only
 changes have been made since the last committed export, reconcile them
 instead of overwriting them. After updating in the Grafana editor, inspect
