@@ -6,10 +6,10 @@
 
 | Purpose | GitHub repository served | Runner source checkout | Container / image | Workspace | Runner label |
 |---|---|---|---|---|---|
-| Backend | [Kart-Chaser/kc-backend-core](https://github.com/Kart-Chaser/kc-backend-core) | `/opt/gha-runners/kc-backend-runner` | `kc-backend-runner-local` / `kc-backend-runner:dev` | `/workspace-backend` | `kc-backend-runner` |
-| Infrastructure | [Kart-Chaser/kartchaser-infrastructure](https://github.com/Kart-Chaser/kartchaser-infrastructure) | `/opt/gha-runners/kc-infra-runner` | `kc-infra-runner-local` / `kc-infra-runner:dev` | `/workspace-infra` | `kc-infra-runner` |
+| Backend | `Kart-Chaser/kc-backend-core` (private) | `/opt/gha-runners/kc-backend-runner` | `kc-backend-runner-local` / `kc-backend-runner:dev` | `/workspace-backend` | `kc-backend-runner` |
+| Infrastructure | `Kart-Chaser/kartchaser-infrastructure` (private) | `/opt/gha-runners/kc-infra-runner` | `kc-infra-runner-local` / `kc-infra-runner:dev` | `/workspace-infra` | `kc-infra-runner` |
 
-Runner source: [kc-backend-runner](https://github.com/Kart-Chaser/kc-backend-runner) and [kc-infra-runner](https://github.com/Kart-Chaser/kc-infra-runner). Both images built and passed `make r.preflight` and `make smoke` on 2026-11-02. The runners registered successfully and executed real CI jobs on 2026-11-03. Workspaces are host bind mounts at the **same absolute path** in the container, owned by UID/GID `1001:1001`, to support Docker-outside-of-Docker bind mounts. The host Docker group GID was `989` during image builds; the Makefiles discover it dynamically.
+Runner source: `kc-backend-runner` (private) and `kc-infra-runner` (private). Both images built and passed `make r.preflight` and `make smoke` on 2026-11-02. The runners registered successfully and executed real CI jobs on 2026-11-03. Workspaces are host bind mounts at the **same absolute path** in the container, owned by UID/GID `1001:1001`, to support Docker-outside-of-Docker bind mounts. The host Docker group GID was `989` during image builds; the Makefiles discover it dynamically.
 
 The infrastructure repository's `RUNNER_LABELS` GitHub Actions variable was updated to `["self-hosted","kc-infra-runner"]`. Backend migration was tested under PR #233; check the current merge/CI state before claiming it fully migrated. Do not change workflows with hard-coded labels without reviewing them.
 
