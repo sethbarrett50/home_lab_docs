@@ -260,7 +260,7 @@ observed terminal evidence includes all three endpoints reachable from
 stats. A negative connectivity test from an unauthorized Lab peer and a
 post-reboot firewall persistence check have **not** been supplied; those are
 separate host-network hardening follow-ups and are not implicitly verified by
-#104 closure. Keep the existing Docker runners running during those tests.
+the closure of issue #104. Keep the existing Docker runners running during those tests.
 
 The observation exporter currently runs Docker CLI under `pooltab`
 with the supplementary `docker` group and thus has privileged host access;
