@@ -69,11 +69,24 @@ panels cover host CPU/RAM/disk, runner container state and current inferred
 job. Planned Uptime Kuma TCP monitor checks SSH port 22 with existing Telegram
 DOWN/recovery notifications.
 
-These are **versioned deployment instructions**, not evidence that the
-collectors, scrape targets, Grafana panels or Kuma monitors have been
-installed. The Linux metrics ports must be restricted to the monitoring host
-before exposing them. Neither CI runner must be restarted to deploy the
-collectors. See the [step-by-step runbook](lenovo-observability/README.md).
+**Deployment verified by operator on 2026-11-03:** the dedicated nftables
+metrics firewall was loaded on Lenovo; native node-exporter was installed
+and reached from monitor-01, the Python GitHub runner exporter returned
+`gha_runner_container_running=1` and observer metrics for both runners,
+and cAdvisor served container CPU metrics. Prometheus on monitor-01 was
+validated with `promtool`, reloaded using HUP, and confirmed the three
+new jobs (`lenovo-lap-node`, `lenovo-lap-containers`,
+`lenovo-lap-runners`) **UP**, bringing the observed total from ten
+to thirteen active scrape targets. The user also configured an SSH/TCP 22
+monitor in Uptime Kuma.
+
+**Not yet verified:** persistent nftables rules after a reboot, negative
+tests from unauthorized Lab clients, Grafana's updated dashboard imported
+and rendered in the live application, Kuma's per-runner keyword monitors,
+and Telegram notification delivery for the new monitor. Do not equate a
+healthy container with authoritative GitHub runner online status.
+Deployment and testing guidance: [Lenovo runbook](lenovo-observability/README.md).
+Versioned dashboard: [Infrastructure Overview](dashboards/infra-overview.json).
 
 ## Components (as deployed)
 
