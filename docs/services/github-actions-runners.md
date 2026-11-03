@@ -9,8 +9,8 @@ separate from `gha-general-01`, which remains in service for other workloads.
 
 | GitHub repository served | Runner source | Container / image | Workspace | systemd instance |
 |---|---|---|---|---|
-| `Kart-Chaser/kc-backend-core` | [kc-backend-runner](https://github.com/Kart-Chaser/kc-backend-runner) | `kc-backend-runner-local` / `kc-backend-runner:dev` | `/workspace-backend` | `gha-runner@kc-backend-runner-local.service` |
-| `Kart-Chaser/kartchaser-infrastructure` | [kc-infra-runner](https://github.com/Kart-Chaser/kc-infra-runner) | `kc-infra-runner-local` / `kc-infra-runner:dev` | `/workspace-infra` | `gha-runner@kc-infra-runner-local.service` |
+| `Kart-Chaser/kc-backend-core` | `kc-backend-runner` (private) | `kc-backend-runner-local` / `kc-backend-runner:dev` | `/workspace-backend` | `gha-runner@kc-backend-runner-local.service` |
+| `Kart-Chaser/kartchaser-infrastructure` | `kc-infra-runner` (private) | `kc-infra-runner-local` / `kc-infra-runner:dev` | `/workspace-infra` | `gha-runner@kc-infra-runner-local.service` |
 
 Both runners were registered online and observed executing real GitHub Actions jobs.
 The infrastructure repository's `RUNNER_LABELS` variable was changed to
