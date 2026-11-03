@@ -38,13 +38,28 @@ sudo nft -f docs/services/lenovo-observability/lenovo-metrics-firewall.nft
 sudo nft list table inet lenovo_observability
 ```
 
-For reboot persistence, arrange for this rule file to be loaded **before**
-Docker and the monitoring services start. Review the current
-`/etc/nftables.conf` and `nftables.service` before adding an include or
-installing any firewall manager. Do not overwrite an existing ruleset or
-flush Docker's tables. Do not count this monitoring as persistent until a
-reboot check has verified the rule survives and collectors recover.
-Keep an existing SSH session open while changing firewall rules.
+Install the separately versioned `lenovo-metrics-firewall.service` to
+reapply **only its own table** before Docker and the exporters at boot.
+It does not flush or change Docker tables.
+
+```bash
+sudo install -d -m 755 /etc/nftables.d
+sudo install -m 644 docs/services/lenovo-observability/lenovo-metrics-firewall.nft \
+  /etc/nftables.d/lenovo-metrics-firewall.nft
+sudo install -m 644 docs/services/lenovo-observability/lenovo-metrics-firewall.service \
+  /etc/systemd/system/lenovo-metrics-firewall.service
+sudo nft -c -f /etc/nftables.d/lenovo-metrics-firewall.nft
+sudo systemctl daemon-reload
+sudo systemctl enable --now lenovo-metrics-firewall.service
+systemctl is-enabled lenovo-metrics-firewall.service
+systemctl is-active lenovo-metrics-firewall.service
+sudo nft list table inet lenovo_observability
+```
+
+Review existing `/etc/nftables.conf` and `nftables.service` first and
+ensure no other service subsequently flushes the ruleset. Keep SSH connected
+while applying firewall rules. Confirm persistence after a scheduled reboot;
+do **not** reboot or restart existing CI runners during jobs.
 
 ## Step 1 — install collectors on lenovo-lap
 
