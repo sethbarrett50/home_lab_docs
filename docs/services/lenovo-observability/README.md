@@ -177,11 +177,37 @@ queries are the appropriate checks for individual `gha_runner_container_running`
 series. Avoid a deployment-triggering GitHub workflow just to generate traffic.
 Test notification delivery through a safe, explicitly controlled monitor test.
 
-## Step 4 — Grafana queries
+### Additional Uptime Kuma monitors for runner health
 
-Use the existing Prometheus datasource in Grafana 13. Add panels (prefer a new
-row to avoid overwriting the current Infrastructure Overview JSON). Suggested
-queries:
+The operator has created the `Lenovo CI host - SSH` TCP port 22 monitor.
+Suggested additional checks in Kuma's existing UI (all target the Lenovo
+Lab IP; enable the existing Telegram notification on each):
+
+| Name | Type | URL | Expected |
+|---|---|---|---|
+| Lenovo Node Exporter | HTTP(s) | `http://192.168.10.193:9100/metrics` | HTTP 200 |
+| Lenovo cAdvisor | HTTP(s) | `http://192.168.10.193:8080/metrics` | HTTP 200 |
+| Lenovo Backend Runner | HTTP(s) - Keyword | `http://192.168.10.193:9119/metrics` | Exact keyword `gha_runner_container_running{runner="kc_backend"} 1` |
+| Lenovo Infra Runner | HTTP(s) - Keyword | `http://192.168.10.193:9119/metrics` | Exact keyword `gha_runner_container_running{runner="kc_infra"} 1` |
+
+Use a 60-second interval and three retries initially. These keyword
+checks test whether Docker reports the specific container running, not
+whether GitHub has marked it online or whether its jobs succeed. The
+metrics endpoint is intentionally protected by Lenovo's nftables rule,
+allowing access from `monitor-01`.
+
+Only configure keyword matching when Uptime Kuma offers it in the current
+version; do not substitute the generic HTTP 200 check for runner status.
+A separate authenticated GitHub Actions API monitor would be needed for
+authoritative registration/queue health; do not place API tokens into
+URLs or version-controlled Kuma settings.
+
+## Step 4 — Grafana dashboard
+
+The versioned [Infrastructure Overview dashboard](../dashboards/infra-overview.json)
+now includes 13 Lenovo panels in a fifth row, preserving the previous panels.
+Use [dashboard deployment guidance](../dashboards/README.md) to back up
+and reconcile any live-only edits. Representative queries:
 
 | Panel | PromQL |
 |---|---|
