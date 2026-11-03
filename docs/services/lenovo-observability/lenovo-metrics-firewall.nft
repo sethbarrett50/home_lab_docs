@@ -1,0 +1,12 @@
+# Host INPUT-hook firewall for Lenovo monitoring listeners.
+# This table is independent of Docker's ip/ip6 nat/filter tables.
+# Only monitor-01 at 192.168.10.158 may connect from the network.
+# Localhost can still read /metrics for diagnosis.
+table inet lenovo_observability {
+  chain input {
+    type filter hook input priority -10; policy accept;
+    iifname "lo" accept
+    ip saddr != 192.168.10.158 tcp dport { 8080, 9100, 9119 } drop
+    meta nfproto ipv6 tcp dport { 8080, 9100, 9119 } drop
+  }
+}
