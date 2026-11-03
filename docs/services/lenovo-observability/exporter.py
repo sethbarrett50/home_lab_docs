@@ -27,7 +27,7 @@ def escape_label(text):
 
 def parse_bytes(value):
     """Parse Docker stats memory amounts (B, KiB, MiB, GiB, etc.)."""
-    match = re.fullmatch(r'\\s*([0-9]+(?:\\.[0-9]+)?)\\s*([KMGTPE]?i?B|B)\\s*', value)
+    match = re.fullmatch(r'\s*([0-9]+(?:\.[0-9]+)?)\s*([KMGTPE]?i?B|B)\s*', value)
     if not match:
         raise ValueError(f'Unrecognized Docker memory unit: {value!r}')
     amount = float(match.group(1))
