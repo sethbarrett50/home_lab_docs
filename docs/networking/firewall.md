@@ -105,6 +105,28 @@ The Caddy metrics endpoint `192.168.10.50:9180` is for `monitor-01` (`192.168.10
 
 The **guest** firewall on `llm-01` (`192.168.10.162`) uses nftables (`inet filter` input chain, default accept) to restrict TCP 8080 to Caddy `192.168.10.50`, permitting loopback and dropping IPv6 TCP 8080. The **Caddy** virtual host `llm.home.arpa` allows HTTPS proxying only for `192.168.20.0/24`, responds 403 otherwise, and passes through the Bearer token checked by `llama-server`. The backend is unencrypted HTTP on VLAN 10. This is service-specific enforcement, **not** a default-deny Lab or full cross-VLAN firewall audit. Observed: unauthorized Caddy origin returned 403; Trusted client without key returned 401; direct client-to-backend connection failed. See [LLM runbook](../services/local-llm.md).
 
+## Lenovo CI host SSH exception (verified 2026-11-03)
+
+On Flint 2, `firewall.allow_xps_to_lenovo_ssh` permits **only** TCP 22 from
+Trusted VLAN source `192.168.20.173` (XPS) to Lab VLAN destination
+`192.168.10.193` (`lenovo-lap`). It uses `src=trusted`, `dest=lab`,
+`proto=tcp`, `family=ipv4`, and `target=ACCEPT`. The operator ran
+`fw4 check && /etc/init.d/firewall reload` successfully and then connected
+directly with `ssh pooltab@lenovo-lap.home.arpa`. This does not grant general
+Trusted-to-Lab access or permit other clients to reach the Lenovo.
+
+The address was obtained through DHCP on `enp0s31f6` and confirmed to return
+after a Lenovo reboot. **Whether the router's DHCP host reservation is saved
+remains unverified.** Because the firewall rule targets the numeric IP,
+confirm/pin the reservation for Ethernet MAC `e4:a8:df:dd:bd:29` before
+relying on long-term access.
+
+```sh
+uci show firewall.allow_xps_to_lenovo_ssh
+uci show dhcp | grep -E 'lenovo-lap|e4:a8:df:dd:bd:29|192.168.10.193'
+fw4 check
+```
+
 ## TODO
 
 - [ ] Negative tests from remote XPS to VLAN 20, VLAN 30, unapproved Lab services, and IPv6 paths

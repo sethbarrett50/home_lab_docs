@@ -1,0 +1,23 @@
+[Unit]
+Description=Lenovo GitHub Actions runner job metrics
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pooltab
+Group=pooltab
+SupplementaryGroups=docker
+Environment=EXPORTER_LISTEN=192.168.10.193
+Environment=EXPORTER_PORT=9119
+ExecStart=/usr/bin/python3 /opt/lenovo-observability/exporter.py
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
