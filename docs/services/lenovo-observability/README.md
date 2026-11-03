@@ -22,6 +22,30 @@ reads host data and needs privileged access according to its upstream Docker
 recipe; treat it as trusted host infrastructure. Keep secrets out of metrics
 and job names.
 
+## Step 0 — restrict host monitoring ports before starting listeners
+
+Review `lenovo-metrics-firewall.nft`. It uses a separate `inet
+lenovo_observability` table with an **input-hook** chain, not Docker's
+iptables-nft-managed tables; port 8080 on cAdvisor uses host networking so
+its traffic crosses this hook. The rule permits IPv4 scrapes from
+`192.168.10.158` and localhost, drops other IPv4 sources, and drops
+network IPv6 access to ports 8080/9100/9119.
+
+```bash
+# On lenovo-lap, in a checkout that includes this PR:
+sudo nft -c -f docs/services/lenovo-observability/lenovo-metrics-firewall.nft
+sudo nft -f docs/services/lenovo-observability/lenovo-metrics-firewall.nft
+sudo nft list table inet lenovo_observability
+```
+
+For reboot persistence, arrange for this rule file to be loaded **before**
+Docker and the monitoring services start. Review the current
+`/etc/nftables.conf` and `nftables.service` before adding an include or
+installing any firewall manager. Do not overwrite an existing ruleset or
+flush Docker's tables. Do not count this monitoring as persistent until a
+reboot check has verified the rule survives and collectors recover.
+Keep an existing SSH session open while changing firewall rules.
+
 ## Step 1 — install collectors on lenovo-lap
 
 From an SSH session on `lenovo-lap`, **not** on `monitor-01`:
@@ -71,7 +95,7 @@ appears only when a running job can be inferred from the logs. The metrics
 **do not** prove GitHub online/busy status; use `gh api` for authoritative
 runner registration.
 
-For cAdvisor, the pinned image in `cadvisor-compose.yml` is
+For cAdvisor (host networking so the host INPUT firewall applies), the pinned image in `cadvisor-compose.yml` is
 `ghcr.io/google/cadvisor:v0.53.0`; verify its digest before deployment.
 Because this is a privileged monitoring container, review the Compose file
 and any security implications before running it:
