@@ -1,8 +1,11 @@
-# Lenovo CI observability deployment (proposed)
+# Lenovo CI observability deployment (operational)
 
-**Status:** configuration checked into the repository; **not yet deployed or
-verified on either host**. This extends the existing monitor-01 stack without
-restarting, rebuilding, or re-registering the GitHub Actions runners.
+**Status (2026-11-03):** deployed and monitored. From `monitor-01`, the operator
+verified Prometheus scrapes for native node-exporter, cAdvisor and the runner
+observer, and later reported working Grafana host-relative runner percentages.
+The SSH and backend/infrastructure keyword Kuma checks were configured and
+the operator reports notification testing complete under issue #104. The
+runners were not restarted, rebuilt, or re-registered for deployment.
 
 ## Architecture
 
@@ -243,16 +246,21 @@ series is normal at idle.
 
 Do not import a replacement dashboard until the live Grafana dashboard has
 been exported/backed up; this repo uses a Grafana 13 dashboard V2/Scenes model.
-Dashboard import/render verification remains necessary.
+Dashboard V2 rendering and runner CPU/RAM host-percentage panels were later
+confirmed by the operator on 2026-11-03; an exported live-dashboard snapshot
+has not been provided for byte-for-byte comparison.
 
 ## Validation and follow-ups
 
-Confirm the following before claiming observability is deployed:
-node-exporter, cAdvisor, and observer HTTP endpoints reachable **from
-monitor-01**, Prometheus targets `UP`, a live CI job appears and disappears
-correctly in the observer, Grafana panels render, Kuma TCP monitor turns
-green, and a notification test reaches Telegram. Verify an unauthorized
-Lab peer cannot read ports 8080, 9100, or 9119.
+The operator reports completion of the monitoring validation checklist for
+[#104](https://github.com/sethbarrett50/home_lab_docs/issues/104), including
+active-to-idle job transitions and Telegram notification tests. Previously
+observed terminal evidence includes all three endpoints reachable from
+`monitor-01`, healthy Prometheus scrapes, and container host-relative CPU/RAM
+stats. A negative connectivity test from an unauthorized Lab peer and a
+post-reboot firewall persistence check have **not** been supplied; those are
+separate host-network hardening follow-ups and are not implicitly verified by
+#104 closure. Keep the existing Docker runners running during those tests.
 
 The observation exporter currently runs Docker CLI under `pooltab`
 with the supplementary `docker` group and thus has privileged host access;
