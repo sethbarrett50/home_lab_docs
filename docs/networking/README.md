@@ -139,7 +139,7 @@ to the planned Mullvad setup for VLAN 20 (#12).
 ## Switch Port Assignment
 
 Read from the switch UI (`VLAN > 802.1Q VLAN` and `VLAN > 802.1Q VLAN PVID
-Setting`) on 2026-10-08, post-Phase 3. Port 1 is the only trunk; VLAN 20 has
+Setting`) on 2026-10-08, post-Phase 3; port 7 was reconfirmed on 2026-11-03. Port 1 is the only trunk; VLAN 20 has
 no wired access ports (Trusted is WiFi-only via `dfair_lab`). Admin UI is on
 the mgmt network at `192.168.1.160` — not reachable from `trusted` by default;
 use an SSH tunnel through the router (`ssh -L 8080:192.168.1.160:80
@@ -153,7 +153,7 @@ root@192.168.1.1`, then `http://localhost:8080`).
 | 4 | Not Member | Untagged | Not Member | Not Member | 10 | `acer-lap` (Acer Aspire 5) |
 | 5 | Not Member | Untagged | Not Member | Not Member | 10 | `hp-lap` (HP EliteBook 840 G2) |
 | 6 | Not Member | Not Member | Not Member | Untagged | 30 | Old TP-Link (OpenWrt) — dedicated IoT AP |
-| 7 | Untagged | Not Member | Not Member | Not Member | 1 | Empty |
+| 7 | Not Member | Untagged | Not Member | Not Member | 10 | `lenovo-lap` (Lenovo ThinkBook, dedicated CI) |
 | 8 | Untagged | Not Member | Not Member | Not Member | 1 | Reserved / maintenance |
 
 Port 6 was left as an untagged member of VLAN 1 after Phase 3 (ingress was
