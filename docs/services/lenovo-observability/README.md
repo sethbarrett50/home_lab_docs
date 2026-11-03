@@ -214,12 +214,26 @@ and reconcile any live-only edits. Representative queries:
 | Lenovo host reachable | `up{job="lenovo-lap-node"}` |
 | Lenovo CPU usage (%) | `100 * (1 - avg(rate(node_cpu_seconds_total{job="lenovo-lap-node",mode="idle"}[5m])))` |
 | Lenovo memory usage (%) | `100 * (1 - node_memory_MemAvailable_bytes{job="lenovo-lap-node"} / node_memory_MemTotal_bytes{job="lenovo-lap-node"})` |
-| Lenovo root filesystem used (%) | `100 * (1 - node_filesystem_avail_bytes{job="lenovo-lap-node",mountpoint="/",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{job="lenovo-lap-node",mountpoint="/",fstype!~"tmpfs|overlay"})` |
-| Backend container running | `gha_runner_container_running{job="lenovo-lap-runners",runner="kc_backend"}` |
-| Infrastructure container running | `gha_runner_container_running{job="lenovo-lap-runners",runner="kc_infra"}` |
+| Lenovo root filesystem used (%) | `100 * (1 - node_filesystem_avail_bytes{job="lenovo-lap-node",mountpoint="/",fstype!="tmpfs",fstype!="overlay"} / node_filesystem_size_bytes{job="lenovo-lap-node",mountpoint="/",fstype!="tmpfs",fstype!="overlay"})` |
+| Backend container running | `gha_runner_container_running{job="lenovo-lap-runners",runner="kc_backend"} or on() vector(0)` |
+| Infrastructure container running | `gha_runner_container_running{job="lenovo-lap-runners",runner="kc_infra"} or on() vector(0)` |
 | Runner log observers healthy | `gha_runner_job_observer_up{job="lenovo-lap-runners"}` |
 | Current backend job | `gha_runner_current_job{job="lenovo-lap-runners",runner="kc_backend"}` |
 | Current infrastructure job | `gha_runner_current_job{job="lenovo-lap-runners",runner="kc_infra"}` |
+
+For the four runner CPU/RAM gauges, the updated dedicated runner exporter
+supplies stable `gha_runner_container_cpu_host_percent` and
+`gha_runner_container_memory_host_percent` metrics. CPU percentage divides
+Docker's per-core CPU percentage by the Lenovo's logical CPU count; RAM
+percentage divides Docker-reported container memory usage by physical host
+memory from `/proc/meminfo`. Unlike cAdvisor metrics, these series do not
+depend on Docker container `name` labels. Validate
+`gha_runner_container_stats_up{runner="kc_backend"}` and
+`gha_runner_container_stats_up{runner="kc_infra"}` are both 1 after
+updating the exporter; the stats collection takes an additional short Docker
+read per Prometheus scrape. **The previous dashboard version had no data for
+container CPU/RAM and displayed UP/DOWN simultaneously due to an incorrect
+unmatched zero fallback.** Both are corrected in the source dashboard.
 
 A missing `gha_runner_current_job` series should show “none inferred”,
 not “runner offline”. A log-derived current-job gauge isn't a counter or a
