@@ -1,0 +1,17 @@
+services:
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.53.0
+    container_name: lenovo-cadvisor
+    restart: unless-stopped
+    privileged: false
+    ports:
+      - "192.168.10.193:8080:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker:/var/lib/docker:ro"
+    devices:
+      - "/dev/kmsg:/dev/kmsg"
+    security_opt:
+      - "no-new-privileges:true"
