@@ -57,6 +57,24 @@ graph TD
     LOKI --> GF
 ```
 
+## Proposed Lenovo runner observability (not yet deployed)
+
+The physical `lenovo-lap` (`192.168.10.193`, VLAN 10) has two working
+Docker-based GitHub Actions runners. An independent monitoring deployment is
+prepared under [lenovo-observability/](lenovo-observability/README.md).
+It adds native node-exporter (`:9100`), cAdvisor (`:8080`) and a
+read-only runner job/container observer (`:9119`) to be scraped by the
+existing Prometheus on `monitor-01` (`192.168.10.158`). Planned Grafana
+panels cover host CPU/RAM/disk, runner container state and current inferred
+job. Planned Uptime Kuma TCP monitor checks SSH port 22 with existing Telegram
+DOWN/recovery notifications.
+
+These are **versioned deployment instructions**, not evidence that the
+collectors, scrape targets, Grafana panels or Kuma monitors have been
+installed. The Linux metrics ports must be restricted to the monitoring host
+before exposing them. Neither CI runner must be restarted to deploy the
+collectors. See the [step-by-step runbook](lenovo-observability/README.md).
+
 ## Components (as deployed)
 
 | Container | Host | Port | Role |
