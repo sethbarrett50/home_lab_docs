@@ -6,6 +6,7 @@ host's Lab IP or loopback, not the public interface. Logs may contain job names,
 so restrict network access to Prometheus. This is an observed log-derived state,
 not a GitHub API assertion of actual runner connectivity.
 """
+import json
 import os
 import re
 import subprocess
@@ -24,6 +25,46 @@ def escape_label(text):
     return text.replace('\\', '\\\\').replace('\n', '\\n').replace('"', '\\"')
 
 
+def parse_bytes(value):
+    """Parse Docker stats memory amounts (B, KiB, MiB, GiB, etc.)."""
+    match = re.fullmatch(r'\\s*([0-9]+(?:\\.[0-9]+)?)\\s*([KMGTPE]?i?B|B)\\s*', value)
+    if not match:
+        raise ValueError(f'Unrecognized Docker memory unit: {value!r}')
+    amount = float(match.group(1))
+    unit = match.group(2)
+    prefixes = {'': 0, 'K': 1, 'M': 2, 'G': 3, 'T': 4, 'P': 5, 'E': 6}
+    prefix = '' if unit == 'B' else unit[0]
+    return amount * ((1024 if 'iB' in unit else 1000) ** prefixes[prefix])
+
+
+def collect_stats():
+    """Get host-relative CPU and RAM percentages from Docker in one read."""
+    cmd = ['docker', 'stats', '--no-stream', '--format', '{{json .}}', *RUNNERS]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=12)
+        if result.returncode != 0:
+            return {}
+        total_kb = next(
+            int(line.split()[1]) for line in open('/proc/meminfo')
+            if line.startswith('MemTotal:')
+        )
+        host_memory = total_kb * 1024
+        host_cpus = os.cpu_count() or 1
+        parsed = {}
+        for line in result.stdout.splitlines():
+            entry = json.loads(line)
+            name = entry.get('Name')
+            if name not in RUNNERS:
+                continue
+            cpu = float(entry['CPUPerc'].strip().removesuffix('%')) / host_cpus
+            used = entry['MemUsage'].split('/')[0].strip()
+            memory = 100 * parse_bytes(used) / host_memory
+            parsed[name] = (cpu, memory)
+        return parsed
+    except (OSError, ValueError, KeyError, StopIteration, subprocess.TimeoutExpired, json.JSONDecodeError):
+        return {}
+
+
 def collect():
     lines = [
         '# HELP gha_runner_job_observer_up Whether Docker logs were read successfully (1=yes).',
@@ -34,8 +75,20 @@ def collect():
         '# TYPE gha_runner_job_observer_initialized gauge',
         '# HELP gha_runner_container_running Whether Docker reports the named container running.',
         '# TYPE gha_runner_container_running gauge',
+        '# HELP gha_runner_container_stats_up Whether Docker stats returned valid usage metrics.',
+        '# TYPE gha_runner_container_stats_up gauge',
+        '# HELP gha_runner_container_cpu_host_percent Docker CPU usage as percent of total host logical CPU capacity.',
+        '# TYPE gha_runner_container_cpu_host_percent gauge',
+        '# HELP gha_runner_container_memory_host_percent Docker memory usage as percent of host physical memory.',
+        '# TYPE gha_runner_container_memory_host_percent gauge',
     ]
+    stats = collect_stats()
     for container, runner in RUNNERS.items():
+        lines.append(f'gha_runner_container_stats_up{{runner="{runner}"}} {int(container in stats)}')
+        if container in stats:
+            cpu, memory = stats[container]
+            lines.append(f'gha_runner_container_cpu_host_percent{{runner="{runner}"}} {cpu:.5f}')
+            lines.append(f'gha_runner_container_memory_host_percent{{runner="{runner}"}} {memory:.5f}')
         # A running container is not the same as an online GitHub runner.
         # Keep this independent from the log observer for clearer diagnostics.
         try:
