@@ -28,12 +28,12 @@ services overview):
 
 | VM/LXC | ID | Role |
 |---|---|---|
-| `gha-general-01` | VM 101 | 2x GitHub Actions runner containers (`dfair`/`kc`); PL retired 2026-10-22, Buildkit, Grafana Alloy, cAdvisor, node-exporter |
+| `gha-general-01` | VM 101 | DFAIR K3s/ARC (0–3 ephemeral runners), KC-Timing Docker runner, BuildKit, Alloy, cAdvisor, node-exporter; 6 vCPU, 18 GiB RAM, 200 GiB Kubernetes SSD |
 | `monitor-01` | VM 102 | Grafana, Prometheus, Loki, Uptime Kuma, Alloy, cAdvisor, node-exporter — see [monitoring.md](monitoring.md) |
 | `nas` | LXC 105 | File storage — software TBD, see [nas.md](nas.md). Data is mp0 `/mnt/pve/hdd-1tb/nas-share` -> `/mnt/nas-share` (`sda1`); rootfs on `local-lvm` |
 | `certs-01` | LXC 106 | Debian 13, unprivileged; Caddy 2.6.2, internal CA and HTTPS reverse proxy; `192.168.10.50`, see [caddy.md](caddy.md) |
 | `telegram-proxy-01` | LXC 107 | Telegram notification proxy; see [telegram-proxy.md](telegram-proxy.md) |
-| `llm-01` | VM 108 | Debian 13, NVIDIA P4000 PCIe passthrough, Qwen3 8B CUDA API; `192.168.10.162`, see [local-llm.md](local-llm.md) |
+| `llm-01` | VM 108 | Powered off since 2026-11-27; Debian 13, NVIDIA P4000 PCIe passthrough, retained Qwen3 CUDA API configuration; `192.168.10.162`, see [local-llm.md](local-llm.md) |
 
 ### Future ideas (not started, no concrete plan)
 
@@ -48,6 +48,8 @@ revisit here with real specs only once one is actually prioritized.
 The P4000 GPU and its audio function are passed through with `hostpci0: 0000:01:00.0,pcie=1` and `hostpci1: 0000:01:00.1,pcie=1`. VT-d/IOMMU were already available; binding via VFIO succeeded without rebooting the Proxmox host. An initial PCI reset warning did not prevent VM execution. VM108 has 4 vCPU, 6 GiB RAM, a 100 GB virtual SCSI disk on `ssd-1tb`, Q35/OVMF, and a VirtIO NIC on `vmbr0`. Guest reboot persistence was verified; full Proxmox host reboot persistence was **not**. The 2026-10-27 GPU/LLM setup is documented in [local-llm.md](local-llm.md). Do not reboot the shared host as part of routine LLM debugging.
 
 ## GitHub Actions Runners
+
+**2026-11-27:** VM 101 was resized from 4 to 6 vCPU and 12 to 18 GiB RAM after shutting down VM 108. VM 108 retains its disks and passthrough configuration and has `onboot: 0`. VM 101 has an additional 200 GiB `ssd-1tb` disk mounted at `/var/lib/rancher/k3s`; its 100 GiB root disk is unchanged. The current [ARC deployment and recovery runbook](github-actions-runners.md#dfair-production-arc-deployment-2026-11-27) supersedes the historical Docker inventory and diagram below. KC-Timing remains active; the older KC service is disabled.
 
 Self-hosted, **2 active runners** (`dfair` and `kc`) as Docker containers inside the
 `gha-general-01` VM — not directly on the Proxmox host. They register with their

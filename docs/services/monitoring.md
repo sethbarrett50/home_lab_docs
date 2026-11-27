@@ -125,7 +125,7 @@ Versioned dashboard: [Infrastructure Overview](dashboards/infra-overview.json).
 | `cadvisor` | monitor-01 + gha-general-01 | 8080 | Per-container CPU/mem/network metrics |
 | `node-exporter` | monitor-01 + gha-general-01 | — | Host-level CPU/mem/disk metrics |
 | `node_exporter` (native, not a container) | dell-mini | 9100 | Host-level CPU/mem/disk metrics — scraped directly by Prometheus, no Alloy (dell-mini doesn't run Docker) |
-| `dfair-gha-runner-local`, `kc-gha-runner-local` | gha-general-01 | — | The 2 active self-hosted GitHub Actions runners; PL retired 2026-10-22 |
+| DFAIR ARC and `kc-timing-runner-local` | gha-general-01 | — | ARC ephemeral Kubernetes runners and retained KC-Timing Docker runner |
 | `gha-runner-job-exporter.service` (systemd/Python) | gha-general-01 | 9119 | Read-only Docker runner log observer; exported metrics for current job names |
 | `buildx_buildkit_builder-*` | gha-general-01 | — | Buildkit builder for the runners |
 
@@ -206,6 +206,8 @@ approved requirement. Distinguish a running Docker container and log-derived
 job inference from authoritative GitHub online and job-result state.
 
 ## GitHub Actions runner observability (2026-10-22)
+
+**2026-11-27 update:** DFAIR migrated to K3s/ARC; its legacy Docker service is disabled and its container absent. KC-Timing and the existing exporter remain active. The older KC service is disabled. The historical Docker observer cannot see ARC jobs or containerd pods; use Kubernetes and GitHub Actions for those. Existing dashboards may show retired runners as down or absent. Updating dashboards/alerts and adjusting monitors for the intentionally stopped LLM VM remain unverified follow-ups. See the [current runner runbook](github-actions-runners.md#dfair-production-arc-deployment-2026-11-27).
 
 The deployed `gha-general-01` runner inventory is **KC + DFAIR only**.
 Runner operations, maintenance, systemd safety overrides, and nightly

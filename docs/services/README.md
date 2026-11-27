@@ -8,7 +8,7 @@ directly on `dell-mini` instead.
 
 - [Proxmox](proxmox.md) — hypervisor setup, VMs, GitHub Actions runner
 - [NAS & Storage](nas.md) — qBittorrent, NAS software, HDD setup
-- [GitHub Actions Runners](github-actions-runners.md) — KC/DFAIR/KC-Timing setup, safe restarts, manual deployment and nightly update checks
+- [GitHub Actions Runners](github-actions-runners.md) — DFAIR ARC/K3s and KC-Timing Docker setup, safe restarts and retirement
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
 - [Hermes Gateway](hermes-gateway.md) — HP Debian 13, live Codex/Telegram gateway, local fallback and recovery (Harness pending)
@@ -34,8 +34,7 @@ graph TD
     end
 
     subgraph "VM 101 - gha-general-01"
-        GHA1[dfair runner]
-        GHA3[kc runner]
+        GHA1[DFAIR ARC / K3s\n0–3 ephemeral runners]
         GHA4[KC-Timing runner]
         BK[Buildkit]
     end
@@ -48,7 +47,7 @@ graph TD
     end
 
     subgraph "VM 108 - llm-01"
-        LLM[Qwen3 8B + Qwen3.5 2B / llama.cpp\nNVIDIA P4000 passthrough]
+        LLM[Powered off / retained\nNVIDIA P4000 passthrough]
     end
 
     subgraph "LXC 106 - certs-01"
@@ -64,10 +63,7 @@ graph TD
     PVE --> WIN
     PVE --> FW
     PVE --> GHA1
-    PVE --> GHA3
     PVE --> GHA4
-    GHA1 --> BK
-    GHA3 --> BK
     GHA4 --> BK
     PVE --> PROM
     PVE --> QB
@@ -122,7 +118,8 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 
 | Service | Type | Status | Priority |
 |---|---|---|---|
-| [GitHub Actions runners (DFAIR/KC/KC-Timing)](github-actions-runners.md) | 3x Docker containers on `gha-general-01` (VM 101, separate from proxmox itself) | ✅ Running | High |
+| [GitHub Actions runners (DFAIR/KC/KC-Timing)](github-actions-runners.md) | DFAIR ARC on K3s (0–3 runners) and KC-Timing Docker on VM 101 | ✅ Running | High |
+| [Local GPU LLM](local-llm.md) | VM 108, retained GPU passthrough | Powered off | Low |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |
 | [research-output-scraper](research-output-scraper.md) | nginx + systemd on `dell-mini`; HTTPS via Caddy | ✅ Running; HTTPS verified 2026-10-21 | Medium |
