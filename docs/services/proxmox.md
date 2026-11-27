@@ -51,7 +51,6 @@ The P4000 GPU and its audio function are passed through with `hostpci0: 0000:01:
 
 **2026-11-27:** VM 101 was resized from 4 to 6 vCPU and 12 to 18 GiB RAM after shutting down VM 108. VM 108 retains its disks and passthrough configuration and has `onboot: 0`. VM 101 has an additional 200 GiB `ssd-1tb` disk mounted at `/var/lib/rancher/k3s`; its 100 GiB root disk is unchanged. The current [ARC deployment and recovery runbook](github-actions-runners.md#dfair-production-arc-deployment-2026-11-27) supersedes the historical Docker inventory and diagram below. KC-Timing remains active; the older KC service is disabled.
 
-
 Self-hosted, **2 active runners** (`dfair` and `kc`) as Docker containers inside the
 `gha-general-01` VM — not directly on the Proxmox host. They register with their
 respective GitHub organizations and can execute jobs from authorized repositories
