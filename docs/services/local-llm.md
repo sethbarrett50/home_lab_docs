@@ -1,5 +1,7 @@
 # Local GPU LLM — llm-01 (Phase 4)
 
+**2026-11-27 status:** VM 108 was gracefully powered off to reallocate its 6 GiB RAM to the CI VM. It remains configured with `onboot: 0`, its disks and GPU passthrough intact. The following deployment and benchmark details are historical; the endpoints are not expected to be available while the guest is off. Before restarting, review host memory capacity and CI workloads. Monitoring maintenance/alert changes have not been verified.
+
 First endpoint deployed and validated **2026-10-27**; second 64K endpoint and dual-model operation validated **2026-10-29**. A Debian 13 VM on the Dell Precision 3620 Proxmox host serves a private, authenticated, OpenAI-compatible LLM API. GPU passthrough, CUDA inference, HTTPS access, client rejection, VM guest reboot recovery, and a 4,096-token context load were observed. **A full Proxmox host restart and recovery was not tested.**
 
 ## Inventory and deployment
