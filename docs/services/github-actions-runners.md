@@ -104,14 +104,17 @@ The legacy service used a foreground helper, `Restart=always` and a
 15-second restart delay. Stopping Docker alone caused it to recreate the
 container and register again. The operator disabled and stopped
 `gha-runner-dfair.service` and verified that the container was absent.
-Masking initially failed because the custom service file occupies the
-mask path. Archive that file outside systemd's unit search paths before
-masking. Recheck GitHub for stale registrations by exact name and remove
-only the idle legacy registration. Do not delete ephemeral runners.
+Masking initially failed because the custom unit occupied the mask path.
+The operator then archived the unit under `/root/retired-services/`,
+masked it, and verified `masked` / `inactive`. The recreated registration
+(ID 133) was verified offline and idle, then deleted. Do not delete
+ephemeral runners.
 
-The nightly update-check unit and timer remain enabled for KC-Timing.
-The versioned checker is fetch-only; confirm the installed script before
-assuming it matches. Exclude the retired DFAIR checkout from its list.
+The nightly update-check unit and timer remain enabled. The installed
+checker was confirmed fetch-only, with KC and DFAIR entries (not KC-Timing).
+The operator backed it up, removed the DFAIR entry and passed `bash -n`.
+The versioned checker also includes KC-Timing; deploying that version and
+validating its credentials remain optional follow-up steps.
 Keep KC-Timing, Docker, job exporter, Alloy, cAdvisor and node-exporter.
 The old Docker image and source checkout can be retained for rollback;
 do not start the legacy service routinely.
