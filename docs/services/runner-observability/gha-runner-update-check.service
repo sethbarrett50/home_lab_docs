@@ -1,5 +1,5 @@
 [Unit]
-Description=Check KC and DFAIR GitHub Actions runner updates
+Description=Check KC GitHub Actions runner source updates
 Wants=network-online.target
 After=network-online.target
 
