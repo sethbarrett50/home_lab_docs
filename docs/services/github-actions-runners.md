@@ -1,5 +1,126 @@
 # Self-hosted GitHub Actions runners
 
+## DFAIR production ARC deployment (2026-11-27)
+
+This section supersedes the historical Docker deployment below for DFAIR.
+The production runner is an organization-level Actions Runner Controller
+(ARC) scale set on the existing Debian 13 CI VM, not the Proxmox host.
+KC-Timing remains a separate Docker runner; do not retire it.
+
+| Property | Production configuration |
+|---|---|
+| VM | `gha-general-01`, Proxmox VM 101, 6 vCPU, 18 GiB RAM |
+| Kubernetes | Single-node K3s v1.37.2+k3s1, containerd |
+| Storage | Dedicated 200 GiB SSD, ext4 at `/var/lib/rancher/k3s` |
+| ARC controller | Chart 0.15.1, namespace `dfair-arc-system` |
+| Scale set | `dfair-gha-runner-arc`, namespace `dfair-arc-runners` |
+| Scaling | Minimum 0, maximum 3 ephemeral runners |
+| Per-runner CPU | Request 1, limit 2 |
+| Per-runner memory | Request 3 GiB, limit 4 GiB |
+| Per-runner ephemeral storage | Request 15 GiB, limit 40 GiB |
+| Image | Digest-pinned research image with LaTeX and Python tooling |
+| Authentication | GitHub App and separate registry pull secret |
+
+### Node setup and recovery
+
+VM 108 was gracefully shut down (already configured not to start at boot).
+VM 101 was shut down, its configuration backed up, and resized from 4 vCPU
+and 12 GiB to 6 vCPU and 18 GiB (ballooning disabled). Its original 100 GiB
+root disk was retained. The added SSD is mounted by UUID with
+`defaults,noatime`; K3s has a systemd mount dependency and mount-point
+condition to avoid writing to the root filesystem when storage is absent.
+The single-node control plane reserves 1 CPU and 3 GiB for system/Kubernetes
+components. After reboot the node reported 5 allocatable CPUs and
+15,207,888 KiB allocatable memory; API readiness and metrics passed.
+
+K3s uses separate pod/service networks, secrets encryption, and containerd.
+Docker remains installed for KC-Timing and monitoring. The guest swap
+partition was reactivated on reboot despite its commented fstab entry;
+swap was disabled again and `dev-sda3.swap` masked. Persistence is not
+yet verified. Preserve the swap partition and investigate auto-discovery
+if it reappears.
+
+### Deployment operations
+
+Use the existing authenticated kubeconfig and Helm context. Never commit
+GitHub App keys, tokens, kubeconfigs, or secret manifests. Keep the exact
+image digest and credentials in the authorized deployment configuration.
+
+```bash
+kubectl get nodes -o wide
+kubectl get --raw='/readyz?verbose'
+findmnt /var/lib/rancher/k3s
+kubectl get autoscalingrunnersets -A
+kubectl get pods -A
+kubectl top nodes
+```
+
+To change capacity during an idle maintenance window, explicitly supply
+both numeric values (reusing only one caused a Helm float/int template
+comparison failure):
+
+```bash
+helm upgrade dfair-gha-runner-arc \
+    oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set \
+    --version 0.15.1 \
+    --namespace dfair-arc-runners \
+    --kube-context dfair-pilot \
+    --reuse-values \
+    --set minRunners=0 \
+    --set maxRunners=3 \
+    --wait --timeout 5m
+```
+
+Revision 2 deployed successfully. Three ephemeral runner objects were
+observed concurrently (one running and two pending at that snapshot).
+The operator reports the subsequent workload test worked well; peak
+three-job memory and sustained throughput have not been formally recorded.
+Keep concurrency at three until heavier workloads are measured.
+
+### Repository migration and performance
+
+The four repository migration PRs merged into dev and their post-merge
+CI passed. CAPEX, XSecIoT and the LaTeX proposal repository were also
+promoted to main. SOC Email Collab's main promotion remained a draft
+at the last inspection; its legacy workflow references must be reconciled.
+All-branch test trigger changes were submitted for CAPEX, XSecIoT and SOC;
+merge and main promotion are not established by opening a PR.
+
+Private trusted workflows use `runs-on: dfair-gha-runner-arc`. Public
+repositories retain GitHub-hosted fallback; do not grant untrusted PRs
+access to the homelab. A YAML condition alone is not an authorization
+boundary. Old feature branches need to incorporate updated workflow files.
+
+A controlled XSecIoT CPU-only PyTorch benchmark passed 242 tests with
+9 skips, matching the CUDA-wheel baseline. Cold dependency setup fell
+from 120.78 s to 19.41 s and environment size from 6.1 G to 1.7 G.
+This is a single paired benchmark, not a production CPU-only rollout
+or evidence of GPU equivalence. Retain full LaTeX dependencies and
+reuse immutable image layers.
+
+### Retire the legacy DFAIR container
+
+The legacy service used a foreground helper, `Restart=always` and a
+15-second restart delay. Stopping Docker alone caused it to recreate the
+container and register again. The operator disabled and stopped
+`gha-runner-dfair.service` and verified that the container was absent.
+Masking initially failed because the custom service file occupies the
+mask path. Archive that file outside systemd's unit search paths before
+masking. Recheck GitHub for stale registrations by exact name and remove
+only the idle legacy registration. Do not delete ephemeral runners.
+
+The nightly update-check unit and timer remain enabled for KC-Timing.
+The versioned checker is fetch-only; confirm the installed script before
+assuming it matches. Exclude the retired DFAIR checkout from its list.
+Keep KC-Timing, Docker, job exporter, Alloy, cAdvisor and node-exporter.
+The old Docker image and source checkout can be retained for rollback;
+do not start the legacy service routinely.
+
+The existing Docker log exporter does not observe ARC pods. Use
+`kubectl get ephemeralrunners -A`, `kubectl top pods -n dfair-arc-runners`
+and GitHub Actions job results for ARC. Dashboard/alert changes to reflect
+the new architecture remain a separate unverified deployment task.
+
 ## Dedicated physical Lenovo host (2026-11-03)
 
 `lenovo-lap` is a **physical Lenovo ThinkBook 15 G4 IAP** running Debian 13.7 on
@@ -27,7 +148,7 @@ rebuilds or registers it. Explicit updates/re-registration use each checkout's
 mount `/var/run/docker.sock`, granting workflows powerful control of the
 physical host. See the [Lenovo CI host runbook](lenovo-github-runners.md).
 
-## Deployment and inventory
+## Legacy Docker deployment and inventory (historical)
 
 The legacy self-hosted runners below operate as Docker containers on
 **`gha-general-01`** (Debian 13, Proxmox VM 101, `192.168.10.189`, VLAN 10).
@@ -147,15 +268,7 @@ sudo systemctl status gha-runner-kc-timing.service --no-pager
 docker logs --tail 40 kc-timing-runner-local
 ```
 
-Update DFAIR independently:
-
-```bash
-git -C /opt/gha-runners/dfair pull --ff-only origin main
-make -C /opt/gha-runners/dfair build
-sudo systemctl restart gha-runner-dfair.service
-sudo systemctl status gha-runner-dfair.service --no-pager
-docker logs --tail 40 dfair-gha-runner-local
-```
+DFAIR now uses the ARC deployment above. Do not restart its retired Docker service.
 
 `make build` builds the new image without replacing the current container;
 `systemctl restart` activates it. The service's `r.up` also builds, so this
