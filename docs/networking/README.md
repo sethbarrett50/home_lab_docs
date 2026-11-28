@@ -2,6 +2,7 @@
 
 ## Contents
 
+- [RG3 IDS capture network](rg3-capture.md) — dual-interface HP/UE300 deployment, switch mirroring and acceptance (hardware pending).
 - [VLANs](vlans.md) — design, IP scheme, inter-VLAN policy
 - [Firewall](firewall.md) — rules and segmentation strategy
 - [Internal DNS](dns.md) — OpenWrt dnsmasq, `home.arpa` hostname resolution, VLAN 10 inventory, and maintenance procedures.
@@ -17,6 +18,8 @@
 | Old TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer", dumb AP for IoT VLAN — no routing/DHCP of its own |
 
 ## Network Topology
+
+> **Research deployment update (2026-11-28):** HP management is currently on VLAN 30. The older topology and port inventory below predate this move; the UE300 mirror connection remains planned. See [RG3 capture network](rg3-capture.md) for the verified baseline and pending port-map reconciliation.
 
 ```mermaid
 graph TD
