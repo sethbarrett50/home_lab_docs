@@ -44,7 +44,7 @@ external mirror; the mirror does not guarantee whole-VLAN coverage.
   with exact independent TCP/UDP packet conservation and unchanged CSV hash.
   Historical fixture statistics are synthetic, not measured capture loss.
 
-See [CAPEX deployment guide](https://github.com/DFAIR-LAB-Augusta/CAPEX/blob/main/docs/RG3_CAPTURE.md)
+See the CAPEX deployment guide (`DFAIR-LAB-Augusta/CAPEX`, `docs/RG3_CAPTURE.md`)
 for software operations.
 
 ## Physical switch plan
