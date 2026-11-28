@@ -20,7 +20,7 @@ Proxmox host + LXC/VM services + multiple physical Debian hosts, including the d
 | `iot-ap` (old TP-Link) | TP-Link (unknown model) | OpenWrt 15.05.1 "Chaos Calmer" | 30 | 192.168.30.2 | Dumb AP, SSID `OpenWrt`, own DHCP/WAN disabled |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian 13 (Trixie) | 10 | 192.168.10.117 | DHCP host reservation (pinned to MAC, `enp2s0`). Networked via `systemd-networkd` (chosen over ifupdown/NetworkManager for a consistent config method across all 3 debian boxes). Runs `research-output-scraper` (nginx + systemd, see that repo's `docs/deploy.md`); served internally through Caddy at `https://cs-leaderboard.home.arpa`. nginx trusts Caddy `.50` for forwarded client IP. SSH (22) and direct HTTP (80) still documented open from lan/trusted |
 | `acer-lap` | Acer Aspire 5 A515-54 (laptop) — i5-10210U, 8 GB, 512 GB NVMe, see [specs](#acer-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 10 | 192.168.10.199 | DHCP host reservation (pinned to MAC `b4:a9:fc:2b:d2:6d`, `enp1s0`). Networked via `systemd-networkd`. Run closed-lid with the built-in panel disconnected; suspend-on-close prevented via drop-in `/etc/systemd/logind.conf.d/10-headless.conf` (`HandleLidSwitch*`/`HandleSuspendKey`/`HandleHibernateKey`/`IdleAction` = `ignore`) plus masked `sleep`/`suspend`/`hibernate`/`hybrid-sleep`/`suspend-then-hibernate` targets — applies to any laptop run this way, see HP below. Planned role: edge-device test host for custom IDS (dissertation direction four). SSH open from lan/trusted |
-| `hp-lap` | HP EliteBook 840 G2 (laptop) — i5-5300U, 16 GB, 240 GB SATA SSD, see [specs](#hp-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 10 (switch port 5) | 192.168.10.147 | DHCP host reservation (pinned to MAC `70:5a:0f:ce:1a:ae`, `enp0s25`). Networked via `systemd-networkd` (`/etc/systemd/network/10-wired.network`, matched on MAC); was previously on the IoT AP's WiFi (VLAN 30) — NetworkManager disabled and WiFi (`wlo1`) rfkill-blocked. Hostname renamed from `poolTab`; login user is `pooltab`. Same closed-lid setup as acer-lap (`/etc/systemd/logind.conf.d/10-headless.conf` + masked sleep targets). Docker installed (`docker0` present). Full-disk encryption — requires an interactive passphrase, but remote unlock via `dropbear-initramfs` on port 2222 from XPS is now verified after Debian 13 kernel reboot (LUKS2 `sda5` → LVM). Docker Trixie packages active; Hermes v0.22.5+2971.ga938f00 gateway active with Codex OAuth primary, owner Telegram bot confirmed, Qwen3.5 2B local alias tested; automatic failover and Harness deployment still unverified; see [gateway runbook](../services/hermes-gateway.md). SSH open from lan/trusted |
+| `hp-lap` | HP EliteBook 840 G2 (laptop) — i5-5300U, 16 GB, 240 GB SATA SSD, see [specs](#hp-lap-hardware) | Debian 13.7 (Trixie), headless (`multi-user.target`) | 30 (current management; physical port pending confirmation) | VLAN 30 DHCP (observed 2026-11-28) | Former VLAN 10 reservation; built-in NIC (matched by MAC `70:5a:0f:ce:1a:ae`, `enp0s25`). Networked via `systemd-networkd` (`/etc/systemd/network/10-wired.network`, matched on MAC); was previously on the IoT AP's WiFi (VLAN 30) — NetworkManager disabled and WiFi (`wlo1`) rfkill-blocked. Hostname renamed from `poolTab`; login user is `pooltab`. Same closed-lid setup as acer-lap (`/etc/systemd/logind.conf.d/10-headless.conf` + masked sleep targets). Docker installed (`docker0` present). Full-disk encryption — requires an interactive passphrase, but remote unlock via `dropbear-initramfs` on port 2222 from XPS is now verified after Debian 13 kernel reboot (LUKS2 `sda5` → LVM). Docker Trixie packages active; Hermes v0.22.5+2971.ga938f00 gateway active with Codex OAuth primary, owner Telegram bot confirmed, Qwen3.5 2B local alias tested; automatic failover and Harness deployment still unverified; see [gateway runbook](../services/hermes-gateway.md). SSH open from lan/trusted |
 
 | `lenovo-lap` | Lenovo ThinkBook 15 G4 IAP (21DJ), i7-1255U, 40 GB RAM, 1 TB NVMe; [details](#lenovo-lap-hardware) | Debian 13.7, headless (`multi-user.target`) | 10 (switch port 7) | 192.168.10.193 (DHCP; reservation not independently confirmed) | Wired `enp0s31f6` via ifupdown/dhcpcd, MAC `e4:a8:df:dd:bd:29`; SSH from XPS `192.168.20.173` allowed TCP 22 through `firewall.allow_xps_to_lenovo_ssh`; runs dedicated Docker runners for `kc-backend-core` and `kartchaser-infrastructure` (see [runner runbook](../services/lenovo-github-runners.md)). |
 
@@ -40,6 +40,13 @@ Collected 2026-10-08 via `dmidecode`, `lscpu`, `lsblk`, `lspci` and sysfs.
 | Battery | AP18C4K, ~71% of design capacity (2,976,000 / 4,200,000 µAh); kernel reports `cycle_count` 0 (not tracked) |
 | Display | Built-in panel physically disconnected; runs headless |
 | Kernel | 6.12.111+deb13-amd64 |
+
+**RG3 update (2026-11-28):** HP management is now on VLAN 30 via its built-in
+NIC; its former switch port and VLAN 10 reservation are historical. A TP-Link
+UE300 USB Ethernet adapter is planned for addressless passive capture, not yet
+connected. See [RG3 capture network](../networking/rg3-capture.md). Current
+service reachability and historical remote-unlock details require separate
+revalidation; remote unlock is not part of this deployment.
 
 ### hp-lap hardware
 
@@ -143,7 +150,7 @@ outside it:
 | gha-general-01 (192.168.10.189) | 22 | lan, trusted |
 | dell-mini (192.168.10.117) | 22, 80 | lan, trusted |
 | acer-lap (192.168.10.199) | 22 | lan, trusted |
-| hp-lap (192.168.10.147) | 22 | lan, trusted |
+| hp-lap (former VLAN 10 address) | 22 | Historical rule; current research management path requires revalidation |
 | lenovo-lap (192.168.10.193) | 22 | XPS 192.168.20.173 (trusted), verified 2026-11-03; router UCI section `allow_xps_to_lenovo_ssh` |
 
 ## Device Naming Convention

@@ -48,6 +48,14 @@ The remote tunnel terminates at a public VPS, **not** the Flint 2 WAN. On the VP
 
 `trusted-vpn on|off|status` switches source `192.168.20.0/24` between Mullvad VPN (`wg_mullvad`) and university WAN (`eth1`). VPN mode also enables `firewall.trusted_vpn_dns` (IPv4 UDP/TCP 53 DNAT → `192.168.10.171`) and a dedicated `trusted_mullvad_guard` drop chain for WAN fallback. WAN mode removes those protections intentionally. The NAS and Telegram proxy have independent always-VPN source policies and guards. [Operational details](mullvad.md).
 
+### RG3 research deployment note (2026-11-28)
+
+HP management has moved to VLAN 30. Reconcile the active router rules and
+scoped management access against the October baseline before live collection.
+The planned UE300 mirror NIC needs no routed firewall exception. See
+[RG3 capture network](rg3-capture.md). This documentation does not apply or
+authorize firewall changes.
+
 ### IoT VLAN — Planned exception policy (not deployed)
 Historic design only; **VLAN 30 WAN forwarding was removed on 2026-10-22**, and the table below is *not* a list of deployed rules. An existing DHCP/DNS exception remains and must be reviewed separately.
 
