@@ -25,7 +25,7 @@ Overview of rack hardware, device placement, and power infrastructure.
 | Proxmox node | Dell Precision 3620 (i7-6700K, 32 GB) | Hypervisor, GitHub Actions runner, monitoring — specs in [proxmox.md](../services/proxmox.md) | Rack, full-depth shelf (shared front+back) |
 | `dell-mini` | Dell OptiPlex 3050 Micro | Debian, runs research-output-scraper — see [devices/README.md](../devices/README.md) | Rack, back short shelf (shares with switch) |
 | `acer-lap` | Acer Aspire 5 A515-54 (laptop) | Debian 13, headless — edge-device IDS test host (planned move to VLAN 30 when that work starts), see [devices/README.md](../devices/README.md) | Rack, back half-depth shelf |
-| `hp-lap` | HP EliteBook 840 G2 (laptop) | Debian 12, no assigned role yet — see [devices/README.md](../devices/README.md) | Rack, front half-depth shelf |
+| `hp-lap` | HP EliteBook 840 G2 (laptop) | Debian 13, RG3 IDS capture host; UE300 installation pending — see [devices/README.md](../devices/README.md) | Rack, front half-depth shelf |
 
 ### Top of Rack (not rack-mounted)
 
