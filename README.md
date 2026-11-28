@@ -50,7 +50,8 @@ graph TD
 | Mullvad selective egress | ✅ NAS + Telegram proxy Mullvad egress and switchable VLAN 20 VPN/WAN mode verified 2026-10-25; reboot/boot-order audit pending |
 | GitHub Actions runners | ✅ KC + DFAIR + KC-Timing; Timing deployed 2026-10-27; [nightly source update checks](docs/services/github-actions-runners.md) (check-only) |
 | Monitoring stack | ✅ Kuma 2.5.7 with tested Telegram alerts; Prometheus/Grafana metrics running; runner job-active test pending |
-| VLAN 30 Internet egress | 🔒 IoT → WAN forwarding removed 2026-10-22; client validation pending |
+| RG3 IDS passive capture | Software accepted; UE300 and switch mirror deployment pending — [runbook](docs/networking/rg3-capture.md) |
+| VLAN 30 Internet egress | October WAN-block baseline; current research egress policy requires reconciliation |
 
 ## Repo Structure
 
