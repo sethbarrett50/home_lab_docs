@@ -2,7 +2,50 @@
 
 **Deployed:** 2026-11-03. **Host:** physical Lenovo ThinkBook 15 G4 IAP (`lenovo-lap`), Debian 13.7, Lab VLAN 10, switch port 7, `192.168.10.193` / `lenovo-lap.home.arpa`. This deployment is **not** a Proxmox VM and does not replace the existing `gha-general-01` runner VM.
 
-## Inventory
+## Kart-Chaser organization ARC pool (2026-11-28)
+
+The physical Lenovo now runs the organization-level `kc-gha-runner` scale
+set on single-node K3s, independently of DFAIR ARC on VM101.
+
+| Setting | Value |
+|---|---|
+| Source | Kart-Chaser/KC-GHA-Runner, main |
+| Scale set / workflow target | `kc-gha-runner` |
+| Controller / runner namespaces | `arc-systems` / `arc-runners` |
+| ARC version | 0.15.1 |
+| Capacity | minRunners 1, maxRunners 9 total; plan for 8 assigned jobs plus warm reserve |
+| Cache | Docker Hub registry mirror, 50 GiB configured, namespace registry-cache |
+| Runtime | K3s/containerd, per-job Docker-in-Docker |
+| Startup service | `kc-runner-pool.service` |
+
+Real frontend security-scan work and a warm runner were observed after
+deployment. Nine-pod saturation, reboot recovery and sustained heavy-job
+resource usage are not established. The older repository-scoped Docker
+runners below are a separate deployment; their current inventory needs
+reconciliation (the upstream pool guide refers to three other containers).
+
+Use the private source repository's `docs/pool-operations.md` and
+`docs/pool-setup.md` for changes. Do not restart the pool while jobs run:
+stopping its service removes the scale set. A warm idle pod can remain
+when no jobs are executing, so inspect job assignments rather than
+requiring an empty pod list.
+
+```bash
+systemctl status kc-runner-pool.service k3s --no-pager
+kubectl get nodes -o wide
+kubectl -n arc-runners get autoscalingrunnersets
+kubectl -n arc-runners get ephemeralrunners -o wide
+kubectl -n arc-runners get pods -o wide
+free -h
+df -h
+```
+
+Privileged job containers are not a strong isolation boundary. Restrict
+assignment to trusted workflows; do not publish credentials, secret
+manifests or kubeconfig. Metrics-server is disabled in the documented
+Lenovo setup; inspect node conditions and host resource use.
+
+## Earlier repository-scoped Docker inventory (2026-11-03)
 
 | Purpose | GitHub repository served | Runner source checkout | Container / image | Workspace | Runner label |
 |---|---|---|---|---|---|

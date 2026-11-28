@@ -1,4 +1,6 @@
-# Hermes gateway: HP baseline, live Codex/Telegram and local fallback
+# Hermes gateway — retired deployment record
+
+> **Retired (2026-11-28, operator confirmed):** Hermes has been removed from HP. The remaining content is historical, not an active runbook. Do not execute its installation, restart or recovery instructions for the RG3 capture host. Exact removal scope and residual accounts, tunnel units and credentials have not been audited.
 
 **Status, 2026-10-29:** HP baseline, persistent Hermes gateway, Codex OAuth primary, owner Telegram messaging, authenticated Qwen3.5 native alias, and local terminal smoke execution are observed. **Automatic primary-to-local failover and full tool-using Harness workflows are not qualified; Harness and XPS bounded inference are now installed and directly observed.** See [Harness deployment readiness](hermes-harness-deployment.md). Historical tracking: [#85](https://github.com/sethbarrett50/home_lab_docs/issues/85).
 

@@ -1,8 +1,7 @@
 # Services
 
-All services run on or through the **Dell Precision 3620 Proxmox node**
-unless noted — `research-output-scraper` is the one exception, running
-directly on `dell-mini` instead.
+Proxmox hosts the virtualized infrastructure. Physical hosts also run
+Kart-Chaser CI (Lenovo), RG3 capture (HP) and the research leaderboard (Dell mini).
 
 ## Contents
 
@@ -11,9 +10,8 @@ directly on `dell-mini` instead.
 - [GitHub Actions Runners](github-actions-runners.md) — DFAIR ARC/K3s and KC-Timing Docker setup, safe restarts and retirement
 - [Monitoring](monitoring.md) — current and planned monitoring stack
 - [Internal HTTPS / Caddy](caddy.md) — reverse proxy, internal CA, metrics and trust
-- [Hermes Gateway](hermes-gateway.md) — HP Debian 13, live Codex/Telegram gateway, local fallback and recovery (Harness pending)
-- [Local GPU LLM](local-llm.md) — VM108 Quadro P4000, Qwen3 8B plus Qwen3.5 2B, private authenticated HTTPS APIs
-- [Harness Deployment Readiness](hermes-harness-deployment.md) — hybrid GPU residency design, prerequisites and pre-install checks
+- [Lenovo Kart-Chaser ARC and dedicated runners](lenovo-github-runners.md) — physical VLAN 10 CI host
+- [Local GPU LLM](local-llm.md) — VM108 Quadro P4000, Qwen3 8B plus Qwen3.5 2B, retained configuration, powered off
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
   confirmed IoT testbed; RG3 passive capture software ready, hardware pending
 - [research-output-scraper](research-output-scraper.md) — CS researcher
@@ -76,7 +74,9 @@ graph TD
     CADDY -->|HTTPS frontend, HTTP backend| LEADERBOARD
 
     IDS["IDS Research (FIRCE/FADES)\nVLAN 30 testbed"]
-    IDS -.-> PVE
+    LENOVO["Physical Lenovo — Kart-Chaser ARC"]
+    HP["Physical HP — RG3 passive capture"]
+    IDS --> HP
 ```
 
 ## Internal DNS
@@ -105,7 +105,7 @@ The router maintains hostname records from DHCP leases and reservations, with ex
 | CS publication leaderboard | `cs-leaderboard.home.arpa` | HTTPS 443 via Caddy → `dell-mini:80` |
 | NAS LXC | `nas.home.arpa` | Service-dependent |
 | GitHub Actions VM | `gha-general-01.home.arpa` | SSH port 22 |
-| Local LLM 8B API | `llm.home.arpa` | HTTPS port 443, Trusted VLAN plus HP host + Bearer API key |
+| Local LLM 8B API | `llm.home.arpa` | Historical access policy; VM powered off |
 | Local LLM 64K API | `llm-long.home.arpa` | HTTPS port 443, Trusted VLAN plus HP host + Bearer API key |
 
 The NAS currently uses DHCP at `192.168.10.170`. A permanent reservation is recommended but has not yet been configured.
@@ -118,7 +118,7 @@ For the full configuration, verified inventory, and troubleshooting procedures, 
 
 | Service | Type | Status | Priority |
 |---|---|---|---|
-| [GitHub Actions runners (DFAIR/KC/KC-Timing)](github-actions-runners.md) | DFAIR ARC on K3s (0–3 runners) and KC-Timing Docker on VM 101 | ✅ Running | High |
+| [GitHub Actions runners (DFAIR/KC/KC-Timing)](github-actions-runners.md) | DFAIR ARC and KC-Timing on VM101; Kart-Chaser ARC on Lenovo | ✅ Running | High |
 | [Local GPU LLM](local-llm.md) | VM 108, retained GPU passthrough | Powered off | Low |
 | Monitoring (Prometheus/Grafana) | Docker, on `monitor-01` (VM 102) | ✅ Running | High |
 | [Internal HTTPS / Caddy](caddy.md) | Caddy 2.6.2 on `certs-01` (LXC 106) | ✅ Running; hardening and dashboards pending | High |

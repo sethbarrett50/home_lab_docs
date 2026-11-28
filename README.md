@@ -43,12 +43,12 @@ graph TD
 | GL.iNet Flint 2 as main router | ✅ Running |
 | VLAN configuration (10 Lab / 20 Trusted / 30 IoT) | ✅ Done — all 3 VLANs live, devices migrated, static reservations set |
 | Proxmox setup | ✅ Running |
-| Hermes HP gateway | ✅ Codex OAuth primary + Telegram gateway active; Qwen3.5 2B alias verified, automatic fallback pending live qualification — [runbook](docs/services/hermes-gateway.md) |
-| Local GPU LLM (Phase 4) | ✅ VM108 P4000 with Qwen3 8B (4K) and Qwen3.5 2B (64K) systemd services, authenticated Caddy HTTPS; host reboot and second-service reboot recovery pending — [runbook](docs/services/local-llm.md) |
+| Hermes HP gateway | Retired; HP repurposed for RG3 passive capture |
+| Local GPU LLM (Phase 4) | VM108 powered off; configuration retained — [runbook](docs/services/local-llm.md) |
 | NAS / storage | ✅ Done |
 | VPN (inbound) | ✅ VPS-relayed WireGuard live 2026-10-25; XPS off-network access validated, reboot/isolation checks pending |
 | Mullvad selective egress | ✅ NAS + Telegram proxy Mullvad egress and switchable VLAN 20 VPN/WAN mode verified 2026-10-25; reboot/boot-order audit pending |
-| GitHub Actions runners | ✅ KC + DFAIR + KC-Timing; Timing deployed 2026-10-27; [nightly source update checks](docs/services/github-actions-runners.md) (check-only) |
+| GitHub Actions runners | DFAIR ARC on VM101; Kart-Chaser ARC on Lenovo (VLAN 10); KC-Timing retained — [runbook](docs/services/github-actions-runners.md) |
 | Monitoring stack | ✅ Kuma 2.5.7 with tested Telegram alerts; Prometheus/Grafana metrics running; runner job-active test pending |
 | RG3 IDS passive capture | Software accepted; UE300 and switch mirror deployment pending — [runbook](docs/networking/rg3-capture.md) |
 | VLAN 30 Internet egress | October WAN-block baseline; current research egress policy requires reconciliation |

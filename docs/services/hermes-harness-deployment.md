@@ -1,4 +1,6 @@
-# Hermes Harness deployment readiness — HP and llm-01
+# Hermes Harness — historical deployment record
+
+> **Retired HP integration (2026-11-28):** the operator confirms Hermes was removed. This record describes earlier qualification only; do not assume the Harness checkout, gateway, XPS tunnel or credentials remain operational. No redeployment is planned for RG3.
 
 **Status: installed on hp-lap at pinned Harness `41fa1c3` (2026-10-29); limited local inference verified, live autonomous workflow NOT qualified.** This page is a deployment contract for `sethbarrett50/hermes-harness` (private GitHub repository), not a claim that native commands, code-editing workers, or host sandbox enforcement have been qualified.
 
