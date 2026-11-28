@@ -3,7 +3,7 @@
 This homelab's IoT segment (VLAN 30) doubles as the real-world testbed for
 Seth's dissertation research on drift-aware, uncertainty-quantified
 intrusion detection. Documented here for reproducibility, per the repo's
-[CONTRIBUTING.md](https://github.com/sethbarrett50/home_lab_docs/blob/main/CONTRIBUTING.md)
+[CONTRIBUTING.md](../../CONTRIBUTING.md)
 goal of being useful to anyone trying to reproduce or understand the setup.
 
 ## The research line
@@ -27,7 +27,17 @@ The device mix has grown since the FIRCE/FADES captures (10 devices), so new
 captures aren't directly comparable without noting which devices were in
 scope.
 
-## Data collection setup (CAPEX)
+## RG3 passive capture deployment (2026-11-28)
+
+The HP capture host now has its management NIC on VLAN 30. A dedicated
+UE300 USB Ethernet monitor interface and TL-SG108E port mirroring are planned;
+software acceptance passed, but hardware and live capture acceptance remain
+pending. See [network deployment runbook](../networking/rg3-capture.md).
+Passive capture uses an explicit interface and does not execute attack
+configurations. It observes only traffic delivered by the mirror, not
+necessarily every frame on VLAN 30.
+
+## Earlier active-experiment workflow (CAPEX)
 
 Traffic capture and attack generation is done with
 [CAPEX](https://github.com/DFAIR-LAB-Augusta/CAPEX) (public repo, same
@@ -52,12 +62,11 @@ flowchart TD
     FLOWS --> CE["Conformal evaluation /\ndrift detection pipeline\n(FIRCE / FADES)"]
 ```
 
-**Why CAPEX has to run inside VLAN 30, not elsewhere on this network:**
-VLAN 30 is fully isolated from Lab and Trusted (see
-[vlans.md](../networking/vlans.md)'s inter-VLAN policy — no traffic in
-either direction). A capture/attack host on any other VLAN couldn't reach
-the IoT devices at all, so CAPEX's host is itself another device sitting
-on VLAN 30 alongside the IoT hardware it targets.
+**Earlier active-experiment host placement:**
+The active-experiment host was placed on VLAN 30 to reach authorized test
+devices locally. The newer passive mirror interface does not need an IP
+address or routed access. See [VLAN policy](../networking/vlans.md) for
+segmentation and the research deployment caveat.
 
 **Capture window shape** (per CAPEX's `docs/USAGE.md`): each run captures
 for a configurable duration (default 8h) per device, with a `SAFE_PERIOD`
@@ -115,6 +124,5 @@ physical removal or switch-level port isolation does.
       `gateway_ip` in `configs/attacks.yaml` still reference pre-migration
       `192.168.1.x` addresses** — these predate the VLAN migration and
       won't reach the real devices at their current `192.168.30.x`
-      addresses (or the real VLAN 30 gateway, `192.168.30.1`). CAPEX won't
-      actually work against this network's current IoT devices until
-      these configs are updated. Separate repo, not fixed here.
+      addresses (or the real VLAN 30 gateway, `192.168.30.1`). Active experiment configurations require fresh inventory validation and
+      correction before use. Passive capture does not depend on these files. Separate repo, not fixed here.

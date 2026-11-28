@@ -18,7 +18,7 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | Direct (no VPN) |
 | Inter-VLAN | → Trusted: blocked. → IoT: blocked. |
 
-**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap, hp-lap (Debian/XFCE)
+**Devices:** Proxmox node, Raspberry Pis, dell-mini, acer-lap (HP moved to VLAN 30 for RG3 research)
 
 ---
 
@@ -52,7 +52,13 @@ Three VLANs segment traffic by trust level and use case. IoT devices get the str
 | Internet | Blocked by router-side `iot` → `wan` forwarding removal on 2026-10-22; client verification pending |
 | Inter-VLAN | Fully isolated — no access to Lab or Trusted. |
 
-**Devices:** Research IoT hardware, Samsung phone (for IoT testing), TP-Link OpenWrt AP
+**Devices:** Research IoT hardware, Samsung phone (for IoT testing), TP-Link OpenWrt AP, HP research management interface (observed 2026-11-28).
+
+The [RG3 passive capture deployment](rg3-capture.md) adds a planned addressless
+monitor NIC, not another routed VLAN endpoint. The October WAN-block and
+inter-VLAN policy below are historical baseline records; current research
+egress and scoped management exceptions require router-side reconciliation
+and client verification before being treated as current policy.
 
 > IoT devices connect wirelessly to the OpenWrt AP on a dedicated SSID. This AP uplinks to the switch on a VLAN 30 access port.
 

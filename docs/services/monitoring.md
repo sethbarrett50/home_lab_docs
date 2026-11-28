@@ -19,7 +19,7 @@ graph TD
         NE1[node-exporter]
         CB1[cAdvisor :8080]
         AL1[Grafana Alloy :12345]
-        R1[2x GHA runner containers\ndfair / kc]
+        R1[DFAIR ARC + KC-Timing Docker]
         BK[Buildkit builder]
         EX[Runner job exporter :9119]
     end
@@ -209,7 +209,7 @@ job inference from authoritative GitHub online and job-result state.
 
 **2026-11-27 update:** DFAIR migrated to K3s/ARC; its legacy Docker service is disabled and its container absent. KC-Timing and the existing exporter remain active. The older KC service is disabled. The historical Docker observer cannot see ARC jobs or containerd pods; use Kubernetes and GitHub Actions for those. Existing dashboards may show retired runners as down or absent. Updating dashboards/alerts and adjusting monitors for the intentionally stopped LLM VM remain unverified follow-ups. See the [current runner runbook](github-actions-runners.md#dfair-production-arc-deployment-2026-11-27).
 
-The deployed `gha-general-01` runner inventory is **KC + DFAIR only**.
+The following Docker inventory is historical. The Lenovo Kart-Chaser ARC pool is also active on VLAN 10; its metrics and alerts are not yet qualified. Do not interpret retired Docker runner series as live ARC availability.
 Runner operations, maintenance, systemd safety overrides, and nightly
 source-update checks are documented in
 [Self-hosted GitHub Actions runners](github-actions-runners.md).

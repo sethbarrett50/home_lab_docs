@@ -29,7 +29,7 @@ The router's VLAN 10 gateway is `192.168.10.1`, and its VLAN 20 gateway is `192.
 | `dell-mini.home.arpa` | `192.168.10.117` | Existing DHCP reservation | DNS lookup |
 | `gha-general-01.home.arpa` | `192.168.10.189` | Existing DHCP reservation | DNS lookup |
 | `acer-lap.home.arpa` | `192.168.10.199` | Existing DHCP reservation | DNS lookup |
-| `hp-lap.home.arpa` | `192.168.10.147` | Existing DHCP reservation | DNS lookup |
+| `hp-lap.home.arpa` | Former VLAN 10 address; current DNS record unverified | HP now on VLAN 30 | Recheck DNS lookup |
 | `nas.home.arpa` | `192.168.10.170` | Active DHCP lease for LXC 105 (`nas`); **no reservation yet confirmed** | DHCP lease verified; DNS lookup pending |
 
 **NAS address verification:** LXC 105 (`hostname: nas`) uses DHCP. The router's `/tmp/dhcp.leases` confirms `192.168.10.170`, hostname `nas`, and MAC `BC:24:11:4D:7E:3A` (matching `pct config 105`). This verifies its **current lease only**, not a permanent reservation or successful `nas.home.arpa` DNS lookup. The router also observed `192.168.10.198` and `.199` with the Acer laptop's MAC, and an unresolved/failed neighbor at `.146`. Do not publish those as additional devices without confirming them.

@@ -1,5 +1,20 @@
 # Self-hosted GitHub Actions runners
 
+## Current runner placement (2026-11-28)
+
+| Host | Workload | Status |
+|---|---|---|
+| VM101 gha-general-01 | DFAIR ARC | Active; 0–3 ephemeral runners |
+| VM101 gha-general-01 | KC-Timing Docker | Retained |
+| Physical lenovo-lap, VLAN 10 | Kart-Chaser organization ARC | Active; 1 warm / 9 total configured |
+| Physical lenovo-lap | Separate repository-scoped Docker runners | Earlier deployment; exact current inventory pending |
+
+The previous VM101 KC container service is disabled according to the VM
+deployment record; do not restart it as routine maintenance. See the
+[Lenovo ARC runbook](lenovo-github-runners.md). All Docker-era KC/DFAIR
+commands below are historical unless explicitly identified as KC-Timing
+operations. The Docker exporter does not measure either ARC pool.
+
 ## DFAIR production ARC deployment (2026-11-27)
 
 This section supersedes the historical Docker deployment below for DFAIR.
@@ -124,7 +139,7 @@ The existing Docker log exporter does not observe ARC pods. Use
 and GitHub Actions job results for ARC. Dashboard/alert changes to reflect
 the new architecture remain a separate unverified deployment task.
 
-## Dedicated physical Lenovo host (2026-11-03)
+## Earlier dedicated physical Lenovo Docker deployment (2026-11-03)
 
 `lenovo-lap` is a **physical Lenovo ThinkBook 15 G4 IAP** running Debian 13.7 on
 Lab VLAN 10 at `192.168.10.193` (`lenovo-lap.home.arpa`). It runs two
