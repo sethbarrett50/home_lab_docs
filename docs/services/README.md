@@ -15,7 +15,7 @@ directly on `dell-mini` instead.
 - [Local GPU LLM](local-llm.md) — VM108 Quadro P4000, Qwen3 8B plus Qwen3.5 2B, private authenticated HTTPS APIs
 - [Harness Deployment Readiness](hermes-harness-deployment.md) — hybrid GPU residency design, prerequisites and pre-install checks
 - [IDS Research](ids-research.md) — dissertation research (FIRCE/FADES),
-  likely uses this network's IoT VLAN as its real-world testbed
+  confirmed IoT testbed; RG3 passive capture software ready, hardware pending
 - [research-output-scraper](research-output-scraper.md) — CS researcher
   publication leaderboard, the one service that runs on `dell-mini`
   instead of Proxmox
@@ -75,7 +75,7 @@ graph TD
     LEADERBOARD[research-output-scraper\nnginx on dell-mini] 
     CADDY -->|HTTPS frontend, HTTP backend| LEADERBOARD
 
-    IDS["IDS Research (FIRCE/FADES)\nlikely uses VLAN 30 as testbed"]
+    IDS["IDS Research (FIRCE/FADES)\nVLAN 30 testbed"]
     IDS -.-> PVE
 ```
 
